@@ -1,0 +1,466 @@
+# SAOMMO — Technical Architecture
+
+**Document:** Band 2 — Technical Architecture
+**Engine:** Unreal Engine 5.4.4
+**Language:** C++
+**Architecture Status:** Initial Foundation
+**Version:** 1.0
+
+---
+
+# 1. Architecture Goals
+
+The SAOMMO architecture must support:
+
+* VR
+* Desktop
+* First Person
+* Third Person
+* future Budget VR
+* future multiplayer
+* modular gameplay
+* AI-controlled enemies
+* scalable world systems
+* future MMO functionality
+
+The architecture should avoid unnecessary dependencies between systems.
+
+---
+
+# 2. Core Architecture
+
+The project is divided into major functional areas:
+
+```text
+SAOMMO
+│
+├── Core
+├── Character
+├── Input
+├── VR
+├── Combat
+├── Interaction
+├── Enemies
+├── UI
+├── World
+├── Inventory
+├── Progression
+└── Network
+```
+
+Not every system needs to exist immediately.
+
+Folders and modules should be expanded as the project grows.
+
+---
+
+# 3. Input Abstraction
+
+One of the most important architectural components is the universal input abstraction.
+
+The planned structure is:
+
+```cpp
+FSAOInputFrame
+```
+
+The structure is intended to represent gameplay-relevant input independently of the physical device producing it.
+
+Possible data includes:
+
+```text
+Move
+Turn
+HeadRotation
+
+LeftHandRotation
+RightHandRotation
+
+LeftHandPosition
+RightHandPosition
+
+Attack
+Menu
+```
+
+Additional fields may be introduced when required.
+
+---
+
+# 4. Input Flow
+
+The intended architecture is:
+
+```text
+Keyboard / Mouse
+       │
+       ├──────────────┐
+VR Controllers        │
+       │              │
+Budget VR             │
+       │              │
+       └──────┬───────┘
+              ↓
+       Input Abstraction
+              ↓
+       FSAOInputFrame
+              ↓
+         Gameplay
+```
+
+The gameplay layer should not depend directly on a specific hardware platform.
+
+---
+
+# 5. Character Architecture
+
+The main player character will initially use:
+
+```cpp
+ASAOMMOCharacter
+```
+
+or an equivalent project-specific character class.
+
+The character should be capable of operating in:
+
+* desktop mode
+* VR mode
+
+The character itself should remain the same whenever possible.
+
+---
+
+# 6. Desktop Camera Architecture
+
+Desktop mode contains two camera states.
+
+### First Person
+
+The camera is positioned around the player's head.
+
+### Third Person
+
+The camera is positioned behind the player using an appropriate camera boom/spring arm system.
+
+The camera state can be switched during gameplay.
+
+Conceptually:
+
+```text
+Desktop Camera Manager
+        │
+        ├── First Person
+        │
+        └── Third Person
+```
+
+Switching camera mode must not recreate the player character.
+
+---
+
+# 7. VR Architecture
+
+The planned VR hierarchy is approximately:
+
+```text
+SAOMMO Character
+│
+└── VROrigin
+    │
+    ├── Camera
+    ├── Left Hand
+    └── Right Hand
+```
+
+Motion controller components or the appropriate OpenXR tracking components provide tracked hand/controller data.
+
+OpenXR supports motion-controller and hand-pose input through interaction profiles and XR input systems.
+
+---
+
+# 8. Combat Architecture
+
+Combat should be separated into components rather than implemented entirely inside the player character.
+
+Possible structure:
+
+```text
+Character
+│
+├── Combat Component
+├── Interaction Component
+└── Equipment Component
+```
+
+Weapons should be separate actors.
+
+Example:
+
+```cpp
+ASAOSword
+```
+
+The sword should contain:
+
+* visual mesh
+* collision
+* damage information
+* owner information
+* movement tracking
+* hit detection
+
+---
+
+# 9. Hit Detection
+
+The first prototype should use reliable collision volumes or traces.
+
+Possible initial implementation:
+
+```text
+Sphere Trace
+Capsule Trace
+Overlap
+```
+
+Later versions may use multiple traces along the blade:
+
+```text
+Blade
+●────●────●────●
+│    │    │    │
+T1   T2   T3   T4
+```
+
+This allows better detection of fast sword movements.
+
+---
+
+# 10. Enemy Architecture
+
+The basic enemy should use:
+
+```cpp
+ASAOEnemy
+```
+
+with a dedicated AI controller.
+
+The architecture should separate:
+
+* enemy body
+* health
+* combat
+* perception
+* navigation
+* behavior
+
+---
+
+# 11. AI Architecture
+
+The initial enemy AI may use:
+
+* AI Controller
+* NavMesh
+* AI Perception
+* Behavior Tree and Blackboard
+
+A later implementation may evaluate StateTree or other AI systems.
+
+Initial behavior:
+
+```text
+Idle
+ ↓
+Detect Player
+ ↓
+Move Toward Player
+ ↓
+Attack
+ ↓
+Recover
+ ↓
+Repeat
+```
+
+---
+
+# 12. World Architecture
+
+The world architecture is intended to support future large environments.
+
+Potential technologies include:
+
+* World Partition
+* Data Layers
+* Level Instances
+* HLOD
+* PCG
+* streaming systems
+
+Unreal Engine 5.4 includes World Partition improvements including runtime hash functionality, data layers, HLOD workflows, and dedicated-server streaming support.
+
+These technologies should only be introduced where they provide a measurable benefit.
+
+---
+
+# 13. Multiplayer Architecture
+
+Multiplayer will eventually use Unreal's authoritative client-server model.
+
+The server should be authoritative over important gameplay state.
+
+Potential future systems include:
+
+* Unreal replication
+* Replication Graph
+* Iris
+* Online Services
+* EOS
+* dedicated servers
+
+Iris is an opt-in replication system designed to reduce replication overhead and provide filtering and prioritization capabilities.
+
+The project must not depend on Iris or Replication Graph before their actual requirements are understood.
+
+Iris and Replication Graph are separate replication approaches and should not be treated as interchangeable plugins.
+
+---
+
+# 14. Gameplay Ability System
+
+Gameplay Ability System is a potential future architecture for:
+
+* skills
+* abilities
+* buffs
+* debuffs
+* attributes
+* cooldowns
+* multiplayer gameplay effects
+
+GAS is specifically designed for gameplay abilities and attributes and supports multiplayer-oriented systems.
+
+However:
+
+**GAS is not required for the first prototype.**
+
+Simple systems should be used initially where they are easier to understand and maintain.
+
+---
+
+# 15. Save Architecture
+
+The first save implementation should use Unreal's built-in:
+
+```text
+USaveGame
+```
+
+A custom save framework should only be introduced if the built-in system becomes insufficient.
+
+---
+
+# 16. Budget VR Architecture
+
+Budget VR should communicate with the game through the same input abstraction.
+
+The planned PC-side bridge is:
+
+```text
+SAOBudgetVRBridge
+```
+
+It may handle:
+
+* UDP communication
+* packet parsing
+* calibration
+* rotation smoothing
+* sensor filtering
+
+The target architecture is:
+
+```text
+Android
+   ↓
+UDP
+   ↓
+SAOBudgetVRBridge
+   ↓
+FSAOInputFrame
+   ↓
+Gameplay
+```
+
+This ensures that Budget VR remains an input provider rather than a separate game.
+
+---
+
+# 17. Coding Principles
+
+C++ is preferred for:
+
+* core systems
+* reusable gameplay systems
+* performance-critical logic
+* architecture
+* networking
+* complex state management
+
+Blueprints are appropriate for:
+
+* asset configuration
+* simple gameplay scripting
+* UI logic
+* designers' iteration
+* visual effects setup
+
+The two systems should complement each other.
+
+---
+
+# 18. Dependency Principle
+
+A system should depend only on what it actually needs.
+
+Avoid creating unnecessary cross-dependencies such as:
+
+```text
+Combat → UI → Character → World → Combat
+```
+
+Prefer:
+
+```text
+Core
+ ↑
+Gameplay
+ ↑
+Specific systems
+```
+
+This makes debugging and future multiplayer development easier.
+
+---
+
+# 19. Technical Priority
+
+The technical priority is:
+
+1. stable project
+2. input
+3. character
+4. desktop camera
+5. VR
+6. interaction
+7. combat
+8. AI
+9. vertical slice
+10. progression
+11. networking
+12. MMO infrastructure
+
+The architecture should grow with the project rather than attempting to implement the final MMO architecture immediately.

@@ -1,0 +1,404 @@
+# SAOMMO — Gameplay Bible
+
+**Document:** Band 3 — Gameplay Bible
+**Project:** SAOMMO
+**Version:** 1.0
+
+---
+
+# 1. Gameplay Objective
+
+SAOMMO is an action-focused VR MMORPG.
+
+The core gameplay loop should be:
+
+```text
+Explore
+ ↓
+Encounter
+ ↓
+Fight
+ ↓
+Defeat Enemy
+ ↓
+Receive Rewards
+ ↓
+Improve Character
+ ↓
+Explore Further
+```
+
+The game should prioritize active player participation over passive menu interaction.
+
+---
+
+# 2. Player Experience
+
+The player should feel physically involved in combat.
+
+In VR:
+
+* look naturally
+* move hands naturally
+* hold weapons
+* swing weapons
+* block
+* interact
+* explore
+
+In Desktop mode:
+
+* move with keyboard
+* look with mouse
+* fight through a desktop-compatible combat system
+* switch between First Person and Third Person
+
+---
+
+# 3. Camera Modes
+
+Desktop supports:
+
+### First Person
+
+Used for:
+
+* immersion
+* precise aiming
+* close combat
+* exploring
+
+### Third Person
+
+Used for:
+
+* seeing the character
+* observing animations
+* exploration
+* situational awareness
+
+The player can switch between both modes.
+
+The switch should be fast and should not reload the level or recreate the character.
+
+---
+
+# 4. Movement
+
+The initial movement system should contain:
+
+* walking
+* running
+* sprinting
+* jumping
+* rotation
+* camera control
+
+Advanced movement such as:
+
+* climbing
+* dodging
+* rolling
+* wall movement
+* special movement abilities
+
+will be added later if required.
+
+---
+
+# 5. VR Movement
+
+VR movement should initially remain simple.
+
+Possible movement systems include:
+
+* smooth locomotion
+* teleportation for accessibility/testing
+* snap turning
+* smooth turning
+
+The final movement configuration can be refined after testing.
+
+---
+
+# 6. Interaction
+
+The interaction system should allow players to interact with physical objects.
+
+Initial examples:
+
+* pick up object
+* drop object
+* throw object
+* activate object
+* open door
+
+The same interaction architecture should later support:
+
+* weapons
+* chests
+* switches
+* NPC interaction
+* equipment
+* quest objects
+
+---
+
+# 7. Sword Combat
+
+Sword combat is the central gameplay feature.
+
+The player should control the sword directly.
+
+A sword attack should be affected by:
+
+* position
+* velocity
+* rotation
+* movement direction
+* target collision
+
+The system should distinguish between an intentional attack and simple movement where possible.
+
+---
+
+# 8. Sword Velocity
+
+The initial sword velocity calculation can use:
+
+```text
+Velocity =
+(Current Position - Previous Position)
+/
+Delta Time
+```
+
+This gives the system an estimate of movement speed.
+
+Later, additional factors can be incorporated.
+
+---
+
+# 9. Damage
+
+The first prototype should use a simple damage system.
+
+Example:
+
+```text
+Sword Damage
+      ↓
+Enemy Health
+      ↓
+Health <= 0
+      ↓
+Enemy Death
+```
+
+Damage calculations can become more sophisticated later.
+
+---
+
+# 10. Enemy Behavior
+
+The first enemy should have a simple combat loop.
+
+```text
+Idle
+ ↓
+Detect Player
+ ↓
+Approach
+ ↓
+Attack
+ ↓
+Recover
+ ↓
+Repeat
+```
+
+The first enemy does not need advanced tactical AI.
+
+---
+
+# 11. Player Death
+
+The initial player death system:
+
+```text
+Health = 0
+ ↓
+Death
+ ↓
+Game Over
+ ↓
+Restart
+```
+
+The final game can later support:
+
+* respawn systems
+* checkpoints
+* penalties
+* resurrection
+* multiplayer recovery
+
+---
+
+# 12. Progression
+
+Long-term progression may include:
+
+* experience
+* levels
+* skills
+* equipment
+* weapons
+* armor
+* statistics
+* achievements
+* quests
+
+Progression must not be implemented before the core combat loop works.
+
+---
+
+# 13. Inventory
+
+The inventory should eventually support:
+
+* weapons
+* armor
+* consumables
+* materials
+* quest items
+
+The initial implementation should remain simple.
+
+---
+
+# 14. Equipment
+
+Equipment may include:
+
+* primary weapon
+* secondary weapon
+* armor
+* accessories
+* special items
+
+The equipment architecture should allow different equipment types to be introduced later.
+
+---
+
+# 15. Quests
+
+The long-term quest system may support:
+
+* main quests
+* side quests
+* NPC quests
+* collection quests
+* combat quests
+* exploration quests
+* dungeon quests
+
+Quests should be data-driven where practical.
+
+---
+
+# 16. NPCs
+
+NPCs may eventually provide:
+
+* dialogue
+* quests
+* shops
+* crafting
+* information
+* world interactions
+
+NPC behavior should remain separate from core player systems.
+
+---
+
+# 17. Dungeons
+
+Dungeons are intended to become major gameplay spaces.
+
+They may contain:
+
+* enemies
+* traps
+* puzzles
+* loot
+* bosses
+* special mechanics
+
+---
+
+# 18. Bosses
+
+Bosses should eventually use more advanced combat behavior.
+
+Potential features:
+
+* multiple attack patterns
+* phases
+* weak points
+* special attacks
+* environmental mechanics
+* multiplayer coordination
+
+Boss development comes after basic enemy combat works.
+
+---
+
+# 19. Multiplayer Gameplay
+
+When multiplayer is introduced, important gameplay state should become server authoritative.
+
+Examples include:
+
+* health
+* damage
+* inventory
+* item ownership
+* enemy state
+* quest progression
+* player progression
+
+Client-side prediction may be used where necessary for responsiveness.
+
+---
+
+# 20. Vertical Slice Definition
+
+The first vertical slice is complete when the player can:
+
+1. Start the game.
+2. Enter a test level.
+3. Move around.
+4. Switch between First Person and Third Person on desktop.
+5. Enter VR.
+6. See tracked hands.
+7. Hold a sword.
+8. Swing the sword.
+9. Hit an enemy.
+10. Deal damage.
+11. Kill an enemy.
+12. Be attacked.
+13. Die.
+14. Restart.
+
+If this works reliably, SAOMMO has its first playable gameplay foundation.
+
+---
+
+# 21. Gameplay Rule
+
+The primary gameplay development rule is:
+
+> A major gameplay system must become playable and testable before the next major system becomes the main development priority.
+
+This prevents the project from accumulating many unfinished systems.

@@ -1,0 +1,336 @@
+# SAOMMO — Art & Asset Bible
+
+**Document:** Band 5 — Art & Asset Bible
+**Project:** SAOMMO
+**Engine:** Unreal Engine 5.4.4
+**Version:** 1.0
+
+---
+
+# 1. Visual Goal
+
+SAOMMO should visually communicate:
+
+* fantasy
+* scale
+* adventure
+* immersion
+* danger
+* technological wonder
+* a persistent virtual world
+
+The final visual style should support the game's identity rather than simply copying another game's assets or art.
+
+---
+
+# 2. Visual Consistency
+
+All assets should follow a consistent visual direction.
+
+This applies to:
+
+* characters
+* environments
+* weapons
+* armor
+* UI
+* VFX
+* lighting
+* materials
+
+Assets that visually conflict with the project should be reviewed before integration.
+
+---
+
+# 3. Characters
+
+Characters should eventually support:
+
+* full-body models
+* equipment
+* weapons
+* armor
+* facial expressions
+* animations
+* hit reactions
+
+Character systems should be designed to support both:
+
+* first-person presentation
+* third-person presentation
+
+---
+
+# 4. First-Person Presentation
+
+In first person, the player should see appropriate first-person representations of:
+
+* hands
+* arms
+* weapons
+* interactions
+
+VR should prioritize the actual tracked hands and physical weapon position.
+
+---
+
+# 5. Third-Person Presentation
+
+Third person requires a complete character representation.
+
+The character should:
+
+* animate correctly
+* hold weapons correctly
+* react to attacks
+* move naturally
+* transition between movement states
+
+---
+
+# 6. Weapons
+
+Weapons are important visual and gameplay assets.
+
+Each weapon should have:
+
+* high-quality visual mesh
+* collision representation
+* appropriate attachment points
+* material
+* optional VFX
+* optional audio
+* gameplay data
+
+The visual asset should not contain all gameplay logic.
+
+Gameplay behavior should remain in appropriate code/components.
+
+---
+
+# 7. Sword Effects
+
+Sword combat may eventually use:
+
+* trails
+* impact effects
+* sparks
+* hit effects
+* elemental effects
+* special attack effects
+
+Niagara is the preferred Unreal-native system for complex real-time VFX.
+
+---
+
+# 8. Environment
+
+Environment assets may include:
+
+* terrain
+* rocks
+* trees
+* buildings
+* roads
+* props
+* vegetation
+* structures
+* dungeon assets
+
+Assets should be modular where practical.
+
+---
+
+# 9. Materials
+
+Materials should be organized and reusable.
+
+Avoid creating unnecessary unique materials for every asset.
+
+Material instances should be used where appropriate.
+
+---
+
+# 10. Lighting
+
+Lighting should support:
+
+* readability
+* atmosphere
+* gameplay
+* performance
+* VR comfort
+
+Lighting should not be designed purely for screenshots if it negatively affects gameplay or VR performance.
+
+---
+
+# 11. VFX
+
+VFX should communicate gameplay information.
+
+Examples:
+
+* enemy hit
+* sword impact
+* player damage
+* ability activation
+* environmental effects
+* boss attacks
+
+VFX should not obscure important gameplay information.
+
+---
+
+# 12. Animation
+
+Animation systems may use:
+
+* Animation Blueprints
+* Control Rig
+* IK Rig
+* IK Retargeter
+* Full Body IK
+* Motion Warping
+* Motion Matching
+* Pose Search
+
+These systems should be introduced according to actual requirements.
+
+---
+
+# 13. VR Animation Requirements
+
+VR introduces special requirements.
+
+Tracked hands should remain responsive.
+
+The system should avoid unnecessary animation overriding actual controller tracking.
+
+For VR weapons, physical controller data should remain authoritative for the weapon's tracked position where appropriate.
+
+---
+
+# 14. Asset Naming
+
+Assets should use consistent names.
+
+Examples:
+
+```text
+SM_     Static Mesh
+SK_     Skeletal Mesh
+M_      Material
+MI_     Material Instance
+T_      Texture
+BP_     Blueprint
+DA_     Data Asset
+NS_     Niagara System
+SFX_    Sound Effect
+MUS_    Music
+```
+
+Specific naming conventions can be expanded later.
+
+---
+
+# 15. Folder Structure
+
+The initial Content structure is:
+
+```text
+Content/
+│
+├── Blueprints/
+├── Characters/
+├── Weapons/
+├── Enemies/
+├── Levels/
+├── UI/
+├── VFX/
+├── Materials/
+├── Audio/
+└── Data/
+```
+
+Additional folders may be introduced when required.
+
+---
+
+# 16. Asset Ownership
+
+Art assets should be separated from gameplay logic.
+
+For example:
+
+```text
+Sword Mesh
+      ↓
+Weapon Asset
+      ↓
+ASAOSword
+      ↓
+Combat System
+```
+
+This allows the same gameplay weapon system to support different visual weapons.
+
+---
+
+# 17. Performance
+
+Performance is part of the art pipeline.
+
+Assets should consider:
+
+* polygon count
+* texture memory
+* material complexity
+* draw calls
+* VFX cost
+* animation cost
+* VR rendering cost
+
+VR performance must be considered from the beginning.
+
+---
+
+# 18. Asset Sources
+
+Third-party assets must be legally usable.
+
+Before integrating an asset, verify:
+
+* license
+* redistribution rights
+* commercial-use rights where applicable
+* attribution requirements
+* modification rights
+
+Assets with unclear licensing should not be treated as production-ready.
+
+---
+
+# 19. AI-Generated Assets
+
+AI-generated assets may be used where legally and technically appropriate.
+
+However, generated assets must still be reviewed for:
+
+* quality
+* consistency
+* topology
+* licensing
+* visual style
+* performance
+* technical compatibility
+
+AI generation does not remove the need for asset validation.
+
+---
+
+# 20. Visual Principle
+
+The project should prioritize:
+
+> Consistent, readable, performant visuals over maximum graphical complexity.

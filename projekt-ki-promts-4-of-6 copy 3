@@ -1,0 +1,283 @@
+# SAOMMO — World Bible
+
+**Document:** Band 4 — World Bible
+**Project:** SAOMMO
+**Version:** 1.0
+
+---
+
+# 1. World Concept
+
+SAOMMO is designed around the concept of a persistent virtual world.
+
+The world should feel large, interconnected, and alive.
+
+The player should be able to move through a world containing:
+
+* settlements
+* wilderness
+* dungeons
+* dangerous regions
+* NPCs
+* monsters
+* players
+* resources
+* quests
+* hidden areas
+* major landmarks
+
+---
+
+# 2. World Development Strategy
+
+The final world may become extremely large.
+
+However, development begins with a small test environment.
+
+The initial test level should contain only what is necessary to test gameplay.
+
+The project should not attempt to construct the entire world before the core gameplay is proven.
+
+---
+
+# 3. World Structure
+
+The long-term world structure may contain:
+
+```text
+World
+│
+├── Major Regions
+│   ├── Cities
+│   ├── Villages
+│   ├── Wilderness
+│   ├── Dungeons
+│   └── Special Areas
+│
+├── NPCs
+├── Enemies
+├── Resources
+├── Quests
+├── Items
+└── Players
+```
+
+---
+
+# 4. Cities
+
+Cities should act as safe or relatively safe areas.
+
+Possible features:
+
+* shops
+* blacksmiths
+* quest NPCs
+* inns
+* player services
+* guild areas
+* storage
+* social spaces
+
+Cities should eventually become important multiplayer hubs.
+
+---
+
+# 5. Villages
+
+Villages are smaller settlements.
+
+They may contain:
+
+* NPCs
+* merchants
+* basic quests
+* crafting
+* local storylines
+* small services
+
+---
+
+# 6. Wilderness
+
+Wilderness areas provide exploration and combat.
+
+Possible elements:
+
+* forests
+* mountains
+* plains
+* rivers
+* caves
+* ruins
+* hidden locations
+* enemy camps
+
+---
+
+# 7. Dungeons
+
+Dungeons should provide controlled gameplay experiences.
+
+They may contain:
+
+* enemy encounters
+* environmental hazards
+* puzzles
+* loot
+* minibosses
+* bosses
+* unique mechanics
+
+---
+
+# 8. World Progression
+
+The world should provide progressively more dangerous areas.
+
+Possible structure:
+
+```text
+Safe Region
+   ↓
+Low-Level Region
+   ↓
+Medium-Level Region
+   ↓
+High-Level Region
+   ↓
+Endgame Region
+```
+
+The exact progression system is not fixed yet.
+
+---
+
+# 9. Enemy Ecology
+
+Enemies should belong to appropriate regions.
+
+Different regions may contain different enemy types.
+
+Eventually, enemies may have:
+
+* territory
+* patrols
+* spawn areas
+* behaviors
+* day/night behavior
+* faction relationships
+
+These systems should only be implemented when they improve gameplay.
+
+---
+
+# 10. NPC Ecology
+
+NPCs should make the world feel populated.
+
+They may have:
+
+* schedules
+* dialogue
+* jobs
+* relationships
+* faction affiliations
+* quest responsibilities
+
+Complex simulation is optional and should be introduced only when useful.
+
+---
+
+# 11. World Generation
+
+Potential tools include:
+
+* Landscape
+* PCG
+* World Partition
+* Data Layers
+* Level Instances
+* HLOD
+
+Procedural generation should support production rather than replace deliberate level design.
+
+Important locations should be manually designed when necessary.
+
+---
+
+# 12. World Partition
+
+World Partition may eventually be used for large areas.
+
+The purpose is to allow large worlds to be managed and streamed efficiently.
+
+Unreal Engine 5.4 provides World Partition functionality including runtime partitioning, data layers, HLOD support, and dedicated-server streaming capabilities.
+
+World Partition should not be introduced merely because the final world is intended to be large.
+
+It should be introduced when the project's actual world size requires it.
+
+---
+
+# 13. World Lore
+
+The lore should be stored separately from technical implementation.
+
+Technical systems must not arbitrarily change established lore.
+
+The World Bible is the authority for:
+
+* locations
+* factions
+* characters
+* history
+* terminology
+* major events
+* world rules
+
+---
+
+# 14. Lore Consistency
+
+When creating new content, the responsible AI or developer must verify:
+
+1. Does this contradict existing lore?
+2. Does the location already exist?
+3. Does the character already exist?
+4. Does the faction already exist?
+5. Does the event fit the timeline?
+
+If uncertain, the uncertainty must be documented rather than silently invented.
+
+---
+
+# 15. World Expansion
+
+The world should expand in stages:
+
+```text
+Test Arena
+ ↓
+Small Region
+ ↓
+Connected Regions
+ ↓
+Large World
+ ↓
+Persistent Multiplayer World
+```
+
+The world must grow alongside the gameplay systems.
+
+---
+
+# 16. World Design Principle
+
+The world should exist to support gameplay.
+
+A beautiful environment with no meaningful interaction is not automatically useful.
+
+Every major world system should answer:
+
+> What does this add to the player's experience?

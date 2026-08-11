@@ -1,0 +1,354 @@
+# SAOMMO — Master Vision
+
+**Document:** Band 1 — Master Vision
+**Project:** SAOMMO
+**Engine:** Unreal Engine 5.4.4
+**Primary Language:** C++
+**Project Type:** VR / Desktop Action MMORPG
+**Status:** Development Foundation
+**Version:** 1.0
+
+---
+
+## 1. Project Overview
+
+SAOMMO is a large-scale action MMORPG project inspired by the concept of immersive virtual reality worlds such as *Sword Art Online*.
+
+The central goal of SAOMMO is to create a game in which the player does not simply control a character through traditional button-based combat, but actively participates in combat through physical movement, especially in VR.
+
+The primary combat system is based around real weapon movement.
+
+A player should be able to physically move a sword, control its direction, speed, rotation, and position, and use these movements to perform attacks.
+
+SAOMMO is designed from the beginning to support multiple control modes without creating separate gameplay systems.
+
+The three planned control categories are:
+
+1. Full VR
+2. Desktop
+3. Budget VR
+
+The first development target is full VR and desktop gameplay.
+
+Budget VR and large-scale multiplayer functionality will be developed later.
+
+---
+
+## 2. Core Design Philosophy
+
+SAOMMO follows several fundamental principles.
+
+### 2.1 Gameplay First
+
+Every major system must eventually become playable.
+
+Documentation, architecture, plugins, and tools exist to support development, not to replace it.
+
+A system should not be expanded indefinitely before it can be tested in the game.
+
+---
+
+### 2.2 One Gameplay System, Multiple Input Methods
+
+VR and desktop should not become two separate games.
+
+The underlying gameplay logic should remain shared.
+
+For example:
+
+```text
+VR Controller
+       ↓
+Input Abstraction
+       ↓
+Gameplay
+       ↓
+Combat
+```
+
+and:
+
+```text
+Mouse / Keyboard
+       ↓
+Input Abstraction
+       ↓
+Gameplay
+       ↓
+Combat
+```
+
+Both paths should ultimately communicate with the same gameplay systems.
+
+This architecture is important because it allows SAOMMO to support additional input methods later without rewriting the entire game.
+
+---
+
+## 3. Game Modes
+
+### 3.1 Full VR
+
+Full VR is the primary experience.
+
+The player uses a VR headset and tracked controllers or hands.
+
+The player sees the world from a first-person perspective.
+
+The player can:
+
+* move
+* look around naturally
+* control both hands
+* hold weapons
+* physically move weapons
+* interact with objects
+* fight enemies
+* interact with the world
+
+VR is intended to provide the highest level of immersion.
+
+---
+
+### 3.2 Desktop Mode
+
+Desktop mode is a fully supported gameplay mode and not merely a development fallback.
+
+The player uses:
+
+* keyboard
+* mouse
+* optionally a gamepad
+
+Desktop mode supports both:
+
+**First Person**
+
+and
+
+**Third Person**
+
+The player must be able to switch between these camera modes during gameplay.
+
+The same character, combat systems, enemies, world systems, and progression systems are used in both views.
+
+The camera mode changes the presentation, not the underlying game logic.
+
+---
+
+### 3.3 Budget VR
+
+Budget VR is a later development target.
+
+The concept is to allow inexpensive hardware such as:
+
+* Android phones
+* inexpensive VR headsets
+* Joy-Con or similar motion controllers
+* other low-cost sensors
+
+to provide a VR-like experience.
+
+The PC-side game should receive the same abstract input structure used by the other control systems.
+
+The planned architecture is:
+
+```text
+Budget VR Device
+       ↓
+Android Application
+       ↓
+Network
+       ↓
+SAOBudgetVRBridge
+       ↓
+FSAOInputFrame
+       ↓
+SAOMMO Gameplay
+```
+
+Budget VR must not require a completely separate gameplay implementation.
+
+---
+
+# 4. Combat Vision
+
+Combat is one of the most important features of SAOMMO.
+
+The player should be able to physically control weapons rather than selecting attacks from a menu.
+
+A sword attack should depend on factors such as:
+
+* sword position
+* sword movement
+* sword velocity
+* sword rotation
+* attack direction
+* collision with the target
+* potentially attack angle and impact strength
+
+The first implementation will use a simple and reliable collision system.
+
+More advanced blade tracing and combat calculations can be added later.
+
+---
+
+# 5. World Vision
+
+SAOMMO is intended to grow into a large persistent online world.
+
+The final world may contain:
+
+* cities
+* villages
+* fields
+* forests
+* mountains
+* dungeons
+* bosses
+* NPCs
+* quests
+* shops
+* players
+* guilds
+* equipment
+* progression systems
+* large-scale events
+
+The initial development world will be intentionally small.
+
+The project will first prove its gameplay in a small test environment.
+
+Large-scale world technology such as World Partition, PCG, advanced streaming, and multiplayer replication will be introduced when the project actually requires them.
+
+---
+
+# 6. Long-Term MMORPG Vision
+
+The long-term goal is a persistent multiplayer world.
+
+Players should eventually be able to:
+
+* create characters
+* explore the world
+* fight enemies
+* obtain equipment
+* level up
+* complete quests
+* interact with NPCs
+* trade
+* form groups
+* form guilds
+* participate in multiplayer combat
+* explore dungeons
+* fight bosses
+* interact with a persistent world
+
+The architecture must therefore remain modular and scalable.
+
+However, MMO functionality is not part of the first playable prototype.
+
+---
+
+# 7. Development Philosophy
+
+SAOMMO will be developed incrementally.
+
+The project follows this rule:
+
+> Every major system must work in a playable test environment before the next major system becomes the primary development focus.
+
+The initial progression is:
+
+```text
+Project
+ ↓
+Input
+ ↓
+Desktop Movement
+ ↓
+First Person / Third Person
+ ↓
+VR
+ ↓
+VR Interaction
+ ↓
+Sword
+ ↓
+Combat
+ ↓
+Enemy
+ ↓
+Enemy AI
+ ↓
+Test Level
+ ↓
+Vertical Slice
+ ↓
+Inventory
+ ↓
+Progression
+ ↓
+Save System
+ ↓
+Multiplayer
+ ↓
+MMO
+```
+
+---
+
+# 8. Technical Foundation
+
+The initial technology stack is:
+
+* Unreal Engine 5.4.4
+* C++
+* Blueprints where appropriate
+* Enhanced Input
+* OpenXR
+* Git
+* GitHub
+* Visual Studio 2022
+
+Enhanced Input is intended to provide contextual and dynamic input mappings, which fits the requirement to support multiple control modes.
+
+OpenXR is the primary VR abstraction layer because it is designed to support different XR runtimes and controller interaction profiles.
+
+---
+
+# 9. Quality Principles
+
+SAOMMO should prioritize:
+
+* stable systems
+* readable code
+* modular architecture
+* testability
+* clear documentation
+* reproducible builds
+* version control
+* controlled dependencies
+* performance
+* scalability
+
+Complexity should only be introduced when it solves an actual problem.
+
+---
+
+# 10. Final Vision
+
+The final SAOMMO experience should feel like a real virtual world rather than a conventional game with VR support added afterward.
+
+VR should be a core part of the design.
+
+Desktop mode should remain fully playable.
+
+The architecture should allow additional control systems to be added later.
+
+The project should grow from a small working prototype into a scalable online world.
+
+The first objective is not to build the MMO.
+
+The first objective is to prove that the core experience is fun.
+
+**If moving, fighting, and interacting with the world feels good, SAOMMO has a foundation worth expanding.**

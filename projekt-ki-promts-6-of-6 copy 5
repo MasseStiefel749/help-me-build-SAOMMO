@@ -1,0 +1,565 @@
+# SAOMMO — AI Development Manual
+
+**Document:** Band 6 — AI Development Manual
+**Project:** SAOMMO
+**Purpose:** Coordination of AI-assisted development
+**Version:** 1.0
+
+---
+
+# 1. Purpose
+
+This document defines how AI systems are expected to work on SAOMMO.
+
+Multiple AI systems may assist with:
+
+* programming
+* gameplay
+* world design
+* art
+* debugging
+* testing
+* documentation
+
+The goal is to prevent conflicting changes and uncontrolled modifications.
+
+---
+
+# 2. AI Roles
+
+The primary AI roles are:
+
+```text
+Technical AI
+Gameplay AI
+World AI
+Art AI
+QA AI
+```
+
+A future coordinating or Master AI may be introduced when multiple autonomous agents are operating simultaneously.
+
+---
+
+# 3. Technical AI
+
+## Responsibilities
+
+The Technical AI is responsible for:
+
+* C++
+* architecture
+* core systems
+* performance
+* networking
+* build issues
+* engine integration
+* technical debugging
+
+Typical areas:
+
+```text
+Source/
+Config/
+Technical documentation
+```
+
+---
+
+## Technical AI must not arbitrarily change:
+
+* established lore
+* character backstories
+* world history
+* visual direction
+* gameplay balance
+
+If a technical change requires a gameplay or lore decision, the decision should be documented and passed to the appropriate role.
+
+---
+
+# 4. Gameplay AI
+
+The Gameplay AI is responsible for:
+
+* gameplay mechanics
+* combat
+* movement
+* abilities
+* inventory
+* progression
+* quests
+* player interaction
+
+Typical areas:
+
+```text
+Gameplay code
+Blueprint gameplay assets
+Combat
+Interaction
+Inventory
+Progression
+```
+
+Gameplay AI must respect the technical architecture.
+
+It should not introduce major architectural changes without documenting the reason.
+
+---
+
+# 5. World AI
+
+The World AI is responsible for:
+
+* world design
+* locations
+* factions
+* NPC concepts
+* lore
+* history
+* environmental storytelling
+* quests from a world-design perspective
+
+World AI must treat the World Bible as authoritative.
+
+It must not silently overwrite established lore.
+
+---
+
+# 6. Art AI
+
+The Art AI is responsible for:
+
+* visual concepts
+* asset specifications
+* materials
+* VFX concepts
+* animation requirements
+* visual consistency
+
+Art AI should not change gameplay logic merely to achieve a visual effect.
+
+---
+
+# 7. QA AI
+
+The QA AI is responsible for:
+
+* testing
+* regression testing
+* bug reproduction
+* test documentation
+* performance checks
+* identifying inconsistencies
+
+QA AI should report problems rather than silently modifying unrelated systems.
+
+---
+
+# 8. File Access Principle
+
+AI roles should operate under defined file-access rules.
+
+The conceptual rule is:
+
+> An AI should only modify files necessary for its assigned task.
+
+A more detailed File Access Matrix should define exact paths.
+
+---
+
+# 9. File Access Matrix
+
+The File Access Matrix should eventually define permissions similar to:
+
+| Area                 | Technical | Gameplay | World | Art   | QA   |
+| -------------------- | --------- | -------- | ----- | ----- | ---- |
+| `Source/Core`        | Write     | Read     | None  | None  | Read |
+| `Source/Combat`      | Write     | Write    | None  | None  | Read |
+| `Source/Character`   | Write     | Write    | None  | None  | Read |
+| `Content/Weapons`    | Read      | Write    | Read  | Write | Read |
+| `Content/Characters` | Read      | Write    | Write | Write | Read |
+| `Content/Levels`     | Read      | Write    | Write | Write | Read |
+| `Docs/World`         | Read      | Read     | Write | Read  | Read |
+| `Docs/Art`           | Read      | Read     | Read  | Write | Read |
+| `Config`             | Write     | Read     | None  | None  | Read |
+
+The exact permissions must be maintained separately from this manual.
+
+---
+
+# 10. AI Must Read Before Editing
+
+Before modifying the project, an AI should inspect:
+
+1. relevant documentation
+2. relevant source files
+3. existing architecture
+4. current implementation
+5. recent changes
+6. existing tests
+
+An AI should not assume that a system is missing simply because it has not yet found it.
+
+---
+
+# 11. No Unnecessary Rewrites
+
+AI agents must not rewrite working systems merely because they would personally implement them differently.
+
+Before replacing a system, the AI should determine:
+
+* why the current system exists
+* what depends on it
+* whether the current implementation is actually broken
+* whether the change is necessary
+
+---
+
+# 12. Change Scope
+
+Every AI task should have a defined scope.
+
+Example:
+
+```text
+Task:
+Fix sword hit detection.
+
+Allowed:
+Combat code
+Sword code
+Relevant collision configuration
+
+Not allowed:
+World redesign
+UI redesign
+Lore changes
+Inventory rewrite
+```
+
+This prevents scope creep.
+
+---
+
+# 13. Git Requirements
+
+AI-generated modifications must be committed in understandable units.
+
+Commit messages should describe what changed.
+
+Good:
+
+```text
+Fix sword collision trace
+```
+
+Bad:
+
+```text
+changes
+```
+
+Commits should remain small enough to review and revert.
+
+---
+
+# 14. Git as Technical History
+
+Git history should be treated as the primary record of code and asset changes.
+
+The project should use:
+
+* meaningful commit messages
+* logical commits
+* branches when appropriate
+* pull requests when multiple contributors/agents are involved
+
+Large unrelated changes should not be combined into one commit.
+
+---
+
+# 15. Decision Log
+
+Git records what changed.
+
+Important architectural decisions should additionally record why a decision was made.
+
+Examples:
+
+```text
+ADR-001:
+Use OpenXR as primary VR abstraction.
+
+ADR-002:
+Use shared gameplay architecture for VR and desktop.
+
+ADR-003:
+Delay GAS until the basic combat system is proven.
+
+ADR-004:
+Desktop supports First Person and Third Person.
+```
+
+The Decision Log should remain small and focused on meaningful decisions.
+
+---
+
+# 16. AI Memory
+
+AI systems should not be assumed to permanently remember the project.
+
+The repository documentation is therefore the authoritative shared knowledge base.
+
+If information is important enough that another AI must know it later, it should be written into an appropriate project document.
+
+---
+
+# 17. Documentation Rule
+
+Before creating a new documentation file, ask:
+
+> What concrete question does this document answer that another AI could not reliably answer without it?
+
+If the answer is unclear, the document probably does not need to exist yet.
+
+---
+
+# 18. Versioning
+
+Each major documentation file should contain:
+
+```text
+Document:
+Version:
+Date:
+Status:
+```
+
+Example:
+
+```text
+Document: Band 2 — Technical Architecture
+Version: 1.0
+Date: 2026-08-11
+Status: Active
+```
+
+Documentation should be updated when important architectural decisions change.
+
+---
+
+# 19. AI Hallucination Prevention
+
+An AI must distinguish between:
+
+* known facts
+* documented project decisions
+* reasonable assumptions
+* uncertain information
+
+An AI must not present assumptions as established project facts.
+
+If something is unknown, it should say so.
+
+Example:
+
+```text
+Unknown:
+The project has not yet decided whether GAS will be used.
+
+Correct:
+GAS is a future candidate.
+
+Incorrect:
+SAOMMO uses GAS.
+```
+
+---
+
+# 20. Verification Before Completion
+
+Before declaring a coding task complete, the responsible AI should verify:
+
+* code compiles
+* relevant tests pass
+* no obvious regressions were introduced
+* modified files are within scope
+* documentation is still accurate
+* Git changes are understandable
+
+---
+
+# 21. Build Safety
+
+An AI must avoid destructive actions unless explicitly authorized.
+
+Examples of dangerous actions include:
+
+* deleting project directories
+* deleting assets
+* resetting Git history
+* force-pushing
+* replacing large systems
+* modifying unrelated configuration
+* removing dependencies without checking usage
+
+When a destructive action is necessary, it should be explicitly identified.
+
+---
+
+# 22. Plugin Discipline
+
+AI agents must not add plugins merely because they exist.
+
+Before introducing a plugin, determine:
+
+1. What problem does it solve?
+2. Is the problem currently relevant?
+3. Does Unreal already provide the required functionality?
+4. Is the plugin compatible with UE 5.4.4?
+5. What dependencies does it introduce?
+6. What maintenance risk does it create?
+7. Can the project remove it later?
+
+---
+
+# 23. AI Development Workflow
+
+The recommended workflow is:
+
+```text
+Task
+ ↓
+Read Documentation
+ ↓
+Inspect Existing Code
+ ↓
+Plan Change
+ ↓
+Implement
+ ↓
+Compile
+ ↓
+Test
+ ↓
+Review Changes
+ ↓
+Update Documentation if Necessary
+ ↓
+Commit
+```
+
+The AI should not skip directly from task description to large-scale code generation.
+
+---
+
+# 24. Conflict Resolution
+
+If two AI agents produce conflicting changes:
+
+1. Stop automatic merging.
+2. Identify the conflicting systems.
+3. Determine which architectural rule applies.
+4. Review the relevant documentation.
+5. Decide which implementation is correct.
+6. Record the decision if it affects architecture.
+7. Merge only after verification.
+
+---
+
+# 25. Master AI
+
+A Master AI may eventually coordinate the other AI roles.
+
+Its responsibilities could include:
+
+* task assignment
+* priority management
+* conflict detection
+* documentation consistency
+* architecture review
+* change review
+
+The Master AI should not automatically become the author of every system.
+
+Its primary role is coordination.
+
+---
+
+# 26. AI Responsibility Hierarchy
+
+The intended future structure is:
+
+```text
+                    Master AI
+                       │
+       ┌───────────────┼───────────────┐
+       │               │               │
+ Technical AI     Gameplay AI      World AI
+       │               │               │
+       └───────────────┼───────────────┘
+                       │
+                    Art AI
+                       │
+                     QA AI
+```
+
+This hierarchy is organizational, not necessarily a technical permission system.
+
+Actual file permissions should be enforced separately where possible.
+
+---
+
+# 27. Quality Principle
+
+The AI should optimize for:
+
+* correctness
+* maintainability
+* compatibility
+* testability
+* project consistency
+
+not for the largest amount of generated code.
+
+---
+
+# 28. Final AI Rule
+
+The most important rule is:
+
+> **Do not change what you do not understand.**
+
+Before modifying a system, understand its purpose, dependencies, and constraints.
+
+If the AI cannot determine why something exists, it should investigate before replacing it.
+
+---
+
+# 29. Final Development Philosophy
+
+SAOMMO is a long-term project.
+
+The AI system must therefore optimize for sustainable development rather than short-term output.
+
+The objective is not:
+
+> Generate as much code as possible.
+
+The objective is:
+
+> Build a stable, scalable game while preserving the ability to understand and maintain the project.
+
+---
+
+# 30. Document Status
+
+Band 1–6 together form the initial SAOMMO project knowledge base.
+
+They are not immutable.
+
+They should evolve when the actual project proves that a different approach is better.
+
+However, changes to fundamental architecture, gameplay, world rules, or AI responsibilities should be deliberate, documented, and traceable.
