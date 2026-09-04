@@ -193,23 +193,6 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 			RespawnTransform = InPawn->GetActorTransform();
 			RespawnTransform.SetScale3D(FVector::OneVector);
 		}
-		// Sword grip playtest cycler: each (re)spawn tries the next grip
-		// orientation so the owner can pick the winner by looking. Removed
-		// again once a winner is hardcoded.
-		if (APlayerCharacter* PC = Cast<APlayerCharacter>(InPawn))
-		{
-			if (ASword* Sword = PC->GetEquippedSword())
-			{
-				Sword->ApplyGripPose(SwordPoseIndex);
-				if (GEngine)
-				{
-					GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Orange,
-						FString::Printf(TEXT("Sword grip pose %d/5 - die to try next, report the best"),
-							(SwordPoseIndex % 5) + 1));
-				}
-			}
-		}
-		SwordPoseIndex = (SwordPoseIndex + 1) % 5;
 	}
 }
 

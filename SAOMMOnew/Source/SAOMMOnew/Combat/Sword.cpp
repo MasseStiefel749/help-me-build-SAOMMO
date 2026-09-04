@@ -126,37 +126,7 @@ void ASword::SetShadowCasting(bool bEnabled)
 	}
 }
 
-void ASword::ApplyGripPose(int32 Index)
-{
-	// Candidate orientations for the playtest cycler. Authored part offsets
-	// (blade centered, guard -19.2Y, grip -0.9Y, gem +14.6Y) are rotated by
-	// the SAME rotation via RotateVector, so the assembly stays rigid for
-	// every candidate no matter the engine's axis conventions.
-	static const FRotator Options[] = {
-		FRotator(0.0f, 0.0f, 0.0f),
-		FRotator(0.0f, 0.0f, 90.0f),
-		FRotator(0.0f, 0.0f, -90.0f),
-		FRotator(90.0f, 0.0f, 0.0f),
-		FRotator(-90.0f, 0.0f, 0.0f),
-	};
-	const int32 Count = UE_ARRAY_COUNT(Options);
-	const FRotator& R = Options[((Index % Count) + Count) % Count];
 
-	auto Place = [&](UStaticMeshComponent* Comp, const FVector& AuthorOffset)
-	{
-		if (!Comp)
-		{
-			return;
-		}
-		Comp->SetRelativeRotation(R);
-		Comp->SetRelativeLocation(R.RotateVector(AuthorOffset));
-	};
-
-	Place(Mesh, FVector::ZeroVector);
-	Place(GuardMesh, FVector(0.0f, -19.2f, 0.0f));
-	Place(HandleMesh, FVector(0.0f, -0.9f, 0.0f));
-	Place(GemMesh, FVector(0.0f, 14.6f, 0.0f));
-}
 
 void ASword::Tick(float DeltaTime)
 {

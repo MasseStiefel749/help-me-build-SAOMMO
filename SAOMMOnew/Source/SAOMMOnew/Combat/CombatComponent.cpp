@@ -5,6 +5,9 @@
 #include "CombatInterfaces.h"
 #include "FloatingCombatText.h"
 #include "InputFrameComponent.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/Controller.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "CollisionShape.h"
 #include "CollisionQueryParams.h"
@@ -98,6 +101,28 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			Sword->GetRootComponent()->SetRelativeRotation(SwingStartRotation);
 		}
 		bWasArmed = bArmed;
+
+		// Aim: point the blade where the camera looks (owner request).
+		// Skipped while armed (the swing owns the pose) and on motion
+		// devices (the tracked hand owns it in VR). World rotation on the
+		// attached actor is kept as a relative offset under the socket.
+		if (!bArmed && !bFromMotionDevice && Sword->GetBladeMesh())
+		{
+			UStaticMeshComponent* Blade = Sword->GetBladeMesh();
+			APawn* Pawn = Cast<APawn>(GetOwner());
+			AController* Ctrl = Pawn ? Pawn->GetController() : nullptr;
+			if (Ctrl)
+			{
+				// Blade tip sits toward mesh-local -Y (author layout).
+				const FVector TipDir = (-Blade->GetRightVector()).GetSafeNormal();
+				const FVector ViewDir = Ctrl->GetControlRotation().Vector().GetSafeNormal();
+				if (!TipDir.IsNearlyZero() && !ViewDir.IsNearlyZero())
+				{
+					const FQuat Delta = FQuat::FindBetweenNormals(TipDir, ViewDir);
+					Sword->SetActorRotation((Delta * Sword->GetActorQuat()).Rotator());
+				}
+			}
+		}
 
 		// Active melee query: while armed, apply the sword's damage to any pawn
 		// within reach. Active detection (rather than relying on overlap begin

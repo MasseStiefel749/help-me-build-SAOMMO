@@ -80,9 +80,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (ClampMin = 0, ClampMax = 10, Units = "s"))
 	float RecoverTime = 1.0f;
 
-	/** Broadcast when the enemy dies. */
+/** Broadcast when the enemy dies. */
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnEnemyDefeated OnDied;
+
+	/** Floating health bar above the head (screen space). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* HealthBarComp = nullptr;
 
 	/** Death animation (front fall). Verified loadable; Blueprint may override. */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
@@ -128,9 +132,11 @@ protected:
 	/** Resolves the current state and transitions to the next. */
 	void UpdateState(float DeltaTime);
 
-	/** Moves the enemy toward the target without requiring a Navigation mesh. */
 	/** Steers toward a destination via movement input (no NavMesh needed). */
 	void MoveTowardLocation(const FVector& Destination);
+
+	/** Pushes current health into the floating bar (safe when missing). */
+	void UpdateHealthBar();
 
 	/** Performs a single melee attack against the target. */
 	void PerformAttack();

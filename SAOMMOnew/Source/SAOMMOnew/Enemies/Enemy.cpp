@@ -1,12 +1,14 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Enemy.h"
+#include "EnemyHealthWidget.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/Controller.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/DamageEvents.h"
 #include "ProgressionComponent.h"
@@ -64,6 +66,14 @@ AEnemy::AEnemy()
 	{
 		DeathAnim = DeathObj.Object;
 	}
+
+	// Floating health bar above the head (screen space, code-only widget).
+	HealthBarComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
+	HealthBarComp->SetupAttachment(GetRootComponent());
+	HealthBarComp->SetWidgetClass(UEnemyHealthWidget::StaticClass());
+	HealthBarComp->SetWidgetSpace(EWidgetSpace::Screen);
+	HealthBarComp->SetDrawSize(FVector2D(140.0f, 14.0f));
+	HealthBarComp->SetRelativeLocation(FVector(0.0f, 0.0f, 200.0f));
 }
 
 void AEnemy::BeginPlay()
@@ -73,6 +83,7 @@ void AEnemy::BeginPlay()
 	CurrentHealth = MaxHealth;
 	State = EEnemyState::Idle;
 	HomeLocation = GetActorLocation();
+	UpdateHealthBar();
 
 	// Apply the (possibly Editor-tuned) approach speed; the constructor only
 	// sees the C++ default.
@@ -245,6 +256,10 @@ float AEnemy::TakeDamage(float Damage, const struct FDamageEvent& DamageEvent,
 	{
 		Die();
 	}
+	else
+	{
+		UpdateHealthBar();
+	}
 
 	return Damage;
 }
@@ -268,6 +283,10 @@ void AEnemy::Die()
 	if (DeathAnim && GetMesh())
 	{
 		GetMesh()->PlayAnimation(DeathAnim, false);
+	}
+	if (HealthBarComp)
+	{
+		HealthBarComp->SetVisibility(false);
 	}
 
 	// Fight->Loot->Improve: grant XP + loot to the killer's components.
@@ -323,6 +342,22 @@ void AEnemy::ApplyDamage(float Damage, AActor* DamageCauser, const FVector& Dama
 	if (CurrentHealth <= 0.0f)
 	{
 		Die();
+	}
+	else
+	{
+		UpdateHealthBar();
+	}
+}
+
+void AEnemy::UpdateHealthBar()
+{
+	if (!HealthBarComp)
+	{
+		return;
+	}
+	if (UEnemyHealthWidget* Bar = Cast<UEnemyHealthWidget>(HealthBarComp->GetUserWidgetObject()))
+	{
+		Bar->SetFraction(MaxHealth > 0.0f ? CurrentHealth / MaxHealth : 0.0f);
 	}
 }
 
