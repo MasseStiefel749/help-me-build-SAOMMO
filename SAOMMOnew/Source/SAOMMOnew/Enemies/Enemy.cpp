@@ -55,6 +55,13 @@ void AEnemy::BeginPlay()
 
 	CurrentHealth = MaxHealth;
 	State = EEnemyState::Idle;
+
+	// Apply the (possibly Editor-tuned) approach speed; the constructor only
+	// sees the C++ default.
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = ApproachSpeed;
+	}
 }
 
 void AEnemy::Tick(float DeltaTime)
@@ -105,6 +112,12 @@ void AEnemy::UpdateState(float DeltaTime)
 			if (Dist <= AttackRange)
 			{
 				State = EEnemyState::Attack;
+			}
+			else if (Dist > DetectRange * 2.0f)
+			{
+				// Leash: outran the encounter, drop back to idle.
+				TargetPawn = nullptr;
+				State = EEnemyState::Idle;
 			}
 			else
 			{
@@ -216,6 +229,9 @@ void AEnemy::Die()
 	}
 	bDead = true;
 	State = EEnemyState::Idle;
+	// Stop the FSM immediately: without this the corpse re-aggros and slides
+	// during its remaining lifespan.
+	SetActorTickEnabled(false);
 
 	// Fight->Loot->Improve: grant XP + loot to the killer's components.
 	if (APawn* KillerPawn = Killer.IsValid() ? Killer->GetPawn() : nullptr)

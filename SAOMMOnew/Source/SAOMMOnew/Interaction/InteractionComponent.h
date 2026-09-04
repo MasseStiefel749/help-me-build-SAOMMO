@@ -28,7 +28,7 @@ public:
 
 	/** Maximum interaction reach. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction", meta = (ClampMin = 0, ClampMax = 1000, Units = "cm"))
-	float InteractionRange = 200.0f;
+	float InteractionRange = 350.0f;
 
 	/** Channel used for the interaction trace. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")

@@ -159,6 +159,12 @@ void APlayerCharacter::UpdateCameraAttachment()
 		FollowCamera->SetRelativeLocation(FVector(0.0f, 0.0f, FirstPersonEyeHeight));
 		FollowCamera->bUsePawnControlRotation = true;
 		CameraBoom->bDoCollisionTest = false;
+		// Hide our own head/body from our own camera (the sword stays
+		// visible: it is a separate owned actor, not part of the mesh).
+		if (GetMesh())
+		{
+			GetMesh()->SetOwnerNoSee(true);
+		}
 	}
 	else
 	{
@@ -167,6 +173,10 @@ void APlayerCharacter::UpdateCameraAttachment()
 		FollowCamera->bUsePawnControlRotation = false;
 		CameraBoom->TargetArmLength = ThirdPersonBoomLength;
 		CameraBoom->bDoCollisionTest = true;
+		if (GetMesh())
+		{
+			GetMesh()->SetOwnerNoSee(false);
+		}
 	}
 }
 
@@ -290,7 +300,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		}
 		if (ToggleCameraAction)
 		{
-			EnhancedInput->BindAction(ToggleCameraAction, ETriggerEvent::Triggered, this, &APlayerCharacter::OnToggleCamera);
+			EnhancedInput->BindAction(ToggleCameraAction, ETriggerEvent::Started, this, &APlayerCharacter::OnToggleCamera);
 		}
 		if (AttackAction)
 		{

@@ -3,6 +3,7 @@
 #include "InteractionComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "ItemPickup.h"
 
 UInteractionComponent::UInteractionComponent()
@@ -23,6 +24,24 @@ void UInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	UpdateFocus();
 }
 
+/** Shared trace endpoints: pawn eye + view direction when available (aims
+ *  with the camera, including first-person pitch), else actor forward. */
+static void GetTraceEndpoints(AActor* Owner, float Range, FVector& OutStart, FVector& OutEnd)
+{
+	if (const APawn* Pawn = Cast<APawn>(Owner))
+	{
+		FVector ViewLocation;
+		FRotator ViewRotation;
+		Pawn->GetActorEyesViewPoint(ViewLocation, ViewRotation);
+		OutStart = ViewLocation;
+		OutEnd = ViewLocation + ViewRotation.Vector() * Range;
+		return;
+	}
+
+	OutStart = Owner->GetActorLocation();
+	OutEnd = OutStart + Owner->GetActorForwardVector() * Range;
+}
+
 AActor* UInteractionComponent::UpdateFocus()
 {
 	FocusedActor = nullptr;
@@ -34,8 +53,8 @@ AActor* UInteractionComponent::UpdateFocus()
 		return nullptr;
 	}
 
-	const FVector Start = Owner->GetActorLocation();
-	const FVector End = Start + Owner->GetActorForwardVector() * InteractionRange;
+	FVector Start, End;
+	GetTraceEndpoints(Owner, InteractionRange, Start, End);
 
 	FHitResult Hit;
 	FCollisionQueryParams Params;
@@ -57,8 +76,8 @@ void UInteractionComponent::Interact()
 		return;
 	}
 
-	const FVector Start = Owner->GetActorLocation();
-	const FVector End = Start + Owner->GetActorForwardVector() * InteractionRange;
+	FVector Start, End;
+	GetTraceEndpoints(Owner, InteractionRange, Start, End);
 
 	FHitResult Hit;
 	FCollisionQueryParams Params;

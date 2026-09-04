@@ -136,8 +136,9 @@ void AMainPlayerController::BuildFallbackMapping()
 	const int32 D = AddKey(MoveAction, EKeys::D);
 	const int32 S = AddKey(MoveAction, EKeys::S);
 	const int32 A = AddKey(MoveAction, EKeys::A);
-	const int32 MouseX = AddKey(LookAction, EKeys::MouseX);
-	const int32 MouseY = AddKey(LookAction, EKeys::MouseY);
+	// Mouse as ONE Vector2D key (stock template pattern): separate MouseX /
+	// MouseY axis keys inject on the wrong axis. Negate Y for standard look.
+	const int32 Mouse = AddKey(LookAction, EKeys::Mouse2D);
 	AddKey(JumpAction, EKeys::SpaceBar);
 	AddKey(AttackAction, EKeys::LeftMouseButton);
 	AddKey(ToggleCameraAction, EKeys::V);
@@ -169,14 +170,13 @@ void AMainPlayerController::BuildFallbackMapping()
 		FallbackMapping->GetMapping(Index).Modifiers.Add(Swizzle);
 	};
 
-	// S = backward (-Y), A = left (-X), MouseY negated for standard look.
+	// S = backward (-Y), A = left (-X), mouse pitch negated for standard look.
 	SwizzleY(W);
 	SwizzleY(S);
 	Negate(S, false, true);
 	Negate(A, true, false);
-	Negate(MouseY, false, true);
+	Negate(Mouse, false, true);
 	(void)D;
-	(void)MouseX;
 }
 
 void AMainPlayerController::OnPossess(APawn* InPawn)

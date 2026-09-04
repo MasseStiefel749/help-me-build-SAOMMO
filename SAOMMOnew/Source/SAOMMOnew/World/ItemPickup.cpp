@@ -28,6 +28,18 @@ AItemPickup::AItemPickup()
 	Item.DisplayName = FText::FromString(TEXT("Health Herb"));
 	Item.Type = EItemType::Consumable;
 	Item.Count = 2;
+
+	PickupVolume->OnComponentBeginOverlap.AddDynamic(this, &AItemPickup::OnPickupOverlap);
+}
+
+void AItemPickup::OnPickupOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// Only pawns with somewhere to put it (avoids enemies vacuuming loot).
+	if (OtherActor && OtherActor->FindComponentByClass<UInventoryComponent>())
+	{
+		TryPickup(OtherActor);
+	}
 }
 
 void AItemPickup::Configure(FName ItemId, int32 Count)
