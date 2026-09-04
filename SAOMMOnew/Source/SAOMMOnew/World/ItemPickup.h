@@ -38,6 +38,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pickup")
 	bool TryPickup(AActor* Caller);
 
+	/** Sets the granted item id/count (script and Editor friendly). */
+	UFUNCTION(BlueprintCallable, Category = "Pickup")
+	void Configure(FName ItemId, int32 Count);
+
 protected:
 
 	/** Overlap / interaction volume. */

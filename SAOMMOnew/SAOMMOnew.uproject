@@ -106,6 +106,13 @@
       ]
     },
     {
+      "Name": "PythonScriptPlugin",
+      "Enabled": true,
+      "TargetAllowList": [
+        "Editor"
+      ]
+    },
+    {
       "Name": "CommonUI",
       "Enabled": true
     }

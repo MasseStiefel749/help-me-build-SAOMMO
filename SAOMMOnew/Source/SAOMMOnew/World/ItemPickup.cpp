@@ -22,6 +22,21 @@ AItemPickup::AItemPickup()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(PickupVolume);
 	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Sensible blockout default so a freshly placed pickup works with no setup.
+	Item.ItemId = FName(TEXT("HealthHerb"));
+	Item.DisplayName = FText::FromString(TEXT("Health Herb"));
+	Item.Type = EItemType::Consumable;
+	Item.Count = 2;
+}
+
+void AItemPickup::Configure(FName ItemId, int32 Count)
+{
+	if (!ItemId.IsNone() && Count > 0)
+	{
+		Item.ItemId = ItemId;
+		Item.Count = Count;
+	}
 }
 
 bool AItemPickup::TryPickup(AActor* Caller)
