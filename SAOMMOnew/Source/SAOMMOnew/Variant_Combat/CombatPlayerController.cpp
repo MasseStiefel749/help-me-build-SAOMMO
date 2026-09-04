@@ -57,7 +57,7 @@ void ACombatPlayerController::SetupInputComponent()
 
 		} else {
 
-			UE_LOG(LogSAOMMOnew, Error, TEXT("Could not spawn mobile controls widget."));
+			UE_LOG(LogGame, Error, TEXT("Could not spawn mobile controls widget."));
 
 		}
 

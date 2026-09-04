@@ -1,0 +1,273 @@
+// Copyright Epic Games, Inc. All Rights Reserved.
+
+#include "Enemy.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/Controller.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Engine/DamageEvents.h"
+#include "ProgressionComponent.h"
+#include "InventoryComponent.h"
+#include "ItemTypes.h"
+
+AEnemy::AEnemy()
+{
+	PrimaryActorTick.bCanEverTick = true;
+
+	GetCapsuleComponent()->InitCapsuleSize(35.0f, 90.0f);
+
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = ApproachSpeed;
+	}
+}
+
+void AEnemy::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CurrentHealth = MaxHealth;
+	State = EEnemyState::Idle;
+}
+
+void AEnemy::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	UpdateState(DeltaTime);
+}
+
+void AEnemy::UpdateState(float DeltaTime)
+{
+	const UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	// Acquire / validate the target once per tick.
+	if (!TargetPawn.IsValid())
+	{
+		if (APawn* Player = UGameplayStatics::GetPlayerPawn(World, 0))
+		{
+			TargetPawn = Player;
+		}
+	}
+
+	switch (State)
+	{
+	case EEnemyState::Idle:
+		if (TargetPawn.IsValid())
+		{
+			const float Dist = FVector::Dist(GetActorLocation(), TargetPawn->GetActorLocation());
+			if (Dist <= DetectRange)
+			{
+				State = EEnemyState::Approach;
+			}
+		}
+		break;
+
+	case EEnemyState::Approach:
+		if (!TargetPawn.IsValid())
+		{
+			State = EEnemyState::Idle;
+			break;
+		}
+		{
+			const float Dist = FVector::Dist(GetActorLocation(), TargetPawn->GetActorLocation());
+			if (Dist <= AttackRange)
+			{
+				State = EEnemyState::Attack;
+			}
+			else
+			{
+				MoveTowardTarget(DeltaTime);
+			}
+		}
+		break;
+
+	case EEnemyState::Attack:
+		if (!TargetPawn.IsValid())
+		{
+			State = EEnemyState::Idle;
+			break;
+		}
+		PerformAttack();
+		RecoverRemaining = RecoverTime;
+		State = EEnemyState::Recover;
+		break;
+
+	case EEnemyState::Recover:
+		RecoverRemaining -= DeltaTime;
+		if (RecoverRemaining <= 0.0f)
+		{
+			State = EEnemyState::Approach;
+		}
+		break;
+
+	default:
+		break;
+	}
+}
+
+void AEnemy::MoveTowardTarget(float DeltaTime)
+{
+	if (!TargetPawn.IsValid())
+	{
+		return;
+	}
+
+	const FVector Direction = (TargetPawn->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+	const FVector NewLocation = GetActorLocation() + Direction * ApproachSpeed * DeltaTime;
+
+	SetActorLocation(NewLocation, true);
+	SetActorRotation(Direction.Rotation());
+}
+
+void AEnemy::PerformAttack()
+{
+	if (!TargetPawn.IsValid() || !bAttackReady)
+	{
+		return;
+	}
+
+	const float Dist = FVector::Dist(GetActorLocation(), TargetPawn->GetActorLocation());
+	if (Dist <= AttackRange)
+	{
+		TargetPawn->TakeDamage(AttackDamage, FDamageEvent(), GetController(), this);
+		bAttackReady = false;
+		// Cooldown tied to the recover period (was SetTimerForNextTick = no cooldown).
+		if (UWorld* World = GetWorld())
+		{
+			FTimerHandle Handle;
+			World->GetTimerManager().SetTimer(Handle, [this]()
+			{
+				bAttackReady = true;
+			}, FMath::Max(0.1f, RecoverTime), false);
+		}
+		else
+		{
+			bAttackReady = true;
+		}
+	}
+}
+
+float AEnemy::TakeDamage(float Damage, const struct FDamageEvent& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	if (bDead || CurrentHealth <= 0.0f || Damage <= 0.0f)
+	{
+		return 0.0f;
+	}
+
+	if (EventInstigator)
+	{
+		Killer = EventInstigator;
+	}
+	else if (DamageCauser)
+	{
+		// Melee path passes the sword as causer with a null controller;
+		// credit its instigator so XP/loot still route to the killer.
+		Killer = DamageCauser->GetInstigatorController();
+	}
+
+	CurrentHealth = FMath::Max(0.0f, CurrentHealth - Damage);
+
+	if (CurrentHealth <= 0.0f)
+	{
+		Die();
+	}
+
+	return Damage;
+}
+
+void AEnemy::Die()
+{
+	if (bDead)
+	{
+		return;
+	}
+	bDead = true;
+	State = EEnemyState::Idle;
+
+	// Fight->Loot->Improve: grant XP + loot to the killer's components.
+	if (APawn* KillerPawn = Killer.IsValid() ? Killer->GetPawn() : nullptr)
+	{
+		if (UProgressionComponent* Prog = KillerPawn->FindComponentByClass<UProgressionComponent>())
+		{
+			Prog->AddExperience(XPReward);
+		}
+		if (!LootItemId.IsNone() && LootCount > 0)
+		{
+			if (UInventoryComponent* Inv = KillerPawn->FindComponentByClass<UInventoryComponent>())
+			{
+				FInventoryItem Loot;
+				Loot.ItemId = LootItemId;
+				Loot.Count = LootCount;
+				Inv->AddItem(Loot);
+			}
+		}
+	}
+
+	OnDied.Broadcast();
+
+	if (GetWorld())
+	{
+		SetLifeSpan(2.0f);
+	}
+	else
+	{
+		Destroy();
+	}
+}
+
+void AEnemy::ApplyDamage(float Damage, AActor* DamageCauser, const FVector& DamageLocation, const FVector& DamageImpulse)
+{
+	if (bDead || CurrentHealth <= 0.0f || Damage <= 0.0f)
+	{
+		return;
+	}
+
+	if (DamageCauser)
+	{
+		Killer = DamageCauser->GetInstigatorController();
+	}
+
+	CurrentHealth = FMath::Max(0.0f, CurrentHealth - Damage);
+
+	if (DamageImpulse.SizeSquared() > KINDA_SMALL_NUMBER && GetCharacterMovement())
+	{
+		GetCharacterMovement()->AddImpulse(DamageImpulse, true);
+	}
+
+	if (CurrentHealth <= 0.0f)
+	{
+		Die();
+	}
+}
+
+void AEnemy::HandleDeath()
+{
+	Die();
+}
+
+void AEnemy::ApplyHealing(float Healing, AActor* Healer)
+{
+	CurrentHealth = FMath::Min(MaxHealth, CurrentHealth + Healing);
+}
+
+void AEnemy::NotifyDanger(const FVector& DangerLocation, AActor* DangerSource)
+{
+	// First prototype: simply become aware of the player when danger is nearby.
+	if (APawn* Player = Cast<APawn>(DangerSource))
+	{
+		TargetPawn = Player;
+		if (State == EEnemyState::Idle)
+		{
+			State = EEnemyState::Approach;
+		}
+	}
+}
