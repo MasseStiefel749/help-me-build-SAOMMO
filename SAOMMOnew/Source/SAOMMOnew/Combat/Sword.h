@@ -70,6 +70,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SetShadowCasting(bool bEnabled);
 
+	/** Tries a grip orientation by index (playtest cycler): applies the
+	 *  rotation to all parts and rotates the authored offsets with it, so
+	 *  the assembly stays rigid for every candidate. */
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void ApplyGripPose(int32 Index);
+
 	/** Minimum time between two hits against the same actor. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (ClampMin = 0, ClampMax = 5, Units = "s"))
 	float PerTargetCooldown = 0.4f;

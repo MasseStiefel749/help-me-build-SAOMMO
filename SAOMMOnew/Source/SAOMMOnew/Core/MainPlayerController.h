@@ -57,6 +57,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UInputMappingContext> FallbackMapping = nullptr;
 
+	/** Sword grip playtest cycler index (advanced on every possession). */
+	int32 SwordPoseIndex = 0;
+
 	/** Character class to respawn when the possessed pawn is destroyed. */
 	UPROPERTY(EditAnywhere, Category = "Respawn")
 	TSubclassOf<APlayerCharacter> CharacterClass;
