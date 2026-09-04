@@ -2,6 +2,7 @@
 
 #include "PlayerHudWidget.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/ProgressBar.h"
@@ -11,6 +12,8 @@
 #include "PlayerCharacter.h"
 #include "ProgressionComponent.h"
 #include "InteractionComponent.h"
+#include "InventoryComponent.h"
+#include "Sword.h"
 
 void UPlayerHudWidget::NativeConstruct()
 {
@@ -50,6 +53,31 @@ void UPlayerHudWidget::NativeConstruct()
 				CrossSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
 				CrossSlot->SetOffsets(FMargin(-12.0f, -16.0f, 24.0f, 32.0f));
 				CrossSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			}
+		}
+
+		// Inventory screen: dark centered panel, hidden until toggled.
+		InvBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("InvBorder"));
+		InvBorder->SetBrushColor(FLinearColor(0.02f, 0.03f, 0.05f, 0.92f));
+		InvBorder->SetPadding(FMargin(24.0f));
+		InventoryPanel = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("InventoryPanel"));
+		UTextBlock* InvTitle = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("InvTitle"));
+		InvTitle->SetText(FText::FromString(TEXT("EQUIPMENT  (E / I to close)")));
+		InvTitle->SetColorAndOpacity(FLinearColor(0.4f, 0.9f, 1.0f));
+		InvBody = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("InvBody"));
+		InvBody->SetColorAndOpacity(FLinearColor(0.92f, 0.92f, 0.92f));
+		InventoryPanel->AddChildToVerticalBox(InvTitle);
+		InventoryPanel->AddChildToVerticalBox(InvBody);
+		InvBorder->SetContent(InventoryPanel);
+		InvBorder->SetVisibility(ESlateVisibility::Collapsed);
+
+		if (Canvas)
+		{
+			if (UCanvasPanelSlot* InvSlot = Canvas->AddChildToCanvas(InvBorder))
+			{
+				InvSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
+				InvSlot->SetOffsets(FMargin(-260.0f, -210.0f, 520.0f, 420.0f));
+				InvSlot->SetAlignment(FVector2D(0.5f, 0.5f));
 			}
 		}
 	}
@@ -97,6 +125,77 @@ void UPlayerHudWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 	}
 
 	SetStats(CurrentHealth, MaxHealth, Level, Experience, FocusName);
+}
+
+void UPlayerHudWidget::ToggleInventory()
+{
+	bInventoryOpen = !bInventoryOpen;
+	if (InvBorder)
+	{
+		InvBorder->SetVisibility(bInventoryOpen ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+	if (bInventoryOpen)
+	{
+		RefreshInventory();
+	}
+}
+
+void UPlayerHudWidget::RefreshInventory()
+{
+	if (!InvBody)
+	{
+		return;
+	}
+
+	const APlayerCharacter* Character = Cast<APlayerCharacter>(GetOwningPlayerPawn());
+	if (!Character)
+	{
+		InvBody->SetText(FText::FromString(TEXT("(no character)")));
+		return;
+	}
+
+	FString Body;
+	int32 Level = 1;
+	float Experience = 0.0f;
+	if (const UProgressionComponent* Prog = Character->GetProgression())
+	{
+		Level = Prog->Level;
+		Experience = Prog->Experience;
+	}
+	Body += FString::Printf(TEXT("Lv %d   XP %.0f\n"), Level, Experience);
+	Body += FString::Printf(TEXT("HP %.0f / %.0f\n\n"), Character->GetHealth(), Character->GetMaxHealth());
+
+	if (const ASword* Sword = Character->GetEquippedSword())
+	{
+		Body += FString::Printf(TEXT("Weapon: Sword  (DMG %.0f)\n\n"), Sword->Damage);
+	}
+	else
+	{
+		Body += TEXT("Weapon: -\n\n");
+	}
+
+	Body += TEXT("--- Inventory ---\n");
+	bool bAny = false;
+	if (const UInventoryComponent* Inv = Character->GetInventory())
+	{
+		for (const FInventoryItem& Item : Inv->Items)
+		{
+			if (Item.Count <= 0)
+			{
+				continue;
+			}
+			bAny = true;
+			const FString Name = Item.DisplayName.IsEmpty() ? Item.ItemId.ToString() : Item.DisplayName.ToString();
+			Body += FString::Printf(TEXT("%s  x%d\n"), *Name, Item.Count);
+		}
+	}
+	if (!bAny)
+	{
+		Body += TEXT("(empty — kill enemies, grab pickups)\n");
+	}
+
+	Body += TEXT("\nWASD move · Mouse look · LMB attack · E interact · V camera · I inventory");
+	InvBody->SetText(FText::FromString(Body));
 }
 
 void UPlayerHudWidget::SetStats(float CurrentHealth, float MaxHealth, int32 Level, float Experience, const FString& FocusName)

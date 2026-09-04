@@ -143,6 +143,9 @@ void AMainPlayerController::BuildFallbackMapping()
 	AddKey(AttackAction, EKeys::LeftMouseButton);
 	AddKey(ToggleCameraAction, EKeys::V);
 	AddKey(InteractAction, EKeys::E);
+	// I opens the inventory directly: same action, and OnInteract toggles
+	// the screen whenever nothing is in reach anyway.
+	AddKey(InteractAction, EKeys::I);
 
 	auto Negate = [&](int32 Index, bool bX, bool bY)
 	{
@@ -198,6 +201,14 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 void AMainPlayerController::SetRespawnTransform(const FTransform& NewRespawn)
 {
 	RespawnTransform = NewRespawn;
+}
+
+void AMainPlayerController::ToggleInventory()
+{
+	if (HudWidget)
+	{
+		HudWidget->ToggleInventory();
+	}
 }
 
 bool AMainPlayerController::SaveProgress()

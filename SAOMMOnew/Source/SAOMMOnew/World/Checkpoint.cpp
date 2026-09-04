@@ -21,7 +21,9 @@ ACheckpoint::ACheckpoint()
 	CheckpointVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CheckpointVolume->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-	// Visible landmark pillar (was fully invisible before).
+	// Visible landmark pillar (was fully invisible before). Offset to the
+	// side so a checkpoint placed exactly on a spawn point does not swallow
+	// the player, and slimmed so it marks without blocking the view.
 	BeaconMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BeaconMesh"));
 	BeaconMesh->SetupAttachment(CheckpointVolume);
 	BeaconMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -30,8 +32,8 @@ ACheckpoint::ACheckpoint()
 	if (BeaconObj.Succeeded())
 	{
 		BeaconMesh->SetStaticMesh(BeaconObj.Object);
-		BeaconMesh->SetRelativeScale3D(FVector(0.5f, 0.5f, 6.0f));
-		BeaconMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 300.0f));
+		BeaconMesh->SetRelativeScale3D(FVector(0.3f, 0.3f, 4.0f));
+		BeaconMesh->SetRelativeLocation(FVector(250.0f, 0.0f, 200.0f));
 	}
 }
 

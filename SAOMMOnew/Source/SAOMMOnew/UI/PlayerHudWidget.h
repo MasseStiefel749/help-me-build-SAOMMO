@@ -9,6 +9,7 @@
 class UProgressBar;
 class UTextBlock;
 class UVerticalBox;
+class UBorder;
 
 /**
  *  Code-only HUD (Band 3 playable feedback, no Editor widget needed).
@@ -27,6 +28,14 @@ public:
 	/** Pushes fresh stats into the bars/texts. */
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void SetStats(float CurrentHealth, float MaxHealth, int32 Level, float Experience, const FString& FocusName);
+
+	/** Toggles the inventory screen (E with empty hands / I key). */
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void ToggleInventory();
+
+	/** True while the inventory screen is shown. */
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	bool IsInventoryOpen() const { return bInventoryOpen; }
 
 protected:
 
@@ -48,4 +57,20 @@ protected:
 	/** Center-screen aim crosshair. */
 	UPROPERTY()
 	TObjectPtr<UTextBlock> Crosshair = nullptr;
+
+	/** Inventory screen root (hidden unless open). */
+	UPROPERTY()
+	TObjectPtr<UVerticalBox> InventoryPanel = nullptr;
+
+	/** Dark backing border toggled together with the panel. */
+	UPROPERTY()
+	TObjectPtr<UBorder> InvBorder = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> InvBody = nullptr;
+
+	bool bInventoryOpen = false;
+
+	/** Rebuilds the inventory text from the possessed pawn. */
+	void RefreshInventory();
 };

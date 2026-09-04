@@ -48,8 +48,14 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	const float SwingSpeed = Sword ? Sword->GetSwingVelocity().Size() : 0.0f;
 
 	// Rising edge of attack intent, or a fast swing, starts an armed window.
+	// Velocity arming ONLY counts on motion devices: on desktop the sword is
+	// glued to the body, so walking (400 cm/s) would arm it permanently and
+	// every step would attack. Desktop attacks come from the LMB edge only.
+	const bool bFromMotionDevice = InputFrame
+		&& (InputFrame->CurrentFrame.SourceDevice == EInputDevice::VRController
+			|| InputFrame->CurrentFrame.SourceDevice == EInputDevice::BudgetVR);
 	const bool bRisingEdge = bAttack && !bPrevAttack;
-	if (bRisingEdge || SwingSpeed >= SwingArmThreshold)
+	if (bRisingEdge || (bFromMotionDevice && SwingSpeed >= SwingArmThreshold))
 	{
 		ArmTimer = ArmedDuration;
 		if (!bArmed)

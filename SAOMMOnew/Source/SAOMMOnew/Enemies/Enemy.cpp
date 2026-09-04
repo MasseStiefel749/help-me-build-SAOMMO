@@ -30,6 +30,10 @@ AEnemy::AEnemy()
 		// Smooth turning toward movement input (replaces the old instant
 		// snap in MoveTowardTarget).
 		GetCharacterMovement()->bOrientRotationToMovement = true;
+		// REQUIRED: CharacterMovement skips simulation for controller-less
+		// pawns unless this is set — without it AddMovementInput does
+		// nothing and enemies stand frozen.
+		GetCharacterMovement()->bRunPhysicsWithNoController = true;
 	}
 
 	// Visible body: Quinn mesh so enemies read differently from the player.

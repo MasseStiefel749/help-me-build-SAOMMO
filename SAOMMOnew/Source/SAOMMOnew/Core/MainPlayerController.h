@@ -96,6 +96,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Save")
 	bool LoadProgress();
 
+	/** Toggles the inventory screen (safe with no HUD yet). */
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void ToggleInventory();
+
 	/** Save slot name (shared with UPlayerSaveGame default). */
 	UPROPERTY(EditAnywhere, Category = "Save")
 	FString SaveSlotName = TEXT("PlayerSave");

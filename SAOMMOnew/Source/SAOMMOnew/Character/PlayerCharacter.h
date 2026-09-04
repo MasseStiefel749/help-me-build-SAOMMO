@@ -142,6 +142,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	UInteractionComponent* GetInteraction() const { return InteractionComponent; }
 
+	/** Returns the equipped sword (null before BeginPlay spawns it). */
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	ASword* GetEquippedSword() const { return EquippedSword; }
+
 	/** Returns current health. */
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	float GetHealth() const { return CurrentHealth; }

@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PlayerCharacter.h"
+#include "MainPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
@@ -233,9 +234,21 @@ void APlayerCharacter::OnAttack(const FInputActionValue& Value)
 
 void APlayerCharacter::OnInteract(const FInputActionValue& Value)
 {
-	if (InteractionComponent)
+	if (!InteractionComponent)
 	{
-		InteractionComponent->Interact();
+		return;
+	}
+
+	InteractionComponent->Interact();
+
+	// Nothing in reach: E/I doubles as the inventory screen toggle (matches
+	// player expectation from the reference UI; a dedicated key comes later).
+	if (!InteractionComponent->GetFocusedActor())
+	{
+		if (AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
+		{
+			PC->ToggleInventory();
+		}
 	}
 }
 
