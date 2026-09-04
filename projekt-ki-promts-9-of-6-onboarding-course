@@ -1,0 +1,428 @@
+# SAOMMO — Onboarding Course
+
+**Document:** Band 9 — Onboarding Course
+**Project:** SAOMMO
+**Engine:** Unreal Engine 5.8.1
+**Audience:** Solo developer (Simon) and any new contributor
+**Format:** 10 chapters, ~100+ lessons, one verified step at a time
+**Version:** 1.0
+**Date:** 2026-08-15
+
+---
+
+# 1. Purpose
+
+This band is the **practical curriculum** for SAOMMO.
+
+Bands 1–8 describe *what* the project is and *why*.
+This band describes *how* to actually build it — chapter by chapter, step by step.
+
+Rule:
+
+> One chapter at a time. Verify before continuing.
+
+---
+
+# 2. Course Philosophy
+
+* **Small, verifiable steps.** Each lesson has a clear success condition.
+* **Verify, then proceed.** A step is not "done" until its check passes.
+* **Course is a course.** It teaches Unreal, not just SAOMMO. By the end you should understand *why* each piece exists.
+* **SAOMMO is built incrementally.** We never skip to the "interesting" system until its prerequisites are playable.
+
+Target length of a lesson: **30–60 minutes** of focused work.
+
+---
+
+# 3. Chapter Overview
+
+| #   | Chapter                       | Outcome                                       |
+| --- | ----------------------------- | --------------------------------------------- |
+| 1   | Development environment       | Engine, IDE, Git, repo all set up             |
+| 2   | Project creation              | SAOMMO C++ project generated from Third Person template |
+| 3   | First run                     | Play, walk, jump, verify                      |
+| 4   | First commit                  | Clean baseline in Git                         |
+| 5   | Plugins                       | VR / Input / AI / Animation / Graphics enabled |
+| 6   | Folder structure              | Content folders + Docs/Band1–Band6            |
+| 7   | Documentation in repo         | Bands live next to the code                   |
+| 8   | Build verification            | Visual Studio build succeeds                  |
+| 9   | First checkpoint              | "Project verified" commit                     |
+| 10  | First gameplay iteration      | Camera modes, VR, sword, combat, AI, test level |
+
+---
+
+# 4. Chapter 1 — Development Environment
+
+## Step 1 — Install Unreal Engine
+
+Install: **Unreal Engine 5.8.1**.
+
+Do **not** create a project yet.
+
+## Step 2 — Visual Studio
+
+Open the **Visual Studio Installer**, click **Modify**, install:
+
+* ✅ Desktop development with C++
+* ✅ Game development with C++
+
+Confirm the current Windows SDK and Unreal components are present, matching
+Epic's UE 5.8 recommendations.
+
+## Step 3 — Git
+
+Install:
+
+* Git
+* GitHub Desktop (optional, but recommended)
+
+## Step 4 — Repository
+
+Repository already exists: `help-me-build-SAOMMO`.
+
+✅ Chapter 1 done when: Launcher shows UE 5.8.1, VS has the C++ workloads, Git works, repository is cloned locally.
+
+---
+
+# 5. Chapter 2 — Project Creation
+
+Open Unreal Launcher.
+
+Path:
+
+```text
+Games
+  ↓
+Third Person
+```
+
+**Not First Person.**
+
+Settings:
+
+```text
+Project Name:        SAOMMO
+Project Type:        C++
+Quality:             Maximum
+Starter Content:     ON
+Raytracing:          OFF
+Target Platform:     Desktop
+```
+
+Click **Create**.
+
+Unreal generates the C++ project and opens it in Visual Studio.
+
+✅ Chapter 2 done when: `SAOMMO.uproject` exists, `.sln` opens in VS without errors.
+
+---
+
+# 6. Chapter 3 — First Run
+
+Do **not** modify anything yet.
+
+Verify:
+
+* Can you press **Play**?
+* Does the game run?
+* Can you walk?
+* Can you jump?
+
+If yes → continue. If no → fix the environment before touching anything else.
+
+---
+
+# 7. Chapter 4 — First Commit
+
+```text
+Initial Project Setup
+```
+
+✅ Chapter 4 done when: commit visible in Git history.
+
+---
+
+# 8. Chapter 5 — Plugins
+
+Path:
+
+```text
+Edit
+  ↓
+Plugins
+```
+
+Enable:
+
+## VR
+
+* ✅ OpenXR
+* ✅ OpenXR Hand Tracking
+* ✅ OpenXR Eye Tracker
+* ✅ OpenXR MSFT Hand Interaction
+
+## Gameplay
+
+* ✅ Enhanced Input
+* ✅ Gameplay Tags
+
+## AI
+
+* ✅ AI Perception
+* ✅ Behavior Tree Editor
+* ✅ Environment Query System
+* ✅ StateTree
+
+## Animation
+
+* ✅ Control Rig
+* ✅ Full Body IK
+* ✅ IK Rig
+* ✅ IK Retargeter
+* ✅ Motion Matching
+* ✅ Motion Warping
+* ✅ Pose Search
+
+## Graphics
+
+* ✅ Niagara
+* ✅ PCG
+* ✅ Water
+* ✅ Landmass
+
+Restart the editor.
+
+✅ Chapter 5 done when: all listed plugins enabled, editor restarts cleanly.
+
+---
+
+# 9. Chapter 6 — Folder Structure
+
+In the Content Browser, create:
+
+```text
+Characters
+Enemies
+Weapons
+UI
+Levels
+Materials
+VFX
+Audio
+Animations
+Interfaces
+Data
+```
+
+---
+
+# 10. Chapter 7 — Documentation in Repo
+
+In the project folder:
+
+```text
+Docs/
+  Band1/
+  Band2/
+  Band3/
+  Band4/
+  Band5/
+  Band6/
+```
+
+Copy the prompt band files into their corresponding folders.
+
+> **Note for the live repo:** `help-me-build-SAOMMO/` already contains the
+> band files at the repo root. The `Docs/Band*` split is the recommended
+> layout *inside* the Unreal project once it is moved next to the bands.
+
+---
+
+# 11. Chapter 8 — Build Verification
+
+In Visual Studio:
+
+```text
+Build
+```
+
+When the output ends with:
+
+```text
+Build succeeded
+```
+
+the environment is correct.
+
+---
+
+# 12. Chapter 9 — First Checkpoint
+
+Still:
+
+* No swords.
+* No VR.
+* No AI.
+
+Only:
+
+1. Open project
+2. Press Play
+3. Walk
+4. Jump
+5. Close project
+6. Commit
+
+```text
+Project verified
+```
+
+✅ Chapter 9 done when: this commit exists.
+
+---
+
+# 13. Chapter 10 — First Gameplay Iteration
+
+Only now do we start programming.
+
+Order (do not reorder):
+
+1. Improve desktop movement
+2. Add First-Person camera
+3. Switch between First Person and Third Person
+4. Smooth camera transitions
+5. Add VR
+6. Add hands
+7. Add sword
+8. Add hit system
+9. Add enemies
+10. Add AI
+11. Build test level
+
+Each item above is a sub-course in itself (multiple lessons).
+
+---
+
+# 14. The Long Course (100+ Lessons)
+
+Beyond Chapter 10, the project becomes a multi-month curriculum.
+
+Suggested lesson clusters (each cluster = many 30–60-minute lessons):
+
+### Cluster A — Movement & Camera (≈10 lessons)
+
+* Smooth locomotion, sprint, jump tuning
+* First-person camera that doesn't fight the controller
+* Camera-mode switching without respawning the character
+* Camera lag, FOV transitions, headbob
+
+### Cluster B — VR Foundations (≈15 lessons)
+
+* OpenXR runtime setup and verification
+* Tracking origin and play space
+* Tracked hands, controllers, hand meshes
+* VR-safe UI rendering
+* Comfort options (vignette, snap turn, smooth turn)
+
+### Cluster C — Interaction (≈8 lessons)
+
+* Grab/drop with physics grips
+* Snap grips for weapons
+* Two-handed holds
+* Interaction component architecture
+
+### Cluster D — Sword & Combat (≈20 lessons)
+
+* `ASAOSword` actor: mesh, collision, owner
+* Sword velocity from tracked tip
+* Sphere / capsule trace hit detection
+* Damage flow into enemy health
+* Hit reactions, recovery, blocking
+* Sword trails and impact VFX
+
+### Cluster E — Enemies & AI (≈15 lessons)
+
+* `ASAOEnemy` actor + AI Controller
+* NavMesh, perception, Behavior Tree / StateTree
+* Simple combat loop: Idle → Detect → Approach → Attack → Recover → Repeat
+* Death and cleanup
+
+### Cluster F — World & Level (≈10 lessons)
+
+* Test arena layout
+* Lighting readable in VR
+* Modular environment kits
+* First dungeon teaser
+
+### Cluster G — Camera-agnostic Input (≈10 lessons)
+
+* `FSAOInputFrame` and the abstraction layer
+* Desktop, VR, and Budget-VR providers feeding the same struct
+* Replayable input frames for debugging
+
+### Cluster H — Polish, Performance, Documentation (≈12 lessons)
+
+* Profiling for VR
+* Asset review against Band 5
+* Decision Log entries
+* ADR records
+* Git hygiene
+
+Total: well over 100 lessons, each small and verifiable.
+
+---
+
+# 15. Lesson Template
+
+Use this template for every lesson:
+
+```text
+Lesson:        <number + short title>
+Chapter / Cluster: <chapter or cluster>
+Goal:          <one sentence>
+Prerequisites: <what must already work>
+Files touched: <which files will change>
+Steps:         <numbered, atomic>
+Verify:        <how to confirm it works>
+Commit:        <commit message>
+Notes:         <why this exists, what it enables>
+```
+
+A lesson is **not done** if "Verify" fails.
+
+---
+
+# 16. When to Stop the Course
+
+The course ends when:
+
+* A player can move, switch cameras, enter VR, hold a sword, hit and kill an enemy, and restart — reliably.
+* The architecture in Band 2 is implemented (or its divergences are documented).
+* The first vertical slice in Band 3 §20 is complete.
+
+Until then: one lesson at a time.
+
+---
+
+# 17. Mentor Mode
+
+If you are an AI assistant guiding the developer through this course:
+
+* Never skip ahead. If a prerequisite is not verified, fix it first.
+* Never invent a lesson the developer did not ask for.
+* Surface conflicts between the live project (`SAOMMOnew/`, UE 5.8) and
+  older prompt text referencing UE 5.4.
+* After each lesson, summarize: what changed, what was verified, what is next.
+* Keep commits small and well-named.
+
+---
+
+# 18. Document Status
+
+Band 9 is the **practical** counterpart to the design bands 1–8.
+
+It evolves when:
+
+* a chapter is completed and lessons shift,
+* the live project changes engine version or template,
+* a verified lesson reveals a better order.

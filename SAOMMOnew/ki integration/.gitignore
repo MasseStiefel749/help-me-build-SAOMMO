@@ -1,0 +1,19 @@
+﻿# Ignore Unreal/Visual Studio build artifacts
+Saved/
+Intermediate/
+DerivedDataCache/
+Binaries/
+Build/
+*.sln.user
+*.VC.db
+*.suo
+*.opensdf
+*.pdb
+.vs/
+*.log
+*.sdf
+*.ipch
+*.obj
+*.exe
+*.dll
+*.lib

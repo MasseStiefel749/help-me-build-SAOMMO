@@ -1,0 +1,221 @@
+# SAOMMO — Story & Lore Bible
+
+**Document:** Band 7 — Story & Lore Bible
+**Project:** SAOMMO
+**Version:** 1.0
+**Status:** Active
+**Date:** 2026-08-15
+
+---
+
+# 1. Purpose
+
+This document is the authoritative reference for SAOMMO's narrative content.
+
+It is separate from:
+
+* Technical Architecture (Band 2)
+* Gameplay systems (Band 3)
+* World systems (Band 4)
+* Visual systems (Band 5)
+* AI coordination (Band 6)
+
+Technical systems must not silently change lore.
+Lore must not silently change technical systems.
+
+If both must change, both documents must be updated deliberately.
+
+---
+
+# 2. Core Setting
+
+SAOMMO takes place in a world that has been rebuilt after the fall of an ancient, sword-obsessed civilization.
+
+The player is born into this world and must find their own path within it.
+
+The tone is:
+
+* hopeful but cautious
+* grounded but with traces of a greater past
+* adventure-driven
+* respectful of skill and discipline
+
+---
+
+# 3. The Ancient Civilization (Authoritative Lore)
+
+Long ago, a great civilization flourished — one that believed true power could only be proven through mastery of the blade.
+
+## 3.1 Philosophy
+
+* The blade was treated as the highest expression of personal capability.
+* Skill with a weapon was the dominant social currency.
+* Martial discipline was valued above many other arts.
+
+## 3.2 Decline
+
+The civilization fell due to excessive zeal for combat:
+
+* Fewer people cared about sustaining the population (food, trade, infrastructure).
+* Internal conflicts were increasingly resolved through armed force.
+* Society lost the balance between warrior culture and civil society.
+
+## 3.3 Legacy
+
+The modern world is shaped by the task of rebuilding that shattered civilization.
+
+However, traces of the past world remain:
+
+* In many regions, skilled swordsmen still command great respect.
+* Ancient customs have not vanished — they have evolved.
+* Scattered across the world, hidden and heavily guarded, lie powerful **Artifacts** of that bygone era.
+* Obtaining an Artifact is the driving ambition of nearly every adventurer.
+
+---
+
+# 4. Player Premise
+
+> "Now, you too have been born into this world and must forge your own path within it."
+
+The player is not a chosen one at game start.
+
+They become noteworthy through:
+
+* skill
+* choices
+* reputation
+* discoveries
+
+The game must support this premise from the very first level: a new player is unremarkable until they act.
+
+---
+
+# 5. Major Narrative Themes
+
+The following themes should recur across quests, locations, and dialogue:
+
+1. **Reconstruction vs. Tradition** — How much of the old sword culture should be preserved?
+2. **Respect vs. Reverence** — Skilled fighters are respected, but blind worship of the blade caused collapse.
+3. **Hidden Power** — Artifacts are powerful but also dangerous; their discovery is meaningful.
+4. **Personal Path** — Each adventurer forges their own way.
+5. **Living World** — The world continues regardless of the player.
+
+---
+
+# 6. Factions (Initial Concept)
+
+Only introduce factions when the world actually needs them.
+
+Initial candidate archetypes:
+
+* **Reconstruction Orders** — groups dedicated to rebuilding civil society.
+* **Blade Traditions** — schools, guilds, or wandering masters preserving sword arts.
+* **Artifact Seekers** — adventurers, treasure hunters, scholars chasing relics.
+* **Local Authorities** — city guards, village councils, regional powers.
+
+These are concepts, not finished factions.
+Each faction requires:
+
+* purpose
+* territory or base
+* relationships to other factions
+* at least one representative character or NPC archetype
+
+---
+
+# 7. Locations (Initial Concept)
+
+The world should grow step by step.
+
+Early locations:
+
+* **Starting Town / Safe Zone** — low-threat, basic services, tutorial anchor.
+* **Training Grounds** — early combat practice.
+* **Wilderness Border** — first real enemies.
+* **First Dungeon / Ruin** — Artifact teaser; small but meaningful.
+
+Additional locations are added only when gameplay requires them.
+
+---
+
+# 8. Artifacts (Lore Anchor)
+
+Artifacts are the primary long-term motivation for high-level play.
+
+Each Artifact must have:
+
+* origin (which ancient tradition created it?)
+* power (what does it actually do in gameplay terms?)
+* location (where is it hidden / guarded?)
+* guardian(s) (who or what protects it?)
+* risk (why is retrieving it dangerous?)
+* story cost (what must the player sacrifice or decide?)
+
+Artifacts are not loot piñatas.
+They are narrative landmarks.
+
+---
+
+# 9. Tone and Language
+
+SAOMMO's tone is **adventure-first**, not grimdark.
+
+Avoid:
+
+* gratuitous cruelty
+* edgy nihilism
+* ironic detachment
+* pure power fantasy without consequence
+
+Prefer:
+
+* earnest characters
+* clear stakes
+* earned victories
+* respectful treatment of skill and discipline
+* moments of quiet between action
+
+---
+
+# 10. Narrative Authority Rules
+
+1. The World Bible (Band 4) and this Story Bible together define what is canon.
+2. Technical or gameplay AI must not silently invent new lore.
+3. Story or world AI must not silently change existing lore.
+4. If a contradiction is discovered, it must be documented and resolved.
+5. New lore should answer: *What question in the player's experience does this answer?*
+
+---
+
+# 11. Localization Note
+
+The project's narrative is authored bilingually:
+
+* German (primary author language)
+* English (working language for shared documentation)
+
+Both versions should convey identical meaning.
+When in doubt, the **canonical meaning** is the source of truth — translations must match it.
+
+---
+
+# 12. Open Questions (Document, Don't Invent)
+
+The following are intentionally unresolved:
+
+* Exact extent of the fallen civilization.
+* Names and histories of specific Artifact wielders.
+* Whether any "higher power" exists in the setting.
+* Whether the player character has any pre-set backstory.
+
+These are open by design.
+They must not be filled in by accident during content generation.
+
+---
+
+# 13. Document Status
+
+This document is the authoritative narrative reference for SAOMMO.
+
+It evolves when the project proves that a different story direction is better.
+Changes to core setting, themes, or artifact rules must be deliberate and traceable.

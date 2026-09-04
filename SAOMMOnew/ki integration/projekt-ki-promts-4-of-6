@@ -1,0 +1,404 @@
+# SAOMMO — World Bible
+
+**Document:** Band 4 — World Bible
+**Project:** SAOMMO
+**Version:** 1.2
+**Date:** 2026-08-15
+**Companion:** Band 7 — Story & Lore Bible
+**World docs:** `Docs/World/` (regions, factions, lore, test arena)
+
+---
+
+## 0. Lore Anchor
+
+The world described here exists in the aftermath of the fallen sword
+civilization described in **Band 7 — Story & Lore Bible**.
+
+World AI must read Band 7 before generating any new locations, factions,
+NPCs, or historical events. The two documents together define what is canon.
+
+**Canonical lore text (bilingual):**
+
+* `Docs/World/lore/lore-anchor.en.md`
+* `Docs/World/lore/lore-anchor.de.md`
+
+Legacy copies at repo root: `(en) storry vor promt 4`, `(de) storry vor promt 4`.
+
+---
+
+# 1. World Concept
+
+SAOMMO is designed around the concept of a persistent virtual world.
+
+The world should feel large, interconnected, and alive.
+
+The player should be able to move through a world containing:
+
+* settlements
+* wilderness
+* dungeons
+* dangerous regions
+* NPCs
+* monsters
+* players
+* resources
+* quests
+* hidden areas
+* major landmarks
+
+---
+
+# 2. World Development Strategy
+
+The final world may become extremely large.
+
+However, development begins with a small test environment.
+
+The initial test level should contain only what is necessary to test gameplay.
+
+The project should not attempt to construct the entire world before the core gameplay is proven.
+
+---
+
+# 3. World Structure
+
+The long-term world structure may contain:
+
+```text
+World
+│
+├── Major Regions
+│   ├── Cities
+│   ├── Villages
+│   ├── Wilderness
+│   ├── Dungeons
+│   └── Special Areas
+│
+├── NPCs
+├── Enemies
+├── Resources
+├── Quests
+├── Items
+└── Players
+```
+
+---
+
+# 4. Cities
+
+Cities should act as safe or relatively safe areas.
+
+Possible features:
+
+* shops
+* blacksmiths
+* quest NPCs
+* inns
+* player services
+* guild areas
+* storage
+* social spaces
+
+Cities should eventually become important multiplayer hubs.
+
+---
+
+# 5. Villages
+
+Villages are smaller settlements.
+
+They may contain:
+
+* NPCs
+* merchants
+* basic quests
+* crafting
+* local storylines
+* small services
+
+---
+
+# 6. Wilderness
+
+Wilderness areas provide exploration and combat.
+
+Possible elements:
+
+* forests
+* mountains
+* plains
+* rivers
+* caves
+* ruins
+* hidden locations
+* enemy camps
+
+---
+
+# 7. Dungeons
+
+Dungeons should provide controlled gameplay experiences.
+
+They may contain:
+
+* enemy encounters
+* environmental hazards
+* puzzles
+* loot
+* minibosses
+* bosses
+* unique mechanics
+
+---
+
+# 8. World Progression
+
+The world should provide progressively more dangerous areas.
+
+Possible structure:
+
+```text
+Safe Region
+   ↓
+Low-Level Region
+   ↓
+Medium-Level Region
+   ↓
+High-Level Region
+   ↓
+Endgame Region
+```
+
+The exact progression system is not fixed yet.
+
+---
+
+# 9. Enemy Ecology
+
+Enemies should belong to appropriate regions.
+
+Different regions may contain different enemy types.
+
+Eventually, enemies may have:
+
+* territory
+* patrols
+* spawn areas
+* behaviors
+* day/night behavior
+* faction relationships
+
+These systems should only be implemented when they improve gameplay.
+
+---
+
+# 10. NPC Ecology
+
+NPCs should make the world feel populated.
+
+They may have:
+
+* schedules
+* dialogue
+* jobs
+* relationships
+* faction affiliations
+* quest responsibilities
+
+Complex simulation is optional and should be introduced only when useful.
+
+---
+
+# 11. World Generation
+
+Potential tools include:
+
+* Landscape
+* PCG
+* World Partition
+* Data Layers
+* Level Instances
+* HLOD
+
+Procedural generation should support production rather than replace deliberate level design.
+
+Important locations should be manually designed when necessary.
+
+---
+
+# 12. World Partition
+
+World Partition may eventually be used for large areas.
+
+The purpose is to allow large worlds to be managed and streamed efficiently.
+
+Unreal Engine 5.4 provides World Partition functionality including runtime partitioning, data layers, HLOD support, and dedicated-server streaming capabilities.
+
+World Partition should not be introduced merely because the final world is intended to be large.
+
+It should be introduced when the project's actual world size requires it.
+
+---
+
+# 13. World Lore
+
+The lore should be stored separately from technical implementation.
+
+Technical systems must not arbitrarily change established lore.
+
+The World Bible is the authority for:
+
+* locations
+* factions
+* characters
+* history
+* terminology
+* major events
+* world rules
+
+---
+
+# 14. Lore Consistency
+
+When creating new content, the responsible AI or developer must verify:
+
+1. Does this contradict existing lore?
+2. Does the location already exist?
+3. Does the character already exist?
+4. Does the faction already exist?
+5. Does the event fit the timeline?
+
+If uncertain, the uncertainty must be documented rather than silently invented.
+
+---
+
+# 15. World Expansion
+
+The world should expand in stages:
+
+```text
+Test Arena
+ ↓
+Small Region
+ ↓
+Connected Regions
+ ↓
+Large World
+ ↓
+Persistent Multiplayer World
+```
+
+The world must grow alongside the gameplay systems.
+
+---
+
+# 16. World Design Principle
+
+The world should exist to support gameplay.
+
+A beautiful environment with no meaningful interaction is not automatically useful.
+
+Every major world system should answer:
+
+> What does this add to the player's experience?
+
+---
+
+# 17. Initial Playable Region — Starting Reach
+
+The first concrete world region is documented in:
+
+```text
+Docs/World/regions/01-starting-reach.md
+```
+
+It implements Band 7 §7 location concepts:
+
+| Concept | Working name | Role |
+| ------- | ------------ | ---- |
+| Starting town / safe zone | Brunnfeld | Hub, spawn, services (prototype) |
+| Training grounds | Klingenhof | Safe sword practice |
+| Wilderness border | Grauwaldrand | First real enemies |
+| First dungeon / ruin | Ruine des Ersten Griffs | Artifact teaser |
+
+All proper names are **provisional** until author approval (`Docs/World/open-questions.md`).
+
+---
+
+# 18. Factions at World Start
+
+Initial faction archetypes for world design:
+
+```text
+Docs/World/factions/initial-factions.md
+```
+
+Four concepts from Band 7 §6 are expanded with territory hints, tone, and Starting Reach footprint. Full faction mechanics are not part of the vertical slice.
+
+---
+
+# 19. Terminology
+
+Shared world vocabulary (EN/DE):
+
+```text
+Docs/World/terminology.md
+```
+
+World AI and narrative AI must use these terms consistently in new content.
+
+---
+
+# 20. Test Arena Level Brief
+
+Level-design requirements for the first playable map:
+
+```text
+Docs/World/test-arena-spec.md
+```
+
+Links world design to Band 3 §20 vertical slice and Band 9 Chapter 10.
+
+---
+
+# 21. Open Questions
+
+Unresolved lore and naming decisions:
+
+```text
+Docs/World/open-questions.md
+```
+
+**Rule:** If uncertain, document here — do not silently invent canon.
+
+---
+
+# 22. World AI Workflow
+
+Recommended workflow for World AI (extends Band 6 §23):
+
+```text
+Task assigned (world/locations/ecology)
+  ↓
+Read Band 7 + Band 4 + lore anchor
+  ↓
+Check Docs/World/ for existing regions/factions
+  ↓
+Verify consistency (§14 checklist)
+  ↓
+Propose minimal world content OR update Docs/World/
+  ↓
+Flag open questions if blocked
+  ↓
+Do not modify Source/ or gameplay code without scope
+```
+
+World AI **writes** to `Docs/World/` and Band 4 updates. World AI **reads** technical and gameplay bands; it does not change combat or engine architecture.
+
+---
+
+# 23. Document Status
+
+Band 4 §1–16 define world **principles**. §17–22 connect those principles to the **first playable region** and supporting docs under `Docs/World/`.
+
+When the vertical slice level is built in Unreal, update `01-starting-reach.md` and `test-arena-spec.md` with actual level names and asset paths.

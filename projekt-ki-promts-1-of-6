@@ -2,11 +2,16 @@
 
 **Document:** Band 1 — Master Vision
 **Project:** SAOMMO
-**Engine:** Unreal Engine 5.4.4
+**Engine:** Unreal Engine 5.8.1
 **Primary Language:** C++
 **Project Type:** VR / Desktop Action MMORPG
 **Status:** Development Foundation
-**Version:** 1.0
+**Version:** 1.1
+**Date:** 2026-08-15
+
+> **Engine version note:** Earlier bands of this project documentation referenced
+> UE 5.4.4. The live `SAOMMOnew` project and the onboarding course now target
+> UE 5.8.1. See Band 2 §0.1 for the full version policy.
 
 ---
 
@@ -301,7 +306,7 @@ MMO
 
 The initial technology stack is:
 
-* Unreal Engine 5.4.4
+* Unreal Engine 5.8.1
 * C++
 * Blueprints where appropriate
 * Enhanced Input
@@ -313,6 +318,10 @@ The initial technology stack is:
 Enhanced Input is intended to provide contextual and dynamic input mappings, which fits the requirement to support multiple control modes.
 
 OpenXR is the primary VR abstraction layer because it is designed to support different XR runtimes and controller interaction profiles.
+
+**Onboarding course:** the development environment, project setup, and plugin
+activation sequence that bring the foundation above online is documented as
+**Band 9 — Onboarding Course** (chapter-by-chapter, step-by-step).
 
 ---
 

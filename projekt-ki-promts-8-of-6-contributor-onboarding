@@ -1,0 +1,263 @@
+# SAOMMO — Contributor Onboarding Manual
+
+**Document:** Band 8 — Contributor Onboarding Manual
+**Project:** SAOMMO
+**Purpose:** Onboarding for human contributors and AI agents
+**Version:** 1.0
+**Date:** 2026-08-15
+
+---
+
+# 1. Purpose
+
+SAOMMO is an open-source VR MMORPG project. It welcomes outside contributions.
+
+This document explains how a contributor (human or AI) should approach the project.
+
+The README invites two paths:
+
+1. **Use one of the existing project KI prompts** as the basis for your work.
+2. **Contact the project owner by email** describing what you can offer.
+
+This manual makes both paths concrete.
+
+---
+
+# 2. Before You Start
+
+Before writing any code, asset, or document, you must:
+
+1. Read **Band 1 — Master Vision**.
+2. Read **Band 2 — Technical Architecture**.
+3. Read the bands relevant to your contribution:
+   * Gameplay work → Band 3
+   * World/Lore work → Band 4 + Band 7
+   * Art work → Band 5
+   * AI-assisted work → Band 6
+4. Inspect the existing implementation under `SAOMMOnew/`.
+5. Check recent Git history for context.
+
+If you do not understand why something is the way it is, ask before changing it.
+
+---
+
+# 3. Path A — Use a Project KI Prompt
+
+The project ships six prompt documents (and additional supporting ones):
+
+| Band | Topic                          | Use it when                                        |
+| ---- | ------------------------------ | -------------------------------------------------- |
+| 1    | Master Vision                  | You need overall project context                   |
+| 2    | Technical Architecture         | You are writing or modifying engine code           |
+| 3    | Gameplay Bible                 | You are designing or changing gameplay systems     |
+| 4    | World Bible                    | You are designing locations, regions, or ecology   |
+| 5    | Art & Asset Bible              | You are working on visuals, meshes, materials, VFX |
+| 6    | AI Development Manual          | You are an AI agent working on this project        |
+| 7    | Story & Lore Bible             | You are writing narrative, quests, NPCs, lore      |
+| 8    | Contributor Onboarding         | You are new to the project (this document)         |
+
+Pick the band closest to your task.
+Do not invent a new approach when an existing one covers your needs.
+
+---
+
+# 4. Path B — Contact the Project Owner
+
+Use Path B when:
+
+* You want to contribute a skill the project does not yet have a prompt for.
+* You want to propose a major architectural or narrative change.
+* You want long-term collaboration, not a single contribution.
+
+In your email, include:
+
+* Who you are (real name or handle).
+* What you can do (programming, art, audio, narrative, testing, infra, etc.).
+* What you want to work on (a specific system, asset, or document).
+* Why you are interested in SAOMMO.
+* A short proposal of your first concrete contribution.
+
+Do not start large work before contact is acknowledged.
+
+---
+
+# 5. Choosing the Right Engine Version
+
+The project documentation was originally written for **UE 5.4.4**.
+
+The current implementation (`SAOMMOnew/SAOMMOnew.uproject`) uses **UE 5.8**.
+
+**Rule for contributors:**
+
+* Match the version actually installed for the project.
+* Do not silently change the engine version.
+* If your work requires a version change, document it as a Decision Log entry (see Band 6 §15).
+
+---
+
+# 6. Project Layout
+
+The repository contains two top-level areas:
+
+```text
+help-me-build-SAOMMO/
+├── projekt-ki-promts-*    Documentation / prompt bands
+├── (de) storry vor promt 4  German lore draft
+├── (en) storry vor promt 4  English lore draft
+├── README.md
+└── SAOMMOnew/              Unreal Engine project
+    ├── SAOMMOnew.uproject
+    ├── Source/SAOMMOnew/   C++ module
+    ├── Config/             Engine and input configuration
+    └── Content/            Unreal assets
+```
+
+The Unreal project is the live implementation.
+The prompt files are the authoritative design and coordination documents.
+
+---
+
+# 7. Module Structure (Live)
+
+The current `SAOMMOnew` module ships with Epic's Lyra-style template variants:
+
+* `Variant_Combat`
+* `Variant_Platforming`
+* `Variant_SideScrolling`
+
+These variants exist as exploration starting points.
+SAOMMO's long-term target architecture (see Band 2) replaces them with:
+
+```text
+SAOMMOnew/
+├── Core
+├── Character
+├── Input
+├── VR
+├── Combat
+├── Interaction
+├── Enemies
+├── UI
+├── World
+├── Inventory
+└── Network
+```
+
+Contributors should not expand the variant structure as if it were the target architecture.
+It is a starting point, not the destination.
+
+---
+
+# 8. Required Reading Order for New Contributors
+
+1. README
+2. Band 1 — Master Vision
+3. Band 2 — Technical Architecture
+4. Band 7 — Story & Lore Bible
+5. The band relevant to your task
+6. Recent Git history
+7. The relevant source files under `SAOMMOnew/Source/`
+
+Skipping this order is the most common cause of misaligned contributions.
+
+---
+
+# 9. Contribution Workflow
+
+```text
+Propose scope
+     ↓
+Read relevant documentation
+     ↓
+Inspect existing code
+     ↓
+Plan minimal change
+     ↓
+Implement
+     ↓
+Verify (compile / test)
+     ↓
+Update documentation if needed
+     ↓
+Submit change (commit / PR / patch)
+```
+
+Rules:
+
+* Keep changes small and reviewable.
+* One logical change per commit.
+* Commit messages must describe what changed and why.
+* Do not rewrite working systems because you would do them differently.
+
+---
+
+# 10. What You Must Not Do
+
+* Do not delete or replace project directories.
+* Do not reset Git history.
+* Do not change the engine version without approval.
+* Do not introduce plugins that are not justified (see Band 6 §22).
+* Do not overwrite lore, faction history, or world rules silently.
+* Do not generate large amounts of code without verifying each system.
+
+---
+
+# 11. What You Are Encouraged To Do
+
+* Ask questions when something is unclear.
+* Document decisions as ADRs (see Band 6 §15).
+* Improve existing systems through small, well-scoped changes.
+* Add tests when introducing new logic.
+* Translate documentation between German and English when possible.
+* Help close gaps between Band 2's target architecture and the live `SAOMMOnew` module.
+
+---
+
+# 12. Communication Channels
+
+Until dedicated channels exist:
+
+* **Issues / Discussions:** GitHub repository
+* **Direct contact:** Email the project owner (see README)
+* **In-document questions:** Open a PR that proposes the change and explains the rationale
+
+There is currently no Discord, Slack, or Matrix channel.
+Do not invent one without authorization.
+
+---
+
+# 13. AI Agents Working on This Project
+
+If you are an AI agent:
+
+* Follow **Band 6 — AI Development Manual**.
+* Operate only within your assigned role (Technical, Gameplay, World, Art, QA, Master).
+* Respect the File Access Matrix concept (Band 6 §9).
+* Do not present assumptions as established project facts.
+* Prefer **small, reviewable, scoped changes** over mass generation.
+
+---
+
+# 14. Onboarding Checklist
+
+Before submitting your first contribution:
+
+- [ ] I have read Band 1, Band 2, and the band relevant to my task.
+- [ ] I have read Band 7 if my work touches narrative or world.
+- [ ] I have inspected the relevant source files.
+- [ ] I have matched the live engine version.
+- [ ] I have defined the scope of my change.
+- [ ] I have planned the smallest possible diff.
+- [ ] I have a way to verify my change (compile, test, or visual check).
+- [ ] I know which documentation (if any) needs updating.
+- [ ] I have a clear, specific commit message.
+
+---
+
+# 15. Closing Note
+
+SAOMMO is built by many small, careful contributions, not by one large push.
+
+If moving, fighting, and interacting with the world feels good, SAOMMO has a foundation worth expanding.
+
+Help build that foundation.
