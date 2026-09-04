@@ -21,19 +21,26 @@ ACheckpoint::ACheckpoint()
 	CheckpointVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CheckpointVolume->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-	// Visible landmark pillar (was fully invisible before). Offset to the
-	// side so a checkpoint placed exactly on a spawn point does not swallow
-	// the player, and slimmed so it marks without blocking the view.
+	// Slim landmark pole beside the volume (never on top of the spawn) plus
+	// a floating diamond on top. Reads as a game marker, not architecture.
 	BeaconMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BeaconMesh"));
 	BeaconMesh->SetupAttachment(CheckpointVolume);
 	BeaconMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BeaconTop = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BeaconTop"));
+	BeaconTop->SetupAttachment(CheckpointVolume);
+	BeaconTop->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> BeaconObj(
 		TEXT("/Engine/BasicShapes/Cube"));
 	if (BeaconObj.Succeeded())
 	{
 		BeaconMesh->SetStaticMesh(BeaconObj.Object);
-		BeaconMesh->SetRelativeScale3D(FVector(0.3f, 0.3f, 4.0f));
+		BeaconMesh->SetRelativeScale3D(FVector(0.15f, 0.15f, 4.0f));
 		BeaconMesh->SetRelativeLocation(FVector(250.0f, 0.0f, 200.0f));
+
+		BeaconTop->SetStaticMesh(BeaconObj.Object);
+		BeaconTop->SetRelativeScale3D(FVector(0.6f, 0.6f, 0.6f));
+		BeaconTop->SetRelativeLocation(FVector(250.0f, 0.0f, 460.0f));
+		BeaconTop->SetRelativeRotation(FRotator(0.0f, 0.0f, 45.0f));
 	}
 }
 

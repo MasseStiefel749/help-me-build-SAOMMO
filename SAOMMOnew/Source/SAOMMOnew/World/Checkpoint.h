@@ -40,5 +40,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* BeaconMesh;
 
+	/** Floating diamond above the pillar. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* BeaconTop;
+
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };

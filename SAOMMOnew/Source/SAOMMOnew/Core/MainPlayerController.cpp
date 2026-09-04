@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "MainPlayerController.h"
+#include "SAOMMOnew.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
@@ -43,15 +44,7 @@ AMainPlayerController::AMainPlayerController()
 void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	// Code-only HUD for local players; polls the pawn so it survives respawn.
-	if (IsLocalPlayerController() && !HudWidget && *HudWidgetClass)
-	{
-		HudWidget = CreateWidget<UPlayerHudWidget>(this, HudWidgetClass);
-		if (HudWidget)
-		{
-			HudWidget->AddToViewport();
-		}
-	}
+	EnsureHud();
 	// Cache current transform as default respawn so death doesn't drop to origin.
 	if (RespawnTransform.Equals(FTransform::Identity))
 	{
@@ -186,6 +179,9 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	// Second chance for the HUD (covers any init-order edge in BeginPlay).
+	EnsureHud();
+
 	if (InPawn)
 	{
 		InPawn->OnDestroyed.AddDynamic(this, &AMainPlayerController::OnPawnDestroyed);
@@ -201,6 +197,32 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 void AMainPlayerController::SetRespawnTransform(const FTransform& NewRespawn)
 {
 	RespawnTransform = NewRespawn;
+}
+
+void AMainPlayerController::EnsureHud()
+{
+	// Code-only HUD for local players; polls the pawn so it survives respawn.
+	// NOTE: TSubclassOf truthiness via .Get() — earlier `*HudWidgetClass`
+	// form silently skipped this whole block (no HUD, no crosshair, no log).
+	if (!IsLocalPlayerController() || HudWidget || HudWidgetClass.Get() == nullptr)
+	{
+		UE_LOG(LogGame, Display, TEXT("HUD: skip (local=%d has=%d class=%s)"),
+			(int32)IsLocalPlayerController(), HudWidget ? 1 : 0,
+			HudWidgetClass.Get() ? *HudWidgetClass.Get()->GetName() : TEXT("null"));
+		return;
+	}
+
+	HudWidget = CreateWidget<UPlayerHudWidget>(this, HudWidgetClass.Get());
+	if (HudWidget)
+	{
+		HudWidget->AddToViewport(100);
+		UE_LOG(LogGame, Display, TEXT("HUD: created, in viewport=%d"),
+			HudWidget->IsInViewport() ? 1 : 0);
+	}
+	else
+	{
+		UE_LOG(LogGame, Warning, TEXT("HUD: CreateWidget returned null"));
+	}
 }
 
 void AMainPlayerController::ToggleInventory()

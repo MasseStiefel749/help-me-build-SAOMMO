@@ -72,6 +72,7 @@ void AEnemy::BeginPlay()
 
 	CurrentHealth = MaxHealth;
 	State = EEnemyState::Idle;
+	HomeLocation = GetActorLocation();
 
 	// Apply the (possibly Editor-tuned) approach speed; the constructor only
 	// sees the C++ default.
@@ -122,6 +123,11 @@ void AEnemy::UpdateState(float DeltaTime)
 				State = EEnemyState::Approach;
 			}
 		}
+		else if (FVector::Dist(GetActorLocation(), HomeLocation) > 600.0f)
+		{
+			// Leashed out and lost the trail: walk home, then rest.
+			MoveTowardLocation(HomeLocation);
+		}
 		break;
 
 	case EEnemyState::Approach:
@@ -144,7 +150,7 @@ void AEnemy::UpdateState(float DeltaTime)
 			}
 			else
 			{
-				MoveTowardTarget(DeltaTime);
+				MoveTowardLocation(TargetPawn->GetActorLocation());
 			}
 		}
 		break;
@@ -173,20 +179,16 @@ void AEnemy::UpdateState(float DeltaTime)
 	}
 }
 
-void AEnemy::MoveTowardTarget(float DeltaTime)
+void AEnemy::MoveTowardLocation(const FVector& Destination)
 {
-	if (!TargetPawn.IsValid())
-	{
-		return;
-	}
-
 	// Steer through CharacterMovement (no NavMesh needed for direct input
 	// steering). This gives real velocity, so the locomotion anim blends,
 	// collision slides, and turning smooths via bOrientRotationToMovement.
 	// (Was: SetActorLocation teleport, which left velocity at zero = the
 	// anim graph always saw idle, plus instant rotation snaps.)
-	(void)DeltaTime;
-	const FVector Direction = (TargetPawn->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+	// bRunPhysicsWithNoController (ctor) is what lets this work without an
+	// AI controller at all.
+	const FVector Direction = (Destination - GetActorLocation()).GetSafeNormal();
 	AddMovementInput(Direction, 1.0f);
 }
 

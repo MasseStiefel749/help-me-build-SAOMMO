@@ -108,6 +108,10 @@ protected:
 	UPROPERTY()
 	TWeakObjectPtr<APawn> TargetPawn;
 
+	/** Where this enemy spawned; leash returns end here. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	FVector HomeLocation = FVector::ZeroVector;
+
 	/** True once Die() ran; guards the TakeDamage/ApplyDamage double-death. */
 	bool bDead = false;
 
@@ -125,7 +129,8 @@ protected:
 	void UpdateState(float DeltaTime);
 
 	/** Moves the enemy toward the target without requiring a Navigation mesh. */
-	void MoveTowardTarget(float DeltaTime);
+	/** Steers toward a destination via movement input (no NavMesh needed). */
+	void MoveTowardLocation(const FVector& Destination);
 
 	/** Performs a single melee attack against the target. */
 	void PerformAttack();

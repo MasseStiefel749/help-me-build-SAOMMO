@@ -106,6 +106,9 @@ public:
 
 protected:
 
+	/** Creates the code HUD for local players (idempotent, logged). */
+	void EnsureHud();
+
 	/** Builds the transient fallback mapping (WASD/mouse/Space/LMB/V/E). */
 	void BuildFallbackMapping();
 

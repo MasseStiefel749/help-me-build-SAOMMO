@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PlayerHudWidget.h"
+#include "SAOMMOnew.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
@@ -38,8 +39,9 @@ void UPlayerHudWidget::NativeConstruct()
 		// Center crosshair for aiming swings and E-interactions.
 		Crosshair = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("Crosshair"));
 		Crosshair->SetText(FText::FromString(TEXT("+")));
-		Crosshair->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.8f));
+		Crosshair->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.9f));
 		Crosshair->SetJustification(ETextJustify::Center);
+		Crosshair->SetRenderScale(FVector2D(2.0f, 2.0f));
 
 		if (Canvas)
 		{
@@ -83,16 +85,27 @@ void UPlayerHudWidget::NativeConstruct()
 	}
 
 	SetStats(1.0f, 1.0f, 1, 0.0f, FString());
+	UE_LOG(LogGame, Display, TEXT("HUD: constructed (bar=%d cross=%d inv=%d)"),
+		HealthBar ? 1 : 0, Crosshair ? 1 : 0, InvBorder ? 1 : 0);
 }
 
 void UPlayerHudWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	// Poll the possessed SAOMMO character; HUD stays valid across
+	// Poll the possessed character; HUD stays valid across
 	// death/respawn because it re-resolves the pawn every tick.
 	APawn* Pawn = GetOwningPlayerPawn();
 	const APlayerCharacter* Character = Cast<APlayerCharacter>(Pawn);
+	{
+		static bool bLoggedOnce = false;
+		if (!bLoggedOnce)
+		{
+			bLoggedOnce = true;
+			UE_LOG(LogGame, Display, TEXT("HUD: first tick, pawn=%s"),
+				Pawn ? *Pawn->GetName() : TEXT("none"));
+		}
+	}
 	if (!Character)
 	{
 		return;
