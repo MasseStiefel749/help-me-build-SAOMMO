@@ -156,11 +156,25 @@ void AMainPlayerController::BuildFallbackMapping()
 		FallbackMapping->GetMapping(Index).Modifiers.Add(Neg);
 	};
 
+	// Digital keys inject (1,0) into 2D actions, so W/S must first swizzle
+	// the press onto Y (without this both go right). S additionally negates.
+	auto SwizzleY = [&](int32 Index)
+	{
+		if (Index == INDEX_NONE)
+		{
+			return;
+		}
+		UInputModifierSwizzleAxis* Swizzle = NewObject<UInputModifierSwizzleAxis>(FallbackMapping);
+		Swizzle->Order = EInputAxisSwizzle::YXZ;
+		FallbackMapping->GetMapping(Index).Modifiers.Add(Swizzle);
+	};
+
 	// S = backward (-Y), A = left (-X), MouseY negated for standard look.
+	SwizzleY(W);
+	SwizzleY(S);
 	Negate(S, false, true);
 	Negate(A, true, false);
 	Negate(MouseY, false, true);
-	(void)W;
 	(void)D;
 	(void)MouseX;
 }

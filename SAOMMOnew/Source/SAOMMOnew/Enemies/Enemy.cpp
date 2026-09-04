@@ -13,6 +13,7 @@
 #include "InventoryComponent.h"
 #include "ItemTypes.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimInstance.h"
 #include "Engine/SkeletalMesh.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -37,6 +38,14 @@ AEnemy::AEnemy()
 		GetMesh()->SetSkeletalMesh(BodyMesh.Object);
 		GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 		GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+	}
+
+	// Same skeleton family as the player rig, so the Unarmed anim applies.
+	static ConstructorHelpers::FClassFinder<UAnimInstance> BodyAnim(
+		TEXT("/Game/Characters/Mannequins/Anims/Unarmed/ABP_Unarmed"));
+	if (BodyAnim.Succeeded() && GetMesh())
+	{
+		GetMesh()->SetAnimInstanceClass(BodyAnim.Class);
 	}
 }
 

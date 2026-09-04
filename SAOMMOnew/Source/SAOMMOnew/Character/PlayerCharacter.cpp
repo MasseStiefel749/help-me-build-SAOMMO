@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimInstance.h"
 #include "Engine/SkeletalMesh.h"
 #include "Sword.h"
 #include "CombatComponent.h"
@@ -76,6 +77,15 @@ APlayerCharacter::APlayerCharacter()
 		GetMesh()->SetSkeletalMesh(BodyMesh.Object);
 		GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 		GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+	}
+
+	// Locomotion anim: Unarmed ABP shares the Manny skeleton (verified from
+	// asset references). Guarded like the mesh; falls back to reference pose.
+	static ConstructorHelpers::FClassFinder<UAnimInstance> BodyAnim(
+		TEXT("/Game/Characters/Mannequins/Anims/Unarmed/ABP_Unarmed"));
+	if (BodyAnim.Succeeded() && GetMesh())
+	{
+		GetMesh()->SetAnimInstanceClass(BodyAnim.Class);
 	}
 }
 
