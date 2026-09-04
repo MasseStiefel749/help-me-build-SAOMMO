@@ -154,6 +154,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	float Heal(float Amount);
 
+	/** Directly sets health clamped to [0, MaxHealth] (save/load). */
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetHealth(float NewHealth) { CurrentHealth = FMath::Clamp(NewHealth, 0.0f, MaxHealth); }
+
 	/** Returns the current camera mode. */
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	ESAOCameraMode GetCameraMode() const { return CameraMode; }

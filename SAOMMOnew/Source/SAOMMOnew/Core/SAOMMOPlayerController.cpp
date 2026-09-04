@@ -4,11 +4,15 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 #include "SAOMMOCharacter.h"
 #include "SAOMMOGameMode.h"
 #include "SAOMMOHudWidget.h"
+#include "SAOMMOSaveGame.h"
+#include "SAOMMOInventoryComponent.h"
+#include "SAOMMOProgressionComponent.h"
 
 ASAOMMOPlayerController::ASAOMMOPlayerController()
 {
@@ -87,6 +91,75 @@ void ASAOMMOPlayerController::OnPossess(APawn* InPawn)
 void ASAOMMOPlayerController::SetRespawnTransform(const FTransform& NewRespawn)
 {
 	RespawnTransform = NewRespawn;
+}
+
+bool ASAOMMOPlayerController::SaveProgress()
+{
+	// NOTE: locals intentionally NOT named Pawn/Character: AController owns
+	// members with those names and C4458 is an error in this build.
+	APawn* TargetPawn = GetPawn();
+	const ASAOMMOCharacter* TargetCharacter = Cast<ASAOMMOCharacter>(TargetPawn);
+	if (!TargetPawn || !TargetCharacter)
+	{
+		return false;
+	}
+
+	USAOMMOSaveGame* Save = Cast<USAOMMOSaveGame>(
+		UGameplayStatics::CreateSaveGameObject(USAOMMOSaveGame::StaticClass()));
+	if (!Save)
+	{
+		return false;
+	}
+
+	Save->SlotName = SaveSlotName;
+	const FTransform PawnTransform = TargetPawn->GetActorTransform();
+	Save->PlayerLocation = PawnTransform.GetLocation();
+	Save->PlayerRotation = PawnTransform.Rotator();
+	Save->PlayerHealth = TargetCharacter->GetHealth();
+	if (const USAOMMOInventoryComponent* Inv = TargetCharacter->GetInventory())
+	{
+		Save->Inventory = Inv->Items;
+	}
+	if (const USAOMMOProgressionComponent* Prog = TargetCharacter->GetProgression())
+	{
+		Save->Level = Prog->Level;
+		Save->Experience = Prog->Experience;
+	}
+
+	return UGameplayStatics::SaveGameToSlot(Save, SaveSlotName, 0);
+}
+
+bool ASAOMMOPlayerController::LoadProgress()
+{
+	if (!UGameplayStatics::DoesSaveGameExist(SaveSlotName, 0))
+	{
+		return false;
+	}
+
+	USaveGame* Loaded = UGameplayStatics::LoadGameFromSlot(SaveSlotName, 0);
+	USAOMMOSaveGame* Save = Cast<USAOMMOSaveGame>(Loaded);
+	APawn* TargetPawn = GetPawn();
+	ASAOMMOCharacter* TargetCharacter = Cast<ASAOMMOCharacter>(TargetPawn);
+	if (!Save || !TargetPawn || !TargetCharacter)
+	{
+		return false;
+	}
+
+	const FTransform SavedTransform(Save->PlayerRotation, Save->PlayerLocation, FVector::OneVector);
+	TargetPawn->SetActorLocationAndRotation(Save->PlayerLocation, Save->PlayerRotation, false, nullptr, ETeleportType::TeleportPhysics);
+	TargetCharacter->SetHealth(Save->PlayerHealth);
+	if (USAOMMOInventoryComponent* Inv = TargetCharacter->GetInventory())
+	{
+		Inv->SetItems(Save->Inventory);
+	}
+	if (USAOMMOProgressionComponent* Prog = TargetCharacter->GetProgression())
+	{
+		Prog->SetProgress(Save->Level, Save->Experience);
+	}
+	// Loading doubles as a checkpoint: dying after a load returns here.
+	RespawnTransform = SavedTransform;
+	RespawnTransform.SetScale3D(FVector::OneVector);
+	return true;
 }
 
 void ASAOMMOPlayerController::OnPawnDestroyed(AActor* DestroyedActor)

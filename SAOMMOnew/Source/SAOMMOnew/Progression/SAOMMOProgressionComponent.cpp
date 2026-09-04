@@ -20,6 +20,17 @@ int32 USAOMMOProgressionComponent::AddExperience(float Amount)
 	return Level;
 }
 
+void USAOMMOProgressionComponent::SetProgress(int32 NewLevel, float NewExperience)
+{
+	const int32 OldLevel = Level;
+	Level = FMath::Max(1, NewLevel);
+	Experience = FMath::Max(0.0f, NewExperience);
+	if (Level != OldLevel)
+	{
+		OnLevelUp.Broadcast(Level);
+	}
+}
+
 void USAOMMOProgressionComponent::CheckLevelUp()
 {
 	bool bLeveled = false;

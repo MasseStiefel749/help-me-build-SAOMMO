@@ -55,6 +55,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Respawn")
 	void SetRespawnTransform(const FTransform& NewRespawn);
 
+	/** Returns the current respawn transform. */
+	UFUNCTION(BlueprintCallable, Category = "Respawn")
+	FTransform GetRespawnTransform() const { return RespawnTransform; }
+
+	/** Saves pawn transform, health, inventory and progression to the slot. */
+	UFUNCTION(BlueprintCallable, Category = "Save")
+	bool SaveProgress();
+
+	/** Loads the slot into the current pawn (teleport + state). False if no save. */
+	UFUNCTION(BlueprintCallable, Category = "Save")
+	bool LoadProgress();
+
+	/** Save slot name (shared with USAOMMOSaveGame default). */
+	UPROPERTY(EditAnywhere, Category = "Save")
+	FString SaveSlotName = TEXT("SAOMMO_Save");
+
 protected:
 
 	UFUNCTION()

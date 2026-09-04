@@ -45,6 +45,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Progression")
 	int32 AddExperience(float Amount);
 
+	/** Overwrites level/XP (save/load). Broadcasts only on level change. */
+	UFUNCTION(BlueprintCallable, Category = "Progression")
+	void SetProgress(int32 NewLevel, float NewExperience);
+
 protected:
 
 	void CheckLevelUp();

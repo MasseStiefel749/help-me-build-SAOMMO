@@ -46,6 +46,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 GetItemCount(FName ItemId) const;
 
+	/** Replaces the whole collection (save/load). Broadcasts once. */
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SetItems(const TArray<FSAOItem>& NewItems);
+
 protected:
 
 	int32 FindItemIndex(FName ItemId) const;

@@ -66,3 +66,16 @@ int32 USAOMMOInventoryComponent::GetItemCount(FName ItemId) const
 	const int32 Index = FindItemIndex(ItemId);
 	return Index != INDEX_NONE ? Items[Index].Count : 0;
 }
+
+void USAOMMOInventoryComponent::SetItems(const TArray<FSAOItem>& NewItems)
+{
+	Items.Reset();
+	for (const FSAOItem& Item : NewItems)
+	{
+		if (!Item.ItemId.IsNone() && Item.Count > 0)
+		{
+			Items.Add(Item);
+		}
+	}
+	OnInventoryChanged.Broadcast();
+}
