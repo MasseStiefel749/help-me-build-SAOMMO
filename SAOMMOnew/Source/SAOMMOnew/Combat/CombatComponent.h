@@ -76,6 +76,15 @@ protected:
 	/** Previous-frame attack intent, for edge detection. */
 	bool bPrevAttack = false;
 
+	/** Sword relative rotation captured at swing start (restored after). */
+	FRotator SwingStartRotation = FRotator::ZeroRotator;
+
+	/** 0..1 progress through the visible swing while armed. */
+	float SwingAlpha = 0.0f;
+
+	/** Armed state last tick, for disarm-edge restore. */
+	bool bWasArmed = false;
+
 	/** Per-target timestamps used to throttle repeated hits while armed. */
 	TMap<TObjectPtr<AActor>, float> LastHitTime;
 

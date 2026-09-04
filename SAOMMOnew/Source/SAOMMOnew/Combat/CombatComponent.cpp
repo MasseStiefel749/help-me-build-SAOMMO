@@ -10,6 +10,7 @@
 #include "Engine/OverlapResult.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/DamageEvents.h"
+#include "Engine/Engine.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -54,6 +55,12 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		if (!bArmed)
 		{
 			OnSwingStarted.Broadcast();
+			// Start the visible swing from the sword's current pose.
+			SwingAlpha = 0.0f;
+			if (Sword && Sword->GetRootComponent())
+			{
+				SwingStartRotation = Sword->GetRootComponent()->GetRelativeRotation();
+			}
 		}
 	}
 	bPrevAttack = bAttack;
@@ -67,6 +74,22 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	if (Sword)
 	{
 		Sword->SetHitEnabled(bArmed);
+
+		// Visible swing: pitch the sword from raised (-70) through the cut
+		// (+50) across the armed window, then restore the rest pose. The
+		// damage query is location-based, so rotating is purely cosmetic.
+		if (bArmed && ArmedDuration > KINDA_SMALL_NUMBER && Sword->GetRootComponent())
+		{
+			SwingAlpha = FMath::Clamp(SwingAlpha + DeltaTime / ArmedDuration, 0.0f, 1.0f);
+			const float Pitch = FMath::Lerp(-70.0f, 50.0f, SwingAlpha);
+			Sword->GetRootComponent()->SetRelativeRotation(
+				FRotator(SwingStartRotation.Pitch + Pitch, SwingStartRotation.Yaw, SwingStartRotation.Roll));
+		}
+		else if (bWasArmed && Sword->GetRootComponent())
+		{
+			Sword->GetRootComponent()->SetRelativeRotation(SwingStartRotation);
+		}
+		bWasArmed = bArmed;
 
 		// Active melee query: while armed, apply the sword's damage to any pawn
 		// within reach. Active detection (rather than relying on overlap begin
@@ -131,6 +154,12 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 					}
 					Sword->OnSwordHit.Broadcast(Target, Applied);
 					OnHit.Broadcast(Target, Applied, HitLocation);
+					// Playtest feedback: combat is otherwise invisible.
+					if (GEngine)
+					{
+						GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Yellow,
+							FString::Printf(TEXT("Hit %s (%.0f)"), *Target->GetName(), Applied));
+					}
 				}
 			}
 		}

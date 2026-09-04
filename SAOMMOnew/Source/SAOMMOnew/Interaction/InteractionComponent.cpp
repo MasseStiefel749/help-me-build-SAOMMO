@@ -2,6 +2,7 @@
 
 #include "InteractionComponent.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
 #include "ItemPickup.h"
@@ -92,5 +93,15 @@ void UInteractionComponent::Interact()
 			Pickup->TryPickup(Owner);
 		}
 		OnInteraction.Broadcast(Hit.GetActor(), Hit.ImpactPoint);
+		// Playtest feedback: E otherwise feels dead when aiming at scenery.
+		if (GEngine && Hit.GetActor())
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan,
+				FString::Printf(TEXT("Interact: %s"), *Hit.GetActor()->GetName()));
+		}
+	}
+	else if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan, TEXT("Interact: nothing in reach"));
 	}
 }

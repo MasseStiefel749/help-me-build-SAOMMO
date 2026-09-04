@@ -3,6 +3,7 @@
 #include "ItemPickup.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/Engine.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/Controller.h"
 #include "InventoryComponent.h"
@@ -79,6 +80,11 @@ bool AItemPickup::TryPickup(AActor* Caller)
 	}
 
 	Inventory->AddItem(Item);
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.5f, FColor::Green,
+			FString::Printf(TEXT("Picked up: %s x%d"), *Item.DisplayName.ToString(), Item.Count));
+	}
 	Destroy();
 	return true;
 }

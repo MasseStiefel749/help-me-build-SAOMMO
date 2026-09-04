@@ -161,9 +161,12 @@ void APlayerCharacter::UpdateCameraAttachment()
 		CameraBoom->bDoCollisionTest = false;
 		// Hide our own head/body from our own camera (the sword stays
 		// visible: it is a separate owned actor, not part of the mesh).
+		// bCastHiddenShadow=false too, or the hidden body still throws a
+		// visible FP shadow on the ground.
 		if (GetMesh())
 		{
 			GetMesh()->SetOwnerNoSee(true);
+			GetMesh()->bCastHiddenShadow = false;
 		}
 	}
 	else
@@ -176,6 +179,7 @@ void APlayerCharacter::UpdateCameraAttachment()
 		if (GetMesh())
 		{
 			GetMesh()->SetOwnerNoSee(false);
+			GetMesh()->bCastHiddenShadow = true;
 		}
 	}
 }
