@@ -8,6 +8,8 @@
 #include "InputAction.h"
 #include "InputActionValue.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "Sword.h"
 #include "CombatComponent.h"
 #include "InventoryComponent.h"
@@ -63,6 +65,18 @@ APlayerCharacter::APlayerCharacter()
 	if (AttackObj.Succeeded()) { AttackAction = AttackObj.Object; }
 	if (ToggleCameraObj.Succeeded()) { ToggleCameraAction = ToggleCameraObj.Object; }
 	if (InteractObj.Succeeded()) { InteractAction = InteractObj.Object; }
+
+	// Visible body: Manny mesh (verified loadable headless). A Blueprint
+	// child may override mesh/anim; without this the pawn is invisible
+	// (capsule collision never renders).
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> BodyMesh(
+		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple"));
+	if (BodyMesh.Succeeded() && GetMesh())
+	{
+		GetMesh()->SetSkeletalMesh(BodyMesh.Object);
+		GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
+		GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+	}
 }
 
 void APlayerCharacter::BeginPlay()

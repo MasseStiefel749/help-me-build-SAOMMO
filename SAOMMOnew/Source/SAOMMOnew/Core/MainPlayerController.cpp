@@ -117,48 +117,52 @@ void AMainPlayerController::BuildFallbackMapping()
 		return;
 	}
 
-	auto Negated = [this](bool bX, bool bY)
+	// NOTE: never hold the FEnhancedActionKeyMapping& returned by MapKey
+	// across further MapKey calls (array realloc would dangle it — this
+	// corrupted mappings before). Record indices, configure afterwards via
+	// GetMapping(Index), whose indices stay stable.
+	auto AddKey = [&](UInputAction* Action, const FKey& Key) -> int32
 	{
+		if (!Action)
+		{
+			return INDEX_NONE;
+		}
+		const int32 Index = FallbackMapping->GetMappings().Num();
+		FallbackMapping->MapKey(Action, Key);
+		return Index;
+	};
+
+	const int32 W = AddKey(MoveAction, EKeys::W);
+	const int32 D = AddKey(MoveAction, EKeys::D);
+	const int32 S = AddKey(MoveAction, EKeys::S);
+	const int32 A = AddKey(MoveAction, EKeys::A);
+	const int32 MouseX = AddKey(LookAction, EKeys::MouseX);
+	const int32 MouseY = AddKey(LookAction, EKeys::MouseY);
+	AddKey(JumpAction, EKeys::SpaceBar);
+	AddKey(AttackAction, EKeys::LeftMouseButton);
+	AddKey(ToggleCameraAction, EKeys::V);
+	AddKey(InteractAction, EKeys::E);
+
+	auto Negate = [&](int32 Index, bool bX, bool bY)
+	{
+		if (Index == INDEX_NONE)
+		{
+			return;
+		}
 		UInputModifierNegate* Neg = NewObject<UInputModifierNegate>(FallbackMapping);
 		Neg->bX = bX;
 		Neg->bY = bY;
 		Neg->bZ = false;
-		return Neg;
+		FallbackMapping->GetMapping(Index).Modifiers.Add(Neg);
 	};
 
-	// Move (Vector2D, X = right, Y = forward).
-	if (MoveAction)
-	{
-		FallbackMapping->MapKey(MoveAction, EKeys::W);
-		FallbackMapping->MapKey(MoveAction, EKeys::D);
-		FEnhancedActionKeyMapping& Back = FallbackMapping->MapKey(MoveAction, EKeys::S);
-		Back.Modifiers.Add(Negated(false, true));
-		FEnhancedActionKeyMapping& Left = FallbackMapping->MapKey(MoveAction, EKeys::A);
-		Left.Modifiers.Add(Negated(true, false));
-	}
-	// Look (Vector2D): mouse, Y negated for standard non-inverted feel.
-	if (LookAction)
-	{
-		FallbackMapping->MapKey(LookAction, EKeys::MouseX);
-		FEnhancedActionKeyMapping& Pitch = FallbackMapping->MapKey(LookAction, EKeys::MouseY);
-		Pitch.Modifiers.Add(Negated(false, true));
-	}
-	if (JumpAction)
-	{
-		FallbackMapping->MapKey(JumpAction, EKeys::SpaceBar);
-	}
-	if (AttackAction)
-	{
-		FallbackMapping->MapKey(AttackAction, EKeys::LeftMouseButton);
-	}
-	if (ToggleCameraAction)
-	{
-		FallbackMapping->MapKey(ToggleCameraAction, EKeys::V);
-	}
-	if (InteractAction)
-	{
-		FallbackMapping->MapKey(InteractAction, EKeys::E);
-	}
+	// S = backward (-Y), A = left (-X), MouseY negated for standard look.
+	Negate(S, false, true);
+	Negate(A, true, false);
+	Negate(MouseY, false, true);
+	(void)W;
+	(void)D;
+	(void)MouseX;
 }
 
 void AMainPlayerController::OnPossess(APawn* InPawn)

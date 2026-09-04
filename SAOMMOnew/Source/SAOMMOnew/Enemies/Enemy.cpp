@@ -12,6 +12,9 @@
 #include "ProgressionComponent.h"
 #include "InventoryComponent.h"
 #include "ItemTypes.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "UObject/ConstructorHelpers.h"
 
 AEnemy::AEnemy()
 {
@@ -22,6 +25,18 @@ AEnemy::AEnemy()
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = ApproachSpeed;
+	}
+
+	// Visible body: Quinn mesh so enemies read differently from the player.
+	// Guarded: a missing asset simply leaves the collision capsule (status
+	// quo), it can never break the spawn.
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> BodyMesh(
+		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple"));
+	if (BodyMesh.Succeeded() && GetMesh())
+	{
+		GetMesh()->SetSkeletalMesh(BodyMesh.Object);
+		GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
+		GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	}
 }
 
