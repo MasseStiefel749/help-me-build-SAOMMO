@@ -45,6 +45,10 @@ class ASword : public AActor
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* HandleMesh;
 
+	/** Pommel gem visual (real sword only). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* GemMesh;
+
 public:
 
 	ASword();

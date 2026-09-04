@@ -28,9 +28,54 @@ ASword::ASword()
 	HandleMesh->SetupAttachment(BladeCollision);
 	HandleMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// Blockout sword built from boxes (no sword asset in the project): long
-	// thin blade, wide flat guard, short grip. Reads as a sword instead of
-	// a stick; a real mesh/material replaces this one-for-one later.
+	GemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GemMesh"));
+	GemMesh->SetupAttachment(BladeCollision);
+	GemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Real sword (CC0 FantasySword, Content/Weapons/FantasySword): parts are
+	// modeled along Y with the tip at -Y (pommel gem +14.6, guard -19.2),
+	// so pitch -90 stands the assembly blade-up to match the blockout pose
+	// the swing animation was tuned against. Each part guarded separately.
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealBlade(
+		TEXT("/Game/Weapons/FantasySword/Blade"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealGuard(
+		TEXT("/Game/Weapons/FantasySword/CrossG"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealHandle(
+		TEXT("/Game/Weapons/FantasySword/Hilt"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealGem(
+		TEXT("/Game/Weapons/FantasySword/Gem"));
+	if (RealBlade.Succeeded())
+	{
+		const FRotator Upright(-90.0f, 0.0f, 0.0f);
+		Mesh->SetStaticMesh(RealBlade.Object);
+		Mesh->SetRelativeLocation(FVector::ZeroVector);
+		Mesh->SetRelativeRotation(Upright);
+		Mesh->SetRelativeScale3D(FVector::OneVector);
+		if (RealGuard.Succeeded() && GuardMesh)
+		{
+			GuardMesh->SetStaticMesh(RealGuard.Object);
+			GuardMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 19.2f));
+			GuardMesh->SetRelativeRotation(Upright);
+			GuardMesh->SetRelativeScale3D(FVector::OneVector);
+		}
+		if (RealHandle.Succeeded() && HandleMesh)
+		{
+			HandleMesh->SetStaticMesh(RealHandle.Object);
+			HandleMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 0.9f));
+			HandleMesh->SetRelativeRotation(Upright);
+			HandleMesh->SetRelativeScale3D(FVector::OneVector);
+		}
+		if (RealGem.Succeeded() && GemMesh)
+		{
+			GemMesh->SetStaticMesh(RealGem.Object);
+			GemMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -14.6f));
+			GemMesh->SetRelativeRotation(Upright);
+			GemMesh->SetRelativeScale3D(FVector::OneVector);
+		}
+		return;
+	}
+
+	// Fallback blockout sword built from boxes (no sword asset in project).
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> BoxMesh(
 		TEXT("/Engine/BasicShapes/Cube"));
 	if (BoxMesh.Succeeded())
@@ -72,6 +117,11 @@ void ASword::SetShadowCasting(bool bEnabled)
 	{
 		HandleMesh->SetCastShadow(bEnabled);
 		HandleMesh->bCastHiddenShadow = bEnabled;
+	}
+	if (GemMesh)
+	{
+		GemMesh->SetCastShadow(bEnabled);
+		GemMesh->bCastHiddenShadow = bEnabled;
 	}
 }
 
