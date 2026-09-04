@@ -12,6 +12,9 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 class USAOMMOCombatComponent;
+class USAOMMOInventoryComponent;
+class USAOMMOProgressionComponent;
+class USAOMMOInteractionComponent;
 class ASAOSword;
 struct FInputActionValue;
 
@@ -49,6 +52,18 @@ class ASAOMMOCharacter : public ACharacter
 	/** Combat component; owns swing detection and arms the sword (Band 2 §8). */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USAOMMOCombatComponent* CombatComponent;
+
+	/** Inventory: owns the Fight->Loot collection (Band 3 §13). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USAOMMOInventoryComponent* InventoryComponent;
+
+	/** Progression: records XP toward Improve (Band 3 §12). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USAOMMOProgressionComponent* ProgressionComponent;
+
+	/** Interaction: forward trace for pick up / activate (Band 3 §6). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USAOMMOInteractionComponent* InteractionComponent;
 
 	/** Sword class spawned and attached on BeginPlay. */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
@@ -92,6 +107,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* AttackAction;
 
+	/** Interact (pick up / activate) Input Action. */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* InteractAction;
+
 	/** Jump Input Action. */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* JumpAction;
@@ -112,6 +131,29 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	USAOMMOInputFrameComponent* GetInputFrame() const { return InputFrame; }
 
+	/** Returns the inventory component (Loot). */
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	USAOMMOInventoryComponent* GetInventory() const { return InventoryComponent; }
+	/** Returns the progression component (Improve). */
+	UFUNCTION(BlueprintCallable, Category = "Progression")
+	USAOMMOProgressionComponent* GetProgression() const { return ProgressionComponent; }
+
+	/** Returns the interaction component. */
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	USAOMMOInteractionComponent* GetInteraction() const { return InteractionComponent; }
+
+	/** Returns current health. */
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	float GetHealth() const { return CurrentHealth; }
+
+	/** Returns maximum health. */
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	float GetMaxHealth() const { return MaxHealth; }
+
+	/** Restores health up to MaxHealth. Returns the amount actually healed. */
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	float Heal(float Amount);
+
 	/** Returns the current camera mode. */
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	ESAOCameraMode GetCameraMode() const { return CameraMode; }
@@ -126,6 +168,7 @@ protected:
 	void OnLook(const FInputActionValue& Value);
 	void OnToggleCamera(const FInputActionValue& Value);
 	void OnAttack(const FInputActionValue& Value);
+	void OnInteract(const FInputActionValue& Value);
 	void OnJump(const FInputActionValue& Value);
 
 	/** Repositions the camera for the active mode. */

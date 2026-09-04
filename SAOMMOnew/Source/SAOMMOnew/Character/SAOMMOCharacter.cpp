@@ -8,6 +8,9 @@
 #include "InputActionValue.h"
 #include "SAOSword.h"
 #include "SAOMMOCombatComponent.h"
+#include "SAOMMOInventoryComponent.h"
+#include "SAOMMOProgressionComponent.h"
+#include "SAOMMOInteractionComponent.h"
 #include "Engine/World.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -34,6 +37,12 @@ ASAOMMOCharacter::ASAOMMOCharacter()
 	InputFrame = CreateDefaultSubobject<USAOMMOInputFrameComponent>(TEXT("InputFrame"));
 
 	CombatComponent = CreateDefaultSubobject<USAOMMOCombatComponent>(TEXT("CombatComponent"));
+
+	InventoryComponent = CreateDefaultSubobject<USAOMMOInventoryComponent>(TEXT("InventoryComponent"));
+
+	ProgressionComponent = CreateDefaultSubobject<USAOMMOProgressionComponent>(TEXT("ProgressionComponent"));
+
+	InteractionComponent = CreateDefaultSubobject<USAOMMOInteractionComponent>(TEXT("InteractionComponent"));
 
 	DefaultSwordClass = ASAOSword::StaticClass();
 }
@@ -166,6 +175,14 @@ void ASAOMMOCharacter::OnAttack(const FInputActionValue& Value)
 	}
 }
 
+void ASAOMMOCharacter::OnInteract(const FInputActionValue& Value)
+{
+	if (InteractionComponent)
+	{
+		InteractionComponent->Interact();
+	}
+}
+
 void ASAOMMOCharacter::OnJump(const FInputActionValue& Value)
 {
 	Jump();
@@ -174,25 +191,44 @@ void ASAOMMOCharacter::OnJump(const FInputActionValue& Value)
 float ASAOMMOCharacter::TakeDamage(float Damage, const struct FDamageEvent& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-	if (CurrentHealth <= 0.0f)
+	if (CurrentHealth <= 0.0f || Damage <= 0.0f)
 	{
 		return 0.0f;
 	}
 
-	CurrentHealth -= Damage;
+	CurrentHealth = FMath::Max(0.0f, CurrentHealth - Damage);
 
 	if (CurrentHealth <= 0.0f)
 	{
 		Die();
-		return Damage;
 	}
 
 	return Damage;
 }
 
+float ASAOMMOCharacter::Heal(float Amount)
+{
+	if (Amount <= 0.0f || CurrentHealth <= 0.0f)
+	{
+		return 0.0f;
+	}
+
+	const float Missing = MaxHealth - CurrentHealth;
+	const float Applied = FMath::Min(Missing, Amount);
+	CurrentHealth += Applied;
+	return Applied;
+}
+
 void ASAOMMOCharacter::Die()
 {
 	OnDied.Broadcast();
+	// Respawn path (PlayerController) creates a fresh pawn; destroy the
+	// equipped sword with the old body so no orphan weapon actors linger.
+	if (EquippedSword)
+	{
+		EquippedSword->Destroy();
+		EquippedSword = nullptr;
+	}
 	Destroy();
 }
 
@@ -217,6 +253,10 @@ void ASAOMMOCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		if (AttackAction)
 		{
 			EnhancedInput->BindAction(AttackAction, ETriggerEvent::Started, this, &ASAOMMOCharacter::OnAttack);
+		}
+		if (InteractAction)
+		{
+			EnhancedInput->BindAction(InteractAction, ETriggerEvent::Started, this, &ASAOMMOCharacter::OnInteract);
 		}
 		if (JumpAction)
 		{

@@ -67,7 +67,17 @@ public:
 
 	/** Sets the actor that owns this weapon (typically the wielder). */
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void SetOwnerActor(AActor* NewOwner) { OwnerActor = NewOwner; }
+	void SetOwnerActor(AActor* NewOwner)
+	{
+		OwnerActor = NewOwner;
+		// Mirror into AActor ownership so GetInstigatorController() on the
+		// sword resolves to the wielder (kill credit, damage causer chain).
+		SetOwner(NewOwner);
+	}
+
+	/** Returns the wielding actor; hits against it are ignored. */
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	AActor* GetOwnerActor() const { return OwnerActor.Get(); }
 
 protected:
 

@@ -2,11 +2,16 @@
 
 #include "SAOEnemy.h"
 #include "GameFramework/Pawn.h"
+#include "GameFramework/Controller.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "TimerManager.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/DamageEvents.h"
+#include "SAOMMOProgressionComponent.h"
+#include "SAOMMOInventoryComponent.h"
+#include "SAOItemTypes.h"
 
 ASAOEnemy::ASAOEnemy()
 {
@@ -134,28 +139,46 @@ void ASAOEnemy::PerformAttack()
 	{
 		TargetPawn->TakeDamage(AttackDamage, FDamageEvent(), GetController(), this);
 		bAttackReady = false;
-		// Simple cooldown tied to the recover period.
-		GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+		// Cooldown tied to the recover period (was SetTimerForNextTick = no cooldown).
+		if (UWorld* World = GetWorld())
+		{
+			FTimerHandle Handle;
+			World->GetTimerManager().SetTimer(Handle, [this]()
+			{
+				bAttackReady = true;
+			}, FMath::Max(0.1f, RecoverTime), false);
+		}
+		else
 		{
 			bAttackReady = true;
-		});
+		}
 	}
 }
 
 float ASAOEnemy::TakeDamage(float Damage, const struct FDamageEvent& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-	if (CurrentHealth <= 0.0f)
+	if (bDead || CurrentHealth <= 0.0f || Damage <= 0.0f)
 	{
 		return 0.0f;
 	}
 
-	CurrentHealth -= Damage;
+	if (EventInstigator)
+	{
+		Killer = EventInstigator;
+	}
+	else if (DamageCauser)
+	{
+		// Melee path passes the sword as causer with a null controller;
+		// credit its instigator so XP/loot still route to the killer.
+		Killer = DamageCauser->GetInstigatorController();
+	}
+
+	CurrentHealth = FMath::Max(0.0f, CurrentHealth - Damage);
 
 	if (CurrentHealth <= 0.0f)
 	{
 		Die();
-		return Damage;
 	}
 
 	return Damage;
@@ -163,7 +186,32 @@ float ASAOEnemy::TakeDamage(float Damage, const struct FDamageEvent& DamageEvent
 
 void ASAOEnemy::Die()
 {
+	if (bDead)
+	{
+		return;
+	}
+	bDead = true;
 	State = ESAOEnemyState::Idle;
+
+	// Fight->Loot->Improve: grant XP + loot to the killer's components.
+	if (APawn* KillerPawn = Killer.IsValid() ? Killer->GetPawn() : nullptr)
+	{
+		if (USAOMMOProgressionComponent* Prog = KillerPawn->FindComponentByClass<USAOMMOProgressionComponent>())
+		{
+			Prog->AddExperience(XPReward);
+		}
+		if (!LootItemId.IsNone() && LootCount > 0)
+		{
+			if (USAOMMOInventoryComponent* Inv = KillerPawn->FindComponentByClass<USAOMMOInventoryComponent>())
+			{
+				FSAOItem Loot;
+				Loot.ItemId = LootItemId;
+				Loot.Count = LootCount;
+				Inv->AddItem(Loot);
+			}
+		}
+	}
+
 	OnDied.Broadcast();
 
 	if (GetWorld())
@@ -178,12 +226,17 @@ void ASAOEnemy::Die()
 
 void ASAOEnemy::ApplyDamage(float Damage, AActor* DamageCauser, const FVector& DamageLocation, const FVector& DamageImpulse)
 {
-	if (CurrentHealth <= 0.0f)
+	if (bDead || CurrentHealth <= 0.0f || Damage <= 0.0f)
 	{
 		return;
 	}
 
-	CurrentHealth -= Damage;
+	if (DamageCauser)
+	{
+		Killer = DamageCauser->GetInstigatorController();
+	}
+
+	CurrentHealth = FMath::Max(0.0f, CurrentHealth - Damage);
 
 	if (DamageImpulse.SizeSquared() > KINDA_SMALL_NUMBER && GetCharacterMovement())
 	{

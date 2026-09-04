@@ -48,6 +48,7 @@ public class SAOMMOnew : ModuleRules
 			"SAOMMOnew/Inventory",
 			"SAOMMOnew/Progression",
 			"SAOMMOnew/World",
+			"SAOMMOnew/UI",
 			"SAOMMOnew/Variant_Platforming",
 			"SAOMMOnew/Variant_Platforming/Animation",
 			"SAOMMOnew/Variant_Combat",

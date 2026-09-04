@@ -12,6 +12,9 @@ class USAOMMOInputFrameComponent;
 /** Broadcast when a swing is detected and the sword becomes armed. */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSAOCombatSwing);
 
+/** Broadcast when an armed sweep damages a target (for damage numbers / HUD). */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSAOCombatHit, AActor*, HitActor, float, AppliedDamage, FVector, HitLocation);
+
 /**
  *  Combat component (Band 2 §8, Band 3 §7).
  *
@@ -54,6 +57,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat")
 	FOnSAOCombatSwing OnSwingStarted;
 
+	/** Broadcast per damaged target while armed. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat")
+	FOnSAOCombatHit OnHit;
+
 	/** Sets the controlled sword. */
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SetSword(ASAOSword* InSword) { Sword = InSword; }
@@ -70,7 +77,7 @@ protected:
 	bool bPrevAttack = false;
 
 	/** Per-target timestamps used to throttle repeated hits while armed. */
-	TMap<TWeakObjectPtr<AActor>, float> LastHitTime;
+	TMap<TObjectPtr<AActor>, float> LastHitTime;
 
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

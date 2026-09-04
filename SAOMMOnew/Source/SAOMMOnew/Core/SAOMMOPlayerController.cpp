@@ -3,14 +3,32 @@
 #include "SAOMMOPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
+#include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 #include "SAOMMOCharacter.h"
 #include "SAOMMOGameMode.h"
+#include "SAOMMOHudWidget.h"
+
+ASAOMMOPlayerController::ASAOMMOPlayerController()
+{
+	// Code-only HUD works with zero Editor setup; a Blueprint child can
+	// override HudWidgetClass with a styled widget later.
+	HudWidgetClass = USAOMMOHudWidget::StaticClass();
+}
 
 void ASAOMMOPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	// Code-only HUD for local players; polls the pawn so it survives respawn.
+	if (IsLocalPlayerController() && !HudWidget && *HudWidgetClass)
+	{
+		HudWidget = CreateWidget<USAOMMOHudWidget>(this, HudWidgetClass);
+		if (HudWidget)
+		{
+			HudWidget->AddToViewport();
+		}
+	}
 	// Cache current transform as default respawn so death doesn't drop to origin.
 	if (RespawnTransform.Equals(FTransform::Identity))
 	{

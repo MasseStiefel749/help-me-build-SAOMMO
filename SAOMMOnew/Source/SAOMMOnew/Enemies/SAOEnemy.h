@@ -62,6 +62,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (ClampMin = 0, ClampMax = 1000))
 	float AttackDamage = 1.0f;
 
+	/** XP granted to the killer's progression component on death. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rewards", meta = (ClampMin = 0))
+	float XPReward = 10.0f;
+
+	/** Item granted to the killer's inventory on death (Count<=0 or empty id = none). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rewards")
+	FName LootItemId;
+
+	/** How many of LootItemId to grant. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rewards", meta = (ClampMin = 0))
+	int32 LootCount = 1;
+
 	/** Time the enemy spends recovering after an attack. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (ClampMin = 0, ClampMax = 10, Units = "s"))
 	float RecoverTime = 1.0f;
@@ -89,6 +101,13 @@ protected:
 	/** Last known player pawn, cached during detection. */
 	UPROPERTY()
 	TWeakObjectPtr<APawn> TargetPawn;
+
+	/** True once Die() ran; guards the TakeDamage/ApplyDamage double-death. */
+	bool bDead = false;
+
+	/** Controller credited with the kill (set from TakeDamage/ApplyDamage instigator). */
+	UPROPERTY()
+	TWeakObjectPtr<AController> Killer;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;

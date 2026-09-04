@@ -2,6 +2,7 @@
 
 #include "SAOMMOCombatComponent.h"
 #include "SAOSword.h"
+#include "SAOCombatInterfaces.h"
 #include "SAOMMOInputFrameComponent.h"
 #include "Engine/World.h"
 #include "CollisionShape.h"
@@ -88,7 +89,12 @@ void USAOMMOCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 				for (const FOverlapResult& Hit : Hits)
 				{
 					AActor* Target = Hit.GetActor();
-					if (!Target)
+					if (!Target || Target == GetOwner())
+					{
+						continue;
+					}
+					// Never hit the wielder recorded on the sword either.
+					if (Sword->GetOwnerActor() && Target == Sword->GetOwnerActor())
 					{
 						continue;
 					}
@@ -102,9 +108,29 @@ void USAOMMOCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 					}
 					LastHitTime.Add(Target, Now);
 
-					const float Applied = Target->TakeDamage(Sword->Damage, FDamageEvent(),
-						GetOwner() ? GetOwner()->GetInstigatorController() : nullptr, Sword);
+					const FVector HitLocation = Hit.GetComponent()
+						? Hit.GetComponent()->GetComponentLocation()
+						: Target->GetActorLocation();
+					float Applied = 0.0f;
+					// Prefer the shared damageable contract so enemy logic
+					// (double-death guard, killer credit) runs in one place.
+					if (Target->Implements<USAOCombatDamageable>())
+					{
+						if (ISAOCombatDamageable* Damageable = Cast<ISAOCombatDamageable>(Target))
+						{
+							Damageable->ApplyDamage(Sword->Damage, Sword,
+								HitLocation, FVector::ZeroVector);
+							// ApplyDamage has no return; report configured damage.
+							Applied = Sword->Damage;
+						}
+					}
+					else
+					{
+						Applied = Target->TakeDamage(Sword->Damage, FDamageEvent(),
+							GetOwner() ? GetOwner()->GetInstigatorController() : nullptr, Sword);
+					}
 					Sword->OnSwordHit.Broadcast(Target, Applied);
+					OnHit.Broadcast(Target, Applied, HitLocation);
 				}
 			}
 		}

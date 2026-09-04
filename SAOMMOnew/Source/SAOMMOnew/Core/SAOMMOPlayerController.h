@@ -8,6 +8,7 @@
 
 class UInputMappingContext;
 class ASAOMMOCharacter;
+class USAOMMOHudWidget;
 
 /**
  *  SAOMMO player controller (target architecture).
@@ -31,6 +32,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Respawn")
 	TSubclassOf<ASAOMMOCharacter> CharacterClass;
 
+	/** HUD widget class spawned for local players (defaults to the code HUD). */
+	UPROPERTY(EditAnywhere, Category = "HUD")
+	TSubclassOf<USAOMMOHudWidget> HudWidgetClass;
+
+	/** Live HUD instance (local players only). */
+	UPROPERTY()
+	TObjectPtr<USAOMMOHudWidget> HudWidget = nullptr;
+
 	/** Transform used for respawns; can be updated to create checkpoints. */
 	FTransform RespawnTransform;
 
@@ -39,6 +48,8 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 
 public:
+
+	ASAOMMOPlayerController();
 
 	/** Updates the respawn transform (e.g. from a checkpoint). */
 	UFUNCTION(BlueprintCallable, Category = "Respawn")

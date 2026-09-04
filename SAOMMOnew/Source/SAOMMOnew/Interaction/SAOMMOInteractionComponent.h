@@ -38,11 +38,23 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
 	FOnSAOInteraction OnInteraction;
 
+	/** Currently focused actor under the interaction trace (null if none). */
+	UPROPERTY(BlueprintReadOnly, Category = "Interaction")
+	TObjectPtr<AActor> FocusedActor = nullptr;
+
 	/** Performs the interaction trace from the owner's view/forward direction. */
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	void Interact();
 
+	/** Returns the current focus target (updated every tick). */
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	AActor* GetFocusedActor() const { return FocusedActor; }
+
 protected:
 
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	/** Runs the forward trace; returns hit actor or null. Updates FocusedActor. */
+	AActor* UpdateFocus();
 };
