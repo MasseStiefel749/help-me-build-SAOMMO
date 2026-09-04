@@ -1,0 +1,29 @@
+﻿# Ignore Unreal/Visual Studio build artifacts
+Saved/
+Intermediate/
+DerivedDataCache/
+Binaries/
+Build/
+*.sln.user
+*.VC.db
+*.suo
+*.opensdf
+*.pdb
+*.pch
+*.ipdb
+*.iobj
+*.ilk
+*.exp
+*.aps
+.vs/
+*.log
+*.sdf
+*.ipch
+*.obj
+*.exe
+*.dll
+*.lib
+# UE user-specific (keep .vsconfig - it defines required VS components)
+*.user
+DefaultEditorPerProjectUserSettings.ini
+BroadcastDeviceProviderRegistry.json
