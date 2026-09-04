@@ -33,9 +33,9 @@ ASword::ASword()
 	GemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Real sword (CC0 FantasySword, Content/Weapons/FantasySword): parts are
-	// modeled along Y with the tip at -Y (pommel gem +14.6, guard -19.2),
-	// so pitch -90 stands the assembly blade-up to match the blockout pose
-	// the swing animation was tuned against. Each part guarded separately.
+	// modeled along Y with the tip at -Y (pommel gem +14.6, guard -19.2).
+	// Stand them blade-up with a ROLL (rotation about X): note Pitch rotates
+	// about Y and would leave Y-extents lying flat (the sideways-sword bug).
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealBlade(
 		TEXT("/Game/Weapons/FantasySword/Blade"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealGuard(
@@ -46,7 +46,7 @@ ASword::ASword()
 		TEXT("/Game/Weapons/FantasySword/Gem"));
 	if (RealBlade.Succeeded())
 	{
-		const FRotator Upright(-90.0f, 0.0f, 0.0f);
+		const FRotator Upright(0.0f, 0.0f, -90.0f);
 		Mesh->SetStaticMesh(RealBlade.Object);
 		Mesh->SetRelativeLocation(FVector::ZeroVector);
 		Mesh->SetRelativeRotation(Upright);
