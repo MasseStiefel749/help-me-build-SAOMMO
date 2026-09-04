@@ -32,10 +32,12 @@ ASword::ASword()
 	GemMesh->SetupAttachment(BladeCollision);
 	GemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// Real sword (CC0 FantasySword, Content/Weapons/FantasySword): parts are
-	// modeled along Y with the tip at -Y (pommel gem +14.6, guard -19.2).
-	// Aligned to the grip axis (socket Y) with a 180 roll so it reads
-	// correctly in every arm pose; tip toward the fingertips.
+	// Real sword (CC0 FantasySword): assemble EXACTLY as authored (offsets
+	// in author space) plus one shared rotation. Author anatomy along Y:
+	// tip -57.5, guard -19.2, grip ~0, pommel gem +14.6. Tuner-measured:
+	// pitch -90 maps author +Y to actor +Z, so with the tip at author -Y
+	// the blade hangs straight down from the fist - the natural carry in
+	// every arm pose (world-fixed orientations break as the arm moves).
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealBlade(
 		TEXT("/Game/Weapons/FantasySword/Blade"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealGuard(
@@ -46,35 +48,34 @@ ASword::ASword()
 		TEXT("/Game/Weapons/FantasySword/Gem"));
 	if (RealBlade.Succeeded())
 	{
-		const FRotator GripAligned(0.0f, 0.0f, 180.0f);
+		const FRotator HangDown(-90.0f, 0.0f, 0.0f);
 		Mesh->SetStaticMesh(RealBlade.Object);
 		Mesh->SetRelativeLocation(FVector::ZeroVector);
-		Mesh->SetRelativeRotation(GripAligned);
+		Mesh->SetRelativeRotation(HangDown);
 		Mesh->SetRelativeScale3D(FVector::OneVector);
 		if (RealGuard.Succeeded() && GuardMesh)
 		{
 			GuardMesh->SetStaticMesh(RealGuard.Object);
-			GuardMesh->SetRelativeLocation(FVector(0.0f, 19.2f, 0.0f));
-			GuardMesh->SetRelativeRotation(GripAligned);
+			GuardMesh->SetRelativeLocation(FVector(0.0f, -19.2f, 0.0f));
+			GuardMesh->SetRelativeRotation(HangDown);
 			GuardMesh->SetRelativeScale3D(FVector::OneVector);
 		}
 		if (RealHandle.Succeeded() && HandleMesh)
 		{
 			HandleMesh->SetStaticMesh(RealHandle.Object);
-			HandleMesh->SetRelativeLocation(FVector(0.0f, 0.9f, 0.0f));
-			HandleMesh->SetRelativeRotation(GripAligned);
+			HandleMesh->SetRelativeLocation(FVector(0.0f, -0.9f, 0.0f));
+			HandleMesh->SetRelativeRotation(HangDown);
 			HandleMesh->SetRelativeScale3D(FVector::OneVector);
 		}
 		if (RealGem.Succeeded() && GemMesh)
 		{
 			GemMesh->SetStaticMesh(RealGem.Object);
-			GemMesh->SetRelativeLocation(FVector(0.0f, -14.6f, 0.0f));
-			GemMesh->SetRelativeRotation(GripAligned);
+			GemMesh->SetRelativeLocation(FVector(0.0f, 14.6f, 0.0f));
+			GemMesh->SetRelativeRotation(HangDown);
 			GemMesh->SetRelativeScale3D(FVector::OneVector);
 		}
 		return;
 	}
-
 	// Fallback blockout sword built from boxes (no sword asset in project).
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> BoxMesh(
 		TEXT("/Engine/BasicShapes/Cube"));
