@@ -3,10 +3,14 @@
 #include "MainPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
+#include "InputAction.h"
+#include "InputModifiers.h"
+#include "InputCoreTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
+#include "UObject/ConstructorHelpers.h"
 #include "PlayerCharacter.h"
 #include "MainGameMode.h"
 #include "PlayerHudWidget.h"
@@ -19,6 +23,21 @@ AMainPlayerController::AMainPlayerController()
 	// Code-only HUD works with zero Editor setup; a Blueprint child can
 	// override HudWidgetClass with a styled widget later.
 	HudWidgetClass = UPlayerHudWidget::StaticClass();
+
+	// Fallback actions: same FObjectFinder defaults as the character, so the
+	// transient mapping below always matches the pawn's bindings.
+	static ConstructorHelpers::FObjectFinder<UInputAction> MoveObj(TEXT("/Game/Input/IA_Move"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> LookObj(TEXT("/Game/Input/IA_Look"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> JumpObj(TEXT("/Game/Input/IA_Jump"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> AttackObj(TEXT("/Game/Input/IA_Attack"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> ToggleCameraObj(TEXT("/Game/Input/IA_ToggleCamera"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> InteractObj(TEXT("/Game/Input/IA_Interact"));
+	if (MoveObj.Succeeded()) { MoveAction = MoveObj.Object; }
+	if (LookObj.Succeeded()) { LookAction = LookObj.Object; }
+	if (JumpObj.Succeeded()) { JumpAction = JumpObj.Object; }
+	if (AttackObj.Succeeded()) { AttackAction = AttackObj.Object; }
+	if (ToggleCameraObj.Succeeded()) { ToggleCameraAction = ToggleCameraObj.Object; }
+	if (InteractObj.Succeeded()) { InteractAction = InteractObj.Object; }
 }
 
 void AMainPlayerController::BeginPlay()
@@ -60,15 +79,85 @@ void AMainPlayerController::SetupInputComponent()
 		{
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
 			{
+				int32 Added = 0;
 				for (UInputMappingContext* Context : DefaultMappingContexts)
 				{
 					if (Context)
 					{
 						Subsystem->AddMappingContext(Context, 0);
+						++Added;
+					}
+				}
+				// No content mapping assigned (e.g. broken/unmigrated IMC
+				// asset): fall back to the transient C++ mapping so the game
+				// stays playable with zero Editor setup.
+				if (Added == 0)
+				{
+					BuildFallbackMapping();
+					if (FallbackMapping)
+					{
+						Subsystem->AddMappingContext(FallbackMapping, 0);
 					}
 				}
 			}
 		}
+	}
+}
+
+void AMainPlayerController::BuildFallbackMapping()
+{
+	if (FallbackMapping)
+	{
+		return;
+	}
+
+	FallbackMapping = NewObject<UInputMappingContext>(this);
+	if (!FallbackMapping)
+	{
+		return;
+	}
+
+	auto Negated = [this](bool bX, bool bY)
+	{
+		UInputModifierNegate* Neg = NewObject<UInputModifierNegate>(FallbackMapping);
+		Neg->bX = bX;
+		Neg->bY = bY;
+		Neg->bZ = false;
+		return Neg;
+	};
+
+	// Move (Vector2D, X = right, Y = forward).
+	if (MoveAction)
+	{
+		FallbackMapping->MapKey(MoveAction, EKeys::W);
+		FallbackMapping->MapKey(MoveAction, EKeys::D);
+		FEnhancedActionKeyMapping& Back = FallbackMapping->MapKey(MoveAction, EKeys::S);
+		Back.Modifiers.Add(Negated(false, true));
+		FEnhancedActionKeyMapping& Left = FallbackMapping->MapKey(MoveAction, EKeys::A);
+		Left.Modifiers.Add(Negated(true, false));
+	}
+	// Look (Vector2D): mouse, Y negated for standard non-inverted feel.
+	if (LookAction)
+	{
+		FallbackMapping->MapKey(LookAction, EKeys::MouseX);
+		FEnhancedActionKeyMapping& Pitch = FallbackMapping->MapKey(LookAction, EKeys::MouseY);
+		Pitch.Modifiers.Add(Negated(false, true));
+	}
+	if (JumpAction)
+	{
+		FallbackMapping->MapKey(JumpAction, EKeys::SpaceBar);
+	}
+	if (AttackAction)
+	{
+		FallbackMapping->MapKey(AttackAction, EKeys::LeftMouseButton);
+	}
+	if (ToggleCameraAction)
+	{
+		FallbackMapping->MapKey(ToggleCameraAction, EKeys::V);
+	}
+	if (InteractAction)
+	{
+		FallbackMapping->MapKey(InteractAction, EKeys::E);
 	}
 }
 

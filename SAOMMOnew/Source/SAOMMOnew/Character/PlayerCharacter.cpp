@@ -5,7 +5,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "InputAction.h"
 #include "InputActionValue.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Sword.h"
 #include "CombatComponent.h"
 #include "InventoryComponent.h"
@@ -45,6 +47,22 @@ APlayerCharacter::APlayerCharacter()
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 
 	DefaultSwordClass = ASword::StaticClass();
+
+	// Fallback input actions so the pawn is playable with zero Blueprint
+	// setup. All six assets exist and load (verified headless); a Blueprint
+	// child may still override any of them.
+	static ConstructorHelpers::FObjectFinder<UInputAction> MoveObj(TEXT("/Game/Input/IA_Move"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> LookObj(TEXT("/Game/Input/IA_Look"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> JumpObj(TEXT("/Game/Input/IA_Jump"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> AttackObj(TEXT("/Game/Input/IA_Attack"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> ToggleCameraObj(TEXT("/Game/Input/IA_ToggleCamera"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> InteractObj(TEXT("/Game/Input/IA_Interact"));
+	if (MoveObj.Succeeded()) { MoveAction = MoveObj.Object; }
+	if (LookObj.Succeeded()) { LookAction = LookObj.Object; }
+	if (JumpObj.Succeeded()) { JumpAction = JumpObj.Object; }
+	if (AttackObj.Succeeded()) { AttackAction = AttackObj.Object; }
+	if (ToggleCameraObj.Succeeded()) { ToggleCameraAction = ToggleCameraObj.Object; }
+	if (InteractObj.Succeeded()) { InteractAction = InteractObj.Object; }
 }
 
 void APlayerCharacter::BeginPlay()

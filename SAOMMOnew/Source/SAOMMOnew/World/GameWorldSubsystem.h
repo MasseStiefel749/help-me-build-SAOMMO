@@ -31,6 +31,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "World")
 	void SetCurrentRegion(const FString& RegionName) { CurrentRegion = RegionName; }
 
+	/**
+	 *  Repairs a map whose level references an alien WorldDataLayers actor
+	 *  (e.g. maps copied from another level: the reference blocks saving).
+	 *  Spawns a fresh AWorldDataLayers in the context world and points the
+	 *  persistent level at it via ULevel::SetWorldDataLayers (the property
+	 *  itself is private to scripts). Returns the new actor, null on failure.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "World", meta = (WorldContext = "WorldContextObject"))
+	static AWorldDataLayers* RepairLevelDataLayers(UObject* WorldContextObject);
+
 protected:
 
 	FString CurrentRegion = TEXT("Starting Reach");

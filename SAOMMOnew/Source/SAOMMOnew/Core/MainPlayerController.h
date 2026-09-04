@@ -7,6 +7,7 @@
 #include "MainPlayerController.generated.h"
 
 class UInputMappingContext;
+class UInputAction;
 class APlayerCharacter;
 class UPlayerHudWidget;
 
@@ -27,6 +28,34 @@ protected:
 	/** Input mapping contexts applied on possession. */
 	UPROPERTY(EditAnywhere, Category = "Input|Input Mappings")
 	TArray<UInputMappingContext*> DefaultMappingContexts;
+
+	/** Fallback input actions (FObjectFinder defaults; Blueprint may override). */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> MoveAction = nullptr;
+
+	/** Fallback input actions (FObjectFinder defaults; Blueprint may override). */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> LookAction = nullptr;
+
+	/** Fallback input actions (FObjectFinder defaults; Blueprint may override). */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> JumpAction = nullptr;
+
+	/** Fallback input actions (FObjectFinder defaults; Blueprint may override). */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> AttackAction = nullptr;
+
+	/** Fallback input actions (FObjectFinder defaults; Blueprint may override). */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> ToggleCameraAction = nullptr;
+
+	/** Fallback input actions (FObjectFinder defaults; Blueprint may override). */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> InteractAction = nullptr;
+
+	/** Transient fallback mapping, built when no contexts are assigned. */
+	UPROPERTY()
+	TObjectPtr<UInputMappingContext> FallbackMapping = nullptr;
 
 	/** Character class to respawn when the possessed pawn is destroyed. */
 	UPROPERTY(EditAnywhere, Category = "Respawn")
@@ -72,6 +101,9 @@ public:
 	FString SaveSlotName = TEXT("PlayerSave");
 
 protected:
+
+	/** Builds the transient fallback mapping (WASD/mouse/Space/LMB/V/E). */
+	void BuildFallbackMapping();
 
 	UFUNCTION()
 	void OnPawnDestroyed(AActor* DestroyedActor);
