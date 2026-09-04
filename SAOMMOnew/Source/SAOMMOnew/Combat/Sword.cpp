@@ -20,15 +20,32 @@ ASword::ASword()
 	Mesh->SetupAttachment(BladeCollision);
 	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// Visible blade: stretched cube (blockout look). Without this combat is
-	// invisible — the mesh asset normally comes from the (broken) Blueprint.
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> BladeMesh(
+	GuardMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GuardMesh"));
+	GuardMesh->SetupAttachment(BladeCollision);
+	GuardMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	HandleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HandleMesh"));
+	HandleMesh->SetupAttachment(BladeCollision);
+	HandleMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Blockout sword built from boxes (no sword asset in the project): long
+	// thin blade, wide flat guard, short grip. Reads as a sword instead of
+	// a stick; a real mesh/material replaces this one-for-one later.
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> BoxMesh(
 		TEXT("/Engine/BasicShapes/Cube"));
-	if (BladeMesh.Succeeded())
+	if (BoxMesh.Succeeded())
 	{
-		Mesh->SetStaticMesh(BladeMesh.Object);
+		Mesh->SetStaticMesh(BoxMesh.Object);
 		Mesh->SetRelativeScale3D(FVector(0.08f, 0.08f, 1.4f));
 		Mesh->SetRelativeLocation(FVector(0.0f, 0.0f, 60.0f));
+
+		GuardMesh->SetStaticMesh(BoxMesh.Object);
+		GuardMesh->SetRelativeScale3D(FVector(0.28f, 0.1f, 0.06f));
+		GuardMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -8.0f));
+
+		HandleMesh->SetStaticMesh(BoxMesh.Object);
+		HandleMesh->SetRelativeScale3D(FVector(0.07f, 0.07f, 0.3f));
+		HandleMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -25.0f));
 	}
 }
 

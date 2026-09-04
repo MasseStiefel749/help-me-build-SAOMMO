@@ -44,4 +44,8 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UTextBlock> FocusText = nullptr;
+
+	/** Center-screen aim crosshair. */
+	UPROPERTY()
+	TObjectPtr<UTextBlock> Crosshair = nullptr;
 };

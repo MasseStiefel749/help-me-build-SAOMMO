@@ -7,6 +7,8 @@
 #include "CombatInterfaces.h"
 #include "Enemy.generated.h"
 
+class UAnimSequence;
+
 /** Initial enemy behavior states (Band 2 §11, Band 3 §10). */
 UENUM(BlueprintType)
 enum class EEnemyState : uint8
@@ -81,6 +83,10 @@ public:
 	/** Broadcast when the enemy dies. */
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnEnemyDefeated OnDied;
+
+	/** Death animation (front fall). Verified loadable; Blueprint may override. */
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TObjectPtr<UAnimSequence> DeathAnim = nullptr;
 
 	/** Returns the current AI state. */
 	UFUNCTION(BlueprintCallable, Category = "AI")

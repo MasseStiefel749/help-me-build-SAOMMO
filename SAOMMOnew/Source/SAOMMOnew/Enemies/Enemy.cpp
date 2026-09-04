@@ -13,6 +13,7 @@
 #include "InventoryComponent.h"
 #include "ItemTypes.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimSequence.h"
 #include "Animation/AnimInstance.h"
 #include "Engine/SkeletalMesh.h"
 #include "UObject/ConstructorHelpers.h"
@@ -26,6 +27,9 @@ AEnemy::AEnemy()
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = ApproachSpeed;
+		// Smooth turning toward movement input (replaces the old instant
+		// snap in MoveTowardTarget).
+		GetCharacterMovement()->bOrientRotationToMovement = true;
 	}
 
 	// Visible body: Quinn mesh so enemies read differently from the player.
@@ -47,6 +51,15 @@ AEnemy::AEnemy()
 	{
 		GetMesh()->SetAnimInstanceClass(BodyAnim.Class);
 	}
+
+	// Front-fall death (same skeleton family). Guarded; without it the
+	// corpse simply stands through its lifespan.
+	static ConstructorHelpers::FObjectFinder<UAnimSequence> DeathObj(
+		TEXT("/Game/Characters/Mannequins/Anims/Death/MM_Death_Front_01"));
+	if (DeathObj.Succeeded())
+	{
+		DeathAnim = DeathObj.Object;
+	}
 }
 
 void AEnemy::BeginPlay()
@@ -67,6 +80,12 @@ void AEnemy::BeginPlay()
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// Corpses keep ticking (mesh anim + lifespan) but the FSM is done.
+	if (bDead)
+	{
+		return;
+	}
 
 	UpdateState(DeltaTime);
 }
@@ -157,11 +176,14 @@ void AEnemy::MoveTowardTarget(float DeltaTime)
 		return;
 	}
 
+	// Steer through CharacterMovement (no NavMesh needed for direct input
+	// steering). This gives real velocity, so the locomotion anim blends,
+	// collision slides, and turning smooths via bOrientRotationToMovement.
+	// (Was: SetActorLocation teleport, which left velocity at zero = the
+	// anim graph always saw idle, plus instant rotation snaps.)
+	(void)DeltaTime;
 	const FVector Direction = (TargetPawn->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-	const FVector NewLocation = GetActorLocation() + Direction * ApproachSpeed * DeltaTime;
-
-	SetActorLocation(NewLocation, true);
-	SetActorRotation(Direction.Rotation());
+	AddMovementInput(Direction, 1.0f);
 }
 
 void AEnemy::PerformAttack()
@@ -229,9 +251,18 @@ void AEnemy::Die()
 	}
 	bDead = true;
 	State = EEnemyState::Idle;
-	// Stop the FSM immediately: without this the corpse re-aggros and slides
-	// during its remaining lifespan.
-	SetActorTickEnabled(false);
+
+	// Corpse handling: no collision (passes through cleanly), death fall
+	// animation (mesh keeps ticking; Tick() skips the FSM once bDead).
+	// Lifespan set below destroys the actor after the fall.
+	if (GetCapsuleComponent())
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	if (DeathAnim && GetMesh())
+	{
+		GetMesh()->PlayAnimation(DeathAnim, false);
+	}
 
 	// Fight->Loot->Improve: grant XP + loot to the killer's components.
 	if (APawn* KillerPawn = Killer.IsValid() ? Killer->GetPawn() : nullptr)

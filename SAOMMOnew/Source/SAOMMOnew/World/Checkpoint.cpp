@@ -2,6 +2,10 @@
 
 #include "Checkpoint.h"
 #include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/Engine.h"
+#include "UObject/ConstructorHelpers.h"
 #include "GameFramework/PlayerController.h"
 #include "PlayerCharacter.h"
 #include "MainPlayerController.h"
@@ -16,6 +20,19 @@ ACheckpoint::ACheckpoint()
 	CheckpointVolume->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CheckpointVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CheckpointVolume->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+	// Visible landmark pillar (was fully invisible before).
+	BeaconMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BeaconMesh"));
+	BeaconMesh->SetupAttachment(CheckpointVolume);
+	BeaconMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> BeaconObj(
+		TEXT("/Engine/BasicShapes/Cube"));
+	if (BeaconObj.Succeeded())
+	{
+		BeaconMesh->SetStaticMesh(BeaconObj.Object);
+		BeaconMesh->SetRelativeScale3D(FVector(0.5f, 0.5f, 6.0f));
+		BeaconMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 300.0f));
+	}
 }
 
 void ACheckpoint::NotifyActorBeginOverlap(AActor* OtherActor)
@@ -37,6 +54,10 @@ void ACheckpoint::NotifyActorBeginOverlap(AActor* OtherActor)
 		if (AMainPlayerController* PC = Cast<AMainPlayerController>(Controller))
 		{
 			PC->SetRespawnTransform(SpawnTransform);
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 2.5f, FColor::Green, TEXT("Checkpoint reached"));
+			}
 		}
 	}
 }

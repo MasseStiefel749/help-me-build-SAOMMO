@@ -7,6 +7,7 @@
 #include "Checkpoint.generated.h"
 
 class USphereComponent;
+class UStaticMeshComponent;
 
 /**
  *  Respawn checkpoint (Band 3 §11).
@@ -34,6 +35,10 @@ protected:
 	/** Overlap volume. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USphereComponent* CheckpointVolume;
+
+	/** Tall marker pillar so checkpoints read as landmarks. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* BeaconMesh;
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };

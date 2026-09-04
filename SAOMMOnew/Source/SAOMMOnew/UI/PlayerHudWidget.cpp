@@ -2,6 +2,8 @@
 
 #include "PlayerHudWidget.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
@@ -16,20 +18,39 @@ void UPlayerHudWidget::NativeConstruct()
 
 	if (!HealthBar)
 	{
-		UVerticalBox* Root = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("HudRoot"));
-		WidgetTree->RootWidget = Root;
+		UCanvasPanel* Canvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("HudCanvas"));
+		WidgetTree->RootWidget = Canvas;
 
+		// Stats block, top-left.
+		UVerticalBox* Stats = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("HudStats"));
 		HealthBar = WidgetTree->ConstructWidget<UProgressBar>(UProgressBar::StaticClass(), TEXT("HealthBar"));
 		HealthText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("HealthText"));
 		LevelText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("LevelText"));
 		FocusText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("FocusText"));
+		Stats->AddChildToVerticalBox(HealthBar);
+		Stats->AddChildToVerticalBox(HealthText);
+		Stats->AddChildToVerticalBox(LevelText);
+		Stats->AddChildToVerticalBox(FocusText);
 
-		if (Root)
+		// Center crosshair for aiming swings and E-interactions.
+		Crosshair = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("Crosshair"));
+		Crosshair->SetText(FText::FromString(TEXT("+")));
+		Crosshair->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.8f));
+		Crosshair->SetJustification(ETextJustify::Center);
+
+		if (Canvas)
 		{
-			Root->AddChildToVerticalBox(HealthBar);
-			Root->AddChildToVerticalBox(HealthText);
-			Root->AddChildToVerticalBox(LevelText);
-			Root->AddChildToVerticalBox(FocusText);
+			if (UCanvasPanelSlot* StatsSlot = Canvas->AddChildToCanvas(Stats))
+			{
+				StatsSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+				StatsSlot->SetOffsets(FMargin(20.0f, 20.0f, 320.0f, 140.0f));
+			}
+			if (UCanvasPanelSlot* CrossSlot = Canvas->AddChildToCanvas(Crosshair))
+			{
+				CrossSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
+				CrossSlot->SetOffsets(FMargin(-12.0f, -16.0f, 24.0f, 32.0f));
+				CrossSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			}
 		}
 	}
 

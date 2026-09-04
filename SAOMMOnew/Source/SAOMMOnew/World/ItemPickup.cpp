@@ -10,7 +10,7 @@
 
 AItemPickup::AItemPickup()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	PickupVolume = CreateDefaultSubobject<USphereComponent>(TEXT("PickupVolume"));
 	RootComponent = PickupVolume;
@@ -40,6 +40,17 @@ void AItemPickup::OnPickupOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	if (OtherActor && OtherActor->FindComponentByClass<UInventoryComponent>())
 	{
 		TryPickup(OtherActor);
+	}
+}
+
+void AItemPickup::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	// Gentle spin so pickups read as interactive, not scenery.
+	if (Mesh)
+	{
+		Mesh->AddLocalRotation(FRotator(0.0f, 60.0f * DeltaTime, 0.0f));
 	}
 }
 
