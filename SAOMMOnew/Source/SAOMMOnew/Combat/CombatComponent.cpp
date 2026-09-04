@@ -3,6 +3,7 @@
 #include "CombatComponent.h"
 #include "Sword.h"
 #include "CombatInterfaces.h"
+#include "FloatingCombatText.h"
 #include "InputFrameComponent.h"
 #include "Engine/World.h"
 #include "CollisionShape.h"
@@ -160,6 +161,20 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 					}
 					Sword->OnSwordHit.Broadcast(Target, Applied);
 					OnHit.Broadcast(Target, Applied, HitLocation);
+					// Floating damage number above the hit (SAO-style feedback).
+					if (UWorld* World = GetWorld())
+					{
+						FActorSpawnParameters SpawnParams;
+						SpawnParams.SpawnCollisionHandlingOverride =
+							ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+						if (AFloatingCombatText* Number = World->SpawnActor<AFloatingCombatText>(
+							AFloatingCombatText::StaticClass(),
+							HitLocation + FVector(0.0f, 0.0f, 30.0f),
+							FRotator::ZeroRotator, SpawnParams))
+						{
+							Number->Configure(Applied, FLinearColor(1.0f, 0.85f, 0.2f));
+						}
+					}
 					// Playtest feedback: combat is otherwise invisible.
 					if (GEngine)
 					{

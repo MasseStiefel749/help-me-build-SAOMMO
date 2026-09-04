@@ -170,12 +170,14 @@ void UPlayerHudWidget::RefreshInventory()
 	FString Body;
 	int32 Level = 1;
 	float Experience = 0.0f;
+	float PerLevel = 100.0f;
 	if (const UProgressionComponent* Prog = Character->GetProgression())
 	{
 		Level = Prog->Level;
 		Experience = Prog->Experience;
+		PerLevel = Prog->ExperiencePerLevel;
 	}
-	Body += FString::Printf(TEXT("Lv %d   XP %.0f\n"), Level, Experience);
+	Body += FString::Printf(TEXT("Lv %d   XP %.0f / %.0f\n"), Level, Experience, PerLevel);
 	Body += FString::Printf(TEXT("HP %.0f / %.0f\n\n"), Character->GetHealth(), Character->GetMaxHealth());
 
 	if (const ASword* Sword = Character->GetEquippedSword())
