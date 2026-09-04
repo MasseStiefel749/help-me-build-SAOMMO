@@ -82,15 +82,16 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	{
 		Sword->SetHitEnabled(bArmed);
 
-		// Visible swing: pitch the sword from raised (-70) through the cut
-		// (+50) across the armed window, then restore the rest pose. The
-		// damage query is location-based, so rotating is purely cosmetic.
+		// Visible swing: slash across the roll plane (blade lies along the
+		// grip Y axis, so pitching would roll it in place invisibly). Sweeps
+		// 120 deg from rest pose, then restores it. The damage query is
+		// location-based, so rotating is purely cosmetic.
 		if (bArmed && ArmedDuration > KINDA_SMALL_NUMBER && Sword->GetRootComponent())
 		{
 			SwingAlpha = FMath::Clamp(SwingAlpha + DeltaTime / ArmedDuration, 0.0f, 1.0f);
-			const float Pitch = FMath::Lerp(-70.0f, 50.0f, SwingAlpha);
+			const float Roll = FMath::Lerp(0.0f, -120.0f, SwingAlpha);
 			Sword->GetRootComponent()->SetRelativeRotation(
-				FRotator(SwingStartRotation.Pitch + Pitch, SwingStartRotation.Yaw, SwingStartRotation.Roll));
+				FRotator(SwingStartRotation.Pitch, SwingStartRotation.Yaw, SwingStartRotation.Roll + Roll));
 		}
 		else if (bWasArmed && Sword->GetRootComponent())
 		{

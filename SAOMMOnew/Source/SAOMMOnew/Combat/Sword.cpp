@@ -34,8 +34,8 @@ ASword::ASword()
 
 	// Real sword (CC0 FantasySword, Content/Weapons/FantasySword): parts are
 	// modeled along Y with the tip at -Y (pommel gem +14.6, guard -19.2).
-	// Measured headless: pitch -90 stands the assembly blade-up (+Z), matching the swing sweep plane:
-	// about Y and measured horizontal (reverted).
+	// Aligned to the grip axis (socket Y) with a 180 roll so it reads
+	// correctly in every arm pose; tip toward the fingertips.
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealBlade(
 		TEXT("/Game/Weapons/FantasySword/Blade"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealGuard(
@@ -46,30 +46,30 @@ ASword::ASword()
 		TEXT("/Game/Weapons/FantasySword/Gem"));
 	if (RealBlade.Succeeded())
 	{
-		const FRotator Upright(-90.0f, 0.0f, 0.0f);
+		const FRotator GripAligned(0.0f, 0.0f, 180.0f);
 		Mesh->SetStaticMesh(RealBlade.Object);
 		Mesh->SetRelativeLocation(FVector::ZeroVector);
-		Mesh->SetRelativeRotation(Upright);
+		Mesh->SetRelativeRotation(GripAligned);
 		Mesh->SetRelativeScale3D(FVector::OneVector);
 		if (RealGuard.Succeeded() && GuardMesh)
 		{
 			GuardMesh->SetStaticMesh(RealGuard.Object);
-			GuardMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 19.2f));
-			GuardMesh->SetRelativeRotation(Upright);
+			GuardMesh->SetRelativeLocation(FVector(0.0f, 19.2f, 0.0f));
+			GuardMesh->SetRelativeRotation(GripAligned);
 			GuardMesh->SetRelativeScale3D(FVector::OneVector);
 		}
 		if (RealHandle.Succeeded() && HandleMesh)
 		{
 			HandleMesh->SetStaticMesh(RealHandle.Object);
-			HandleMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 0.9f));
-			HandleMesh->SetRelativeRotation(Upright);
+			HandleMesh->SetRelativeLocation(FVector(0.0f, 0.9f, 0.0f));
+			HandleMesh->SetRelativeRotation(GripAligned);
 			HandleMesh->SetRelativeScale3D(FVector::OneVector);
 		}
 		if (RealGem.Succeeded() && GemMesh)
 		{
 			GemMesh->SetStaticMesh(RealGem.Object);
-			GemMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -14.6f));
-			GemMesh->SetRelativeRotation(Upright);
+			GemMesh->SetRelativeLocation(FVector(0.0f, -14.6f, 0.0f));
+			GemMesh->SetRelativeRotation(GripAligned);
 			GemMesh->SetRelativeScale3D(FVector::OneVector);
 		}
 		return;
