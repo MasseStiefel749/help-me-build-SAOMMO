@@ -171,6 +171,10 @@ void APlayerCharacter::UpdateCameraAttachment()
 			GetMesh()->bCastHiddenShadow = false;
 			GetMesh()->SetCastShadow(false);
 		}
+		if (EquippedSword)
+		{
+			EquippedSword->SetShadowCasting(false);
+		}
 	}
 	else
 	{
@@ -184,6 +188,10 @@ void APlayerCharacter::UpdateCameraAttachment()
 			GetMesh()->SetOwnerNoSee(false);
 			GetMesh()->bCastHiddenShadow = true;
 			GetMesh()->SetCastShadow(true);
+		}
+		if (EquippedSword)
+		{
+			EquippedSword->SetShadowCasting(true);
 		}
 	}
 }

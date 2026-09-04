@@ -61,6 +61,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SetHitEnabled(bool bEnabled) { bHitEnabled = bEnabled; }
 
+	/** Toggles shadow casting on all blade parts (off in first person: a
+	 *  floating sword shadow with no visible wielder reads as a bug). */
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetShadowCasting(bool bEnabled);
+
 	/** Minimum time between two hits against the same actor. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (ClampMin = 0, ClampMax = 5, Units = "s"))
 	float PerTargetCooldown = 0.4f;

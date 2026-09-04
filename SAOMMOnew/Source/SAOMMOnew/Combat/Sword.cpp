@@ -56,6 +56,25 @@ void ASword::BeginPlay()
 	PreviousLocation = GetActorLocation();
 }
 
+void ASword::SetShadowCasting(bool bEnabled)
+{
+	if (Mesh)
+	{
+		Mesh->SetCastShadow(bEnabled);
+		Mesh->bCastHiddenShadow = bEnabled;
+	}
+	if (GuardMesh)
+	{
+		GuardMesh->SetCastShadow(bEnabled);
+		GuardMesh->bCastHiddenShadow = bEnabled;
+	}
+	if (HandleMesh)
+	{
+		HandleMesh->SetCastShadow(bEnabled);
+		HandleMesh->bCastHiddenShadow = bEnabled;
+	}
+}
+
 void ASword::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
