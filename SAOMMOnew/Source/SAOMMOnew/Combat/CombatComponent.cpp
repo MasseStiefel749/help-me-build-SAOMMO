@@ -113,8 +113,9 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			AController* Ctrl = Pawn ? Pawn->GetController() : nullptr;
 			if (Ctrl)
 			{
-				// Blade tip sits toward mesh-local -Y (author layout).
-				const FVector TipDir = (-Blade->GetRightVector()).GetSafeNormal();
+				// Atlas parts model blade-up along local +Z with the tip at
+				// +Z (measured extents), so the up-vector IS the tip dir.
+				const FVector TipDir = Blade->GetUpVector().GetSafeNormal();
 				const FVector ViewDir = Ctrl->GetControlRotation().Vector().GetSafeNormal();
 				if (!TipDir.IsNearlyZero() && !ViewDir.IsNearlyZero())
 				{

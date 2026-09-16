@@ -49,6 +49,10 @@ class ASword : public AActor
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* GemMesh;
 
+	/** Blade tip visual (real sword only). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* TipMesh;
+
 public:
 
 	ASword();

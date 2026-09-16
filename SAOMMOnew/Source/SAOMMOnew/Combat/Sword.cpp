@@ -31,51 +31,39 @@ ASword::ASword()
 	GemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GemMesh"));
 	GemMesh->SetupAttachment(BladeCollision);
 	GemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	TipMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TipMesh"));
+	TipMesh->SetupAttachment(BladeCollision);
+	TipMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// Real sword (CC0 FantasySword): assemble EXACTLY as authored (offsets
-	// in author space) plus one shared rotation. Author anatomy along Y:
-	// tip -57.5, guard -19.2, grip ~0, pommel gem +14.6. Tuner-measured:
-	// pitch -90 maps author +Y to actor +Z, so with the tip at author -Y
-	// the blade hangs straight down from the fist - the natural carry in
-	// every arm pose (world-fixed orientations break as the arm moves).
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealBlade(
-		TEXT("/Game/Weapons/FantasySword/Blade"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealGuard(
-		TEXT("/Game/Weapons/FantasySword/CrossG"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealHandle(
-		TEXT("/Game/Weapons/FantasySword/Hilt"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> RealGem(
-		TEXT("/Game/Weapons/FantasySword/Gem"));
-	if (RealBlade.Succeeded())
+	// Hero sword first: Atlas BlackSword parts share one origin and are
+	// already vertical (tip +Z, pommel -Z, grip at 0), so identity assembly
+	// is exact - no rotations, no offsets, nothing to get wrong.
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> HeroBlade(
+		TEXT("/Game/Atlas/Weapons/BlackSword/Blade"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> HeroGuard(
+		TEXT("/Game/Atlas/Weapons/BlackSword/Guard"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> HeroHandle(
+		TEXT("/Game/Atlas/Weapons/BlackSword/Grip"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> HeroTip(
+		TEXT("/Game/Atlas/Weapons/BlackSword/Tip"));
+	if (HeroBlade.Succeeded())
 	{
-		const FRotator HangDown(-90.0f, 0.0f, 0.0f);
-		Mesh->SetStaticMesh(RealBlade.Object);
-		Mesh->SetRelativeLocation(FVector::ZeroVector);
-		Mesh->SetRelativeRotation(HangDown);
-		Mesh->SetRelativeScale3D(FVector::OneVector);
-		if (RealGuard.Succeeded() && GuardMesh)
+		Mesh->SetStaticMesh(HeroBlade.Object);
+		if (HeroGuard.Succeeded() && GuardMesh)
 		{
-			GuardMesh->SetStaticMesh(RealGuard.Object);
-			GuardMesh->SetRelativeLocation(FVector(0.0f, -19.2f, 0.0f));
-			GuardMesh->SetRelativeRotation(HangDown);
-			GuardMesh->SetRelativeScale3D(FVector::OneVector);
+			GuardMesh->SetStaticMesh(HeroGuard.Object);
 		}
-		if (RealHandle.Succeeded() && HandleMesh)
+		if (HeroHandle.Succeeded() && HandleMesh)
 		{
-			HandleMesh->SetStaticMesh(RealHandle.Object);
-			HandleMesh->SetRelativeLocation(FVector(0.0f, -0.9f, 0.0f));
-			HandleMesh->SetRelativeRotation(HangDown);
-			HandleMesh->SetRelativeScale3D(FVector::OneVector);
+			HandleMesh->SetStaticMesh(HeroHandle.Object);
 		}
-		if (RealGem.Succeeded() && GemMesh)
+		if (HeroTip.Succeeded() && TipMesh)
 		{
-			GemMesh->SetStaticMesh(RealGem.Object);
-			GemMesh->SetRelativeLocation(FVector(0.0f, 14.6f, 0.0f));
-			GemMesh->SetRelativeRotation(HangDown);
-			GemMesh->SetRelativeScale3D(FVector::OneVector);
+			TipMesh->SetStaticMesh(HeroTip.Object);
 		}
 		return;
 	}
+
 	// Fallback blockout sword built from boxes (no sword asset in project).
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> BoxMesh(
 		TEXT("/Engine/BasicShapes/Cube"));
@@ -123,6 +111,11 @@ void ASword::SetShadowCasting(bool bEnabled)
 	{
 		GemMesh->SetCastShadow(bEnabled);
 		GemMesh->bCastHiddenShadow = bEnabled;
+	}
+	if (TipMesh)
+	{
+		TipMesh->SetCastShadow(bEnabled);
+		TipMesh->bCastHiddenShadow = bEnabled;
 	}
 }
 
