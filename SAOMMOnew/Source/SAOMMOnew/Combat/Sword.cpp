@@ -48,18 +48,31 @@ ASword::ASword()
 		TEXT("/Game/Atlas/Weapons/BlackSword/Tip"));
 	if (HeroBlade.Succeeded())
 	{
+		const FRotator HangDown(-90.0f, 0.0f, 0.0f);
 		Mesh->SetStaticMesh(HeroBlade.Object);
+		Mesh->SetRelativeLocation(FVector::ZeroVector);
+		Mesh->SetRelativeRotation(HangDown);
+		Mesh->SetRelativeScale3D(FVector::OneVector);
 		if (HeroGuard.Succeeded() && GuardMesh)
 		{
 			GuardMesh->SetStaticMesh(HeroGuard.Object);
+			GuardMesh->SetRelativeLocation(FVector(0.0f, -19.2f, 0.0f));
+			GuardMesh->SetRelativeRotation(HangDown);
+			GuardMesh->SetRelativeScale3D(FVector::OneVector);
 		}
 		if (HeroHandle.Succeeded() && HandleMesh)
 		{
 			HandleMesh->SetStaticMesh(HeroHandle.Object);
+			HandleMesh->SetRelativeLocation(FVector(0.0f, -0.9f, 0.0f));
+			HandleMesh->SetRelativeRotation(HangDown);
+			HandleMesh->SetRelativeScale3D(FVector::OneVector);
 		}
 		if (HeroTip.Succeeded() && TipMesh)
 		{
 			TipMesh->SetStaticMesh(HeroTip.Object);
+			TipMesh->SetRelativeLocation(FVector(0.0f, 14.6f, 0.0f));
+			TipMesh->SetRelativeRotation(HangDown);
+			TipMesh->SetRelativeScale3D(FVector::OneVector);
 		}
 		return;
 	}
