@@ -17,6 +17,10 @@
   ],
   "Plugins": [
     {
+      "Name": "ModelContextProtocol",
+      "Enabled": true
+    },
+    {
       "Name": "OpenXR",
       "Enabled": true
     },
