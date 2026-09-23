@@ -19,6 +19,8 @@
 #include "MainGameMode.h"
 #include "PlayerHudWidget.h"
 #include "DeathScreenWidget.h"
+#include "SAOCharacterCreatorWidget.h"
+#include "SAOCharacterData.h"
 #include "PlayerSaveGame.h"
 #include "InventoryComponent.h"
 #include "ProgressionComponent.h"
@@ -64,6 +66,62 @@ void AMainPlayerController::BeginPlay()
 		}
 		RespawnTransform.SetScale3D(FVector::OneVector);
 	}
+
+	// Character creator: first boot (no CharacterSave yet) opens the overlay
+	// shortly after possession; the C key re-opens it later.
+	if (IsLocalPlayerController() && GetWorld())
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			FirstBootTimer, this, &AMainPlayerController::MaybeShowCreatorOnFirstBoot, 0.3f, false);
+	}
+}
+
+void AMainPlayerController::MaybeShowCreatorOnFirstBoot()
+{
+	if (!IsLocalPlayerController() || UGameplayStatics::DoesSaveGameExist(TEXT("CharacterSave"), 0))
+	{
+		return;
+	}
+	ShowCharacterCreator();
+}
+
+void AMainPlayerController::ShowCharacterCreator()
+{
+	if (!IsLocalPlayerController())
+	{
+		return;
+	}
+	if (!CreatorWidget)
+	{
+		CreatorWidget = CreateWidget<USAOCharacterCreatorWidget>(this, USAOCharacterCreatorWidget::StaticClass());
+	}
+	if (!CreatorWidget)
+	{
+		return;
+	}
+	if (!CreatorWidget->IsInViewport())
+	{
+		CreatorWidget->AddToViewport(300);
+	}
+
+	// Edit mode starts from the saved character; otherwise a fresh one.
+	USAOCharacterData* Data = nullptr;
+	if (UGameplayStatics::DoesSaveGameExist(TEXT("CharacterSave"), 0))
+	{
+		Data = Cast<USAOCharacterData>(UGameplayStatics::LoadGameFromSlot(TEXT("CharacterSave"), 0));
+	}
+	if (!Data)
+	{
+		Data = NewObject<USAOCharacterData>(this, TEXT("CharacterData"));
+	}
+	CreatorWidget->InitializeCreator(Data);
+
+	// Freeze the world and hand input to the overlay.
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+	bShowMouseCursor = true;
+	FInputModeUIOnly UIMode;
+	UIMode.SetWidgetToFocus(CreatorWidget->TakeWidget());
+	SetInputMode(UIMode);
 }
 
 void AMainPlayerController::SetupInputComponent()
@@ -340,6 +398,14 @@ bool AMainPlayerController::InputKey(const FInputKeyEventArgs& Params)
 			GetWorld()->GetTimerManager().ClearTimer(RespawnTimer);
 		}
 		DoRespawn();
+		return true;
+	}
+	// Character creator toggle: C opens it in game. While the overlay is
+	// open input runs in UIOnly mode (keys never reach this path - the
+	// CANCEL button / CONFIRM close it), so C can't fight with name typing.
+	if (!bPendingRespawn && Params.Event == IE_Pressed && Params.Key == EKeys::C)
+	{
+		ShowCharacterCreator();
 		return true;
 	}
 	return Super::InputKey(Params);

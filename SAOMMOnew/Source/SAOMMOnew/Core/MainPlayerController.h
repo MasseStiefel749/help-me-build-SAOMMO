@@ -12,6 +12,7 @@ class UInputAction;
 class APlayerCharacter;
 class UPlayerHudWidget;
 class UDeathScreenWidget;
+class USAOCharacterCreatorWidget;
 
 /**
  *  SAOMMO player controller (target architecture).
@@ -90,6 +91,19 @@ protected:
 
 	/** Shows/refreshes the death overlay (call before arming the respawn timer). */
 	void BeginDeathScreen();
+
+	/** Character creator overlay (first-boot auto-open + C toggle). */
+	UPROPERTY()
+	TObjectPtr<USAOCharacterCreatorWidget> CreatorWidget = nullptr;
+
+	/** Opens the creator overlay for local players (loads CharacterSave if present). */
+	void ShowCharacterCreator();
+
+	/** First-boot gate: opens the creator when no CharacterSave exists yet. */
+	void MaybeShowCreatorOnFirstBoot();
+
+	/** Defers the first-boot creator check past pawn possession. */
+	FTimerHandle FirstBootTimer;
 
 	/** Any key press on the death screen ends the wait and respawns. */
 	virtual bool InputKey(const struct FInputKeyEventArgs& Params) override;

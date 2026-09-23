@@ -33,6 +33,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character Creator")
 	void OnConfirmCharacter();
 
+	/** Cancel button: closes the overlay without saving and restores game input. */
+	UFUNCTION()
+	void OnCancelCharacter();
+
 	UFUNCTION(BlueprintCallable, Category = "Character Creator")
 	void OnBodyTypeChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
 
@@ -73,6 +77,12 @@ protected:
 	void PopulateArmorOptions();
 	void PopulateWeaponOptions();
 	void RefreshInventoryDisplay();
+
+	/** Code-only layout build (runs only when no designer tree exists). */
+	void BuildLayoutIfNeeded();
+
+	/** Pushes CharacterData into the controls (called on init and after layout build). */
+	void ApplyDataToControls();
 private:
 	UPROPERTY()
 	TObjectPtr<USAOCharacterData> CharacterData;
@@ -104,6 +114,9 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ConfirmButton;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> CancelButton;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> PreviewImage;

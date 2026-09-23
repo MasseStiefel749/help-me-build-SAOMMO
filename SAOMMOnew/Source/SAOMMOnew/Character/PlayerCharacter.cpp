@@ -13,6 +13,8 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "SAOCharacterData.h"
 #include "Engine/SkeletalMesh.h"
 #include "Sword.h"
 #include "CombatComponent.h"
@@ -98,6 +100,22 @@ void APlayerCharacter::BeginPlay()
 
 	CurrentHealth = MaxHealth;
 	UpdateCameraAttachment();
+
+	// Appearance from the character creator: body mesh, animation class and
+	// material tint come from the saved customization (before the sword
+	// attaches, so the socket query runs on the final mesh).
+	if (UGameplayStatics::DoesSaveGameExist(TEXT("CharacterSave"), 0))
+	{
+		if (USAOCharacterData* Appearance = Cast<USAOCharacterData>(
+			UGameplayStatics::LoadGameFromSlot(TEXT("CharacterSave"), 0)))
+		{
+			Appearance->ApplyToMesh(GetMesh());
+			if (TSubclassOf<UAnimInstance> AnimClass = Appearance->GetAnimClass())
+			{
+				GetMesh()->SetAnimInstanceClass(AnimClass);
+			}
+		}
+	}
 
 	if (InputFrame)
 	{

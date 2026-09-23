@@ -2,29 +2,35 @@
 
 #include "SAOCharacterCreatorWidget.h"
 #include "SAOCharacterData.h"
+#include "Blueprint/WidgetTree.h"
 #include "Components/ComboBoxString.h"
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 #include "Components/EditableTextBox.h"
 #include "Components/ScrollBox.h"
 #include "Components/Button.h"
-#include "Components/ScrollBox.h"
-#include "Components/Button.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Components/Border.h"
 #include "Engine/StaticMesh.h"
-#include "Engine/StaticMeshActor.h"
-#include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/PlayerController.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMesh.h"
-#include "Engine/StaticMesh.h"
-#include "Engine/AssetManager.h"
-#include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 
 void USAOCharacterCreatorWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	// Build the whole layout in code when no Blueprint designer tree exists,
+	// so the creator is usable with zero Editor assets (HUD pattern).
+	BuildLayoutIfNeeded();
 
 	if (BodyTypeCombo)
 	{
@@ -37,6 +43,11 @@ void USAOCharacterCreatorWidget::NativeConstruct()
 	if (ConfirmButton)
 	{
 		ConfirmButton->OnClicked.AddDynamic(this, &USAOCharacterCreatorWidget::OnConfirmCharacter);
+	}
+
+	if (CancelButton)
+	{
+		CancelButton->OnClicked.AddDynamic(this, &USAOCharacterCreatorWidget::OnCancelCharacter);
 	}
 
 	if (NameTextBox)
@@ -62,13 +73,25 @@ void USAOCharacterCreatorWidget::NativeConstruct()
 
 	PopulateArmorOptions();
 	PopulateWeaponOptions();
+
+	// Data may have been set before the layout existed (init-before-construct
+	// ordering); push it into the freshly built controls.
+	if (CharacterData)
+	{
+		ApplyDataToControls();
+	}
+
 	RefreshPreview();
 }
 
 void USAOCharacterCreatorWidget::InitializeCreator(USAOCharacterData* InCharacterData)
 {
 	CharacterData = InCharacterData;
+	ApplyDataToControls();
+}
 
+void USAOCharacterCreatorWidget::ApplyDataToControls()
+{
 	if (!CharacterData)
 	{
 		return;
@@ -257,23 +280,34 @@ void USAOCharacterCreatorWidget::OnConfirmCharacter()
 	// Save character data and start game
 	if (CharacterData)
 	{
-		// Save to slot
-		if (UGameplayStatics::DoesSaveGameExist(TEXT("CharacterSave"), 0))
-		{
-			// Overwrite existing
-		}
 		// Save via game instance or save system
 		if (UGameplayStatics::SaveGameToSlot(CharacterData, TEXT("CharacterSave"), 0))
 		{
 			UE_LOG(LogTemp, Log, TEXT("Character saved successfully"));
 		}
 
-		// Open main level
+		// Open main level (unpause first - the overlay froze the world).
 		if (UWorld* World = GetWorld())
 		{
+			UGameplayStatics::SetGamePaused(World, false);
 			UGameplayStatics::OpenLevel(World, TEXT("/Game/Levels/StartingReach/L_StartingReach"));
 		}
 	}
+}
+
+void USAOCharacterCreatorWidget::OnCancelCharacter()
+{
+	// Close without saving: restore gameplay input and unpause.
+	if (UWorld* World = GetWorld())
+	{
+		UGameplayStatics::SetGamePaused(World, false);
+	}
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		PC->SetInputMode(FInputModeGameOnly());
+		PC->bShowMouseCursor = false;
+	}
+	RemoveFromParent();
 }
 
 void USAOCharacterCreatorWidget::PopulateArmorOptions()
@@ -285,55 +319,10 @@ void USAOCharacterCreatorWidget::PopulateArmorOptions()
 
 	ArmorScrollBox->ClearChildren();
 
-	// Helmet options
-	TArray<FString> HelmetPaths = {
-		TEXT("/Game/SAO/Armor/SK_Helm_Aincrad"),
-		TEXT("/Game/SAO/Armor/SK_Helm_Aincrad_Variant"),
-	};
-
-	for (const FString& Path : HelmetPaths)
-	{
-		if (UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *Path))
-		{
-			UButton* Btn = NewObject<UButton>(this);
-			Btn->OnClicked.AddDynamic(this, &USAOCharacterCreatorWidget::OnHelmetButtonClicked);
-			HelmetButtons.Add(Mesh);
-			ArmorScrollBox->AddChild(Btn);
-		}
-	}
-
-	// Chest options
-	TArray<FString> ChestPaths = {
-		TEXT("/Game/SAO/Armor/SK_Cuirass_Iron"),
-		TEXT("/Game/SAO/Armor/SK_Cuirass_Leather"),
-	};
-
-	for (const FString& Path : ChestPaths)
-	{
-		if (UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *Path))
-		{
-			UButton* Btn = NewObject<UButton>(this);
-			Btn->OnClicked.AddDynamic(this, &USAOCharacterCreatorWidget::OnChestButtonClicked);
-			ChestButtons.Add(Mesh);
-			ArmorScrollBox->AddChild(Btn);
-		}
-	}
-
-	// Coat options
-	TArray<FString> CoatPaths = {
-		TEXT("/Game/SAO/Armor/SK_Coat_Beta"),
-	};
-
-	for (const FString& Path : CoatPaths)
-	{
-		if (UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *Path))
-		{
-			UButton* Btn = NewObject<UButton>(this);
-			Btn->OnClicked.AddDynamic(this, &USAOCharacterCreatorWidget::OnCoatButtonClicked);
-			CoatButtons.Add(Mesh);
-			ArmorScrollBox->AddChild(Btn);
-		}
-	}
+	// No armor meshes exist in the project yet (the old /Game/SAO/... paths
+	// pointed at a folder that was never created, so this section always
+	// loaded nothing). Keep it honestly empty and add entries here once
+	// licensed armor assets land under Content/Armor/.
 }
 
 void USAOCharacterCreatorWidget::PopulateWeaponOptions()
@@ -345,21 +334,19 @@ void USAOCharacterCreatorWidget::PopulateWeaponOptions()
 
 	WeaponScrollBox->ClearChildren();
 
+	// The one weapon mesh that exists: project-authored, imported sword.
 	TArray<FString> WeaponPaths = {
-		TEXT("/Game/SAO/Weapons/SM_BlackSword_ElucidatorLike"),
-		TEXT("/Game/SAO/Weapons/SM_AzureBlade"),
-		TEXT("/Game/SAO/Weapons/SM_StarterIronSword"),
-		TEXT("/Game/SAO/Weapons/SM_Rapier_LambentLike"),
-		TEXT("/Game/SAO/Weapons/SM_Dagger_Assassin"),
-		TEXT("/Game/SAO/Weapons/SM_Greatsword_DragonBone"),
-		TEXT("/Game/SAO/Weapons/SM_Shield_Kite"),
+		TEXT("/Game/Weapons/SM_SAOSword"),
 	};
 
 	for (const FString& Path : WeaponPaths)
 	{
 		if (UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *Path))
 		{
-			UButton* Btn = NewObject<UButton>(this);
+			UButton* Btn = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
+			UTextBlock* Caption = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+			Caption->SetText(FText::FromString(Mesh->GetName()));
+			Btn->SetContent(Caption);
 			Btn->OnClicked.AddDynamic(this, &USAOCharacterCreatorWidget::OnWeaponButtonClicked);
 			WeaponButtons.Add(Mesh);
 			WeaponScrollBox->AddChild(Btn);
@@ -439,5 +426,124 @@ void USAOCharacterCreatorWidget::OnWeaponButtonClicked()
 	{
 		OnWeaponSelected(WeaponButtons[WeaponIndex]);
 		RefreshPreview();
+	}
+}
+
+void USAOCharacterCreatorWidget::BuildLayoutIfNeeded()
+{
+	// Code-only layout: only runs when no designer tree exists (no Blueprint
+	// asset yet), same zero-Editor-setup pattern as the HUD and death screen.
+	if (!WidgetTree || WidgetTree->RootWidget)
+	{
+		return;
+	}
+
+	auto MakeLabel = [this](const FString& Text) -> UTextBlock*
+	{
+		UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+		Label->SetText(FText::FromString(Text));
+		Label->SetColorAndOpacity(FLinearColor(0.88f, 0.88f, 0.88f, 1.0f));
+		return Label;
+	};
+
+	auto MakeButton = [this](const FString& Text) -> UButton*
+	{
+		UButton* Btn = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
+		UTextBlock* Caption = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+		Caption->SetText(FText::FromString(Text));
+		Btn->SetContent(Caption);
+		return Btn;
+	};
+
+	auto MakeSwatch = [this](const FName& Name) -> UImage*
+	{
+		UImage* Img = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), Name);
+		FSlateBrush Brush;
+		Brush.DrawAs = ESlateBrushDrawType::Box;
+		Brush.TintColor = FSlateColor(FLinearColor::White);
+		Img->SetBrush(Brush);
+		Img->SetDesiredSizeOverride(FVector2D(72.0f, 24.0f));
+		return Img;
+	};
+
+	UCanvasPanel* Canvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("CreatorCanvas"));
+	WidgetTree->RootWidget = Canvas;
+
+	// Dimmer behind a centered panel.
+	UBorder* Dimmer = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("CreatorDimmer"));
+	Dimmer->SetBrushColor(FLinearColor(0.02f, 0.02f, 0.05f, 0.92f));
+
+	UBorder* Panel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("CreatorPanel"));
+	Panel->SetBrushColor(FLinearColor(0.07f, 0.07f, 0.11f, 0.97f));
+	Panel->SetPadding(FMargin(28.0f));
+
+	UVerticalBox* CenterBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("CreatorBox"));
+	Panel->SetContent(CenterBox);
+
+	UTextBlock* Title = MakeLabel(TEXT("CHARACTER CREATOR"));
+	Title->SetColorAndOpacity(FLinearColor(0.92f, 0.78f, 0.30f, 1.0f));
+	CenterBox->AddChildToVerticalBox(Title);
+
+	auto AddRow = [&](UWidget* Left, UWidget* Right)
+	{
+		UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+		if (UHorizontalBoxSlot* LeftSlot = Row->AddChildToHorizontalBox(Left))
+		{
+			LeftSlot->SetVerticalAlignment(VAlign_Center);
+		}
+		if (UHorizontalBoxSlot* RightSlot = Row->AddChildToHorizontalBox(Right))
+		{
+			RightSlot->SetVerticalAlignment(VAlign_Center);
+		}
+		if (UVerticalBoxSlot* RowSlot = CenterBox->AddChildToVerticalBox(Row))
+		{
+			RowSlot->SetPadding(FMargin(0.0f, 8.0f, 0.0f, 8.0f));
+		}
+	};
+
+	NameTextBox = WidgetTree->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(), TEXT("CreatorName"));
+	NameTextBox->SetHintText(FText::FromString(TEXT("Hero")));
+	AddRow(MakeLabel(TEXT("Name")), NameTextBox);
+
+	BodyTypeCombo = WidgetTree->ConstructWidget<UComboBoxString>(UComboBoxString::StaticClass(), TEXT("CreatorBodyType"));
+	AddRow(MakeLabel(TEXT("Body")), BodyTypeCombo);
+
+	SkinColorButton = MakeButton(TEXT("Skin color"));
+	SkinColorPreview = MakeSwatch(TEXT("SkinSwatch"));
+	AddRow(SkinColorButton, SkinColorPreview);
+
+	HairColorButton = MakeButton(TEXT("Hair color"));
+	HairColorPreview = MakeSwatch(TEXT("HairSwatch"));
+	AddRow(HairColorButton, HairColorPreview);
+
+	EyeColorButton = MakeButton(TEXT("Eye color"));
+	EyeColorPreview = MakeSwatch(TEXT("EyeSwatch"));
+	AddRow(EyeColorButton, EyeColorPreview);
+
+	// Buttons: a sword preview/weapon list only appears when a Blueprint
+	// provides the scroll boxes; the core creator is name/body/colors.
+	UHorizontalBox* Buttons = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("CreatorButtons"));
+	ConfirmButton = MakeButton(TEXT("CONFIRM"));
+	CancelButton = MakeButton(TEXT("CANCEL"));
+	if (UHorizontalBoxSlot* ConfirmSlot = Buttons->AddChildToHorizontalBox(ConfirmButton))
+	{
+		ConfirmSlot->SetPadding(FMargin(0.0f, 0.0f, 12.0f, 0.0f));
+	}
+	Buttons->AddChildToHorizontalBox(CancelButton);
+	if (UVerticalBoxSlot* ButtonRowSlot = CenterBox->AddChildToVerticalBox(Buttons))
+	{
+		ButtonRowSlot->SetPadding(FMargin(0.0f, 18.0f, 0.0f, 0.0f));
+	}
+
+	if (UCanvasPanelSlot* DimSlot = Canvas->AddChildToCanvas(Dimmer))
+	{
+		DimSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
+		DimSlot->SetOffsets(FMargin(0.0f));
+	}
+	if (UCanvasPanelSlot* PanelSlot = Canvas->AddChildToCanvas(Panel))
+	{
+		PanelSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
+		PanelSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+		PanelSlot->SetOffsets(FMargin(0.0f));
 	}
 }
