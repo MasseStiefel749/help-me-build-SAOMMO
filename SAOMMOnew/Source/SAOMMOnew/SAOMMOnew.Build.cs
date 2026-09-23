@@ -33,7 +33,7 @@ public class SAOMMOnew : ModuleRules
 		// UBT resolves PublicIncludePaths relative to the Source/ directory
 		// (i.e. Source/SAOMMOnew/Core), so every entry needs the "SAOMMOnew/"
 		// prefix. Listing every subfolder lets both pathless includes (e.g.
-		// "SAOMMOCoreTypes.h") and prefixed ones (e.g.
+		// "CoreTypes.h") and prefixed ones (e.g.
 		// "Variant_Combat/CombatGameMode.h") resolve.
 		PublicIncludePaths.AddRange(new string[] {
 			".",
@@ -48,6 +48,7 @@ public class SAOMMOnew : ModuleRules
 			"SAOMMOnew/Inventory",
 			"SAOMMOnew/Progression",
 			"SAOMMOnew/World",
+			"SAOMMOnew/UI",
 			"SAOMMOnew/Variant_Platforming",
 			"SAOMMOnew/Variant_Platforming/Animation",
 			"SAOMMOnew/Variant_Combat",
