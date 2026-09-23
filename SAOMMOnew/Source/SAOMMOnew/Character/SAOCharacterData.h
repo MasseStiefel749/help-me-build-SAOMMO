@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "GameFramework/SaveGame.h"
 #include "SAOCharacterData.generated.h"
 
 class USkeletalMesh;
@@ -87,7 +88,7 @@ struct FSAOCharacterCustomization
 };
 
 UCLASS(BlueprintType, Blueprintable)
-class USAOCharacterData : public UObject
+class USAOCharacterData : public USaveGame
 {
 	GENERATED_BODY()
 
