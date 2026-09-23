@@ -1,0 +1,16 @@
+{
+  "search.exclude": {
+    "**/Binaries": true,
+    "**/Intermediate": true,
+    "**/Saved": true,
+    "**/DerivedDataCache": true,
+    "**/.vs": true,
+    "**/Backup": true,
+    "**/node_modules": true,
+    "**/*.uasset": true
+  },
+  "files.exclude": {
+    "**/DerivedDataCache": true,
+    "**/.vs": true
+  }
+}

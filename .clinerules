@@ -1,0 +1,18 @@
+# Cline rules — SAOMMO (local Ollama)
+
+Provider: Ollama | URL: http://localhost:11434 | Model: qwen3-coder:30b
+"Use Compact Prompt" = ON. Start context 16K (see Docs/AI/LOCAL-SETUP.md).
+
+ALWAYS before editing:
+1. Read AGENTS.md at repo root.
+2. Read Band 6 (`SAOMMOnew/ki integration/projekt-ki-promts-6-of-6`) + the band for this task.
+3. `git status` — working tree must be clean; propose a checkpoint commit first.
+4. Inspect existing code under `SAOMMOnew/Source/SAOMMOnew/` — assume the system exists until proven otherwise.
+
+ALLOWED to read/edit: SAOMMOnew/Source/, SAOMMOnew/Config/, SAOMMOnew/Plugins/,
+SAOMMOnew/ki integration/, Docs within ki integration.
+NEVER: Binaries/, Intermediate/, Saved/, DerivedDataCache/, .vs/, Backup/, *.uasset binaries.
+
+Workflow per task: Plan (smallest step) -> Implement -> Build -> Fix only own errors ->
+Review (crash/nullptr/lifecycle/replication/Tick/VR+Desktop+Budget-VR) -> Docs -> small commit.
+One role at a time, role prompts in SAOMMOnew/ki integration/Docs/AI/agents/.

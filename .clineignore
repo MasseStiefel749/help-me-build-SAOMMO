@@ -1,0 +1,12 @@
+# Cline / AI ignore — never read, saves context + speed
+SAOMMOnew/Binaries/
+SAOMMOnew/DerivedDataCache/
+SAOMMOnew/Intermediate/
+SAOMMOnew/Saved/
+SAOMMOnew/.vs/
+SAOMMOnew/Backup/
+SAOMMOnew/DashLibData/
+*.umap
+*.uasset
+node_modules/
+dist/
