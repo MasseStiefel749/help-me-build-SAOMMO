@@ -300,9 +300,6 @@ void USAOCharacterCreatorWidget::PopulateArmorOptions()
 			HelmetButtons.Add(Mesh);
 			ArmorScrollBox->AddChild(Btn);
 		}
-	});
-			ArmorScrollBox->AddChild(Btn);
-		}
 	}
 
 	// Chest options
@@ -320,9 +317,6 @@ void USAOCharacterCreatorWidget::PopulateArmorOptions()
 			ChestButtons.Add(Mesh);
 			ArmorScrollBox->AddChild(Btn);
 		}
-	});
-			ArmorScrollBox->AddChild(Btn);
-		}
 	}
 
 	// Coat options
@@ -337,9 +331,6 @@ void USAOCharacterCreatorWidget::PopulateArmorOptions()
 			UButton* Btn = NewObject<UButton>(this);
 			Btn->OnClicked.AddDynamic(this, &USAOCharacterCreatorWidget::OnCoatButtonClicked);
 			CoatButtons.Add(Mesh);
-			ArmorScrollBox->AddChild(Btn);
-		}
-	});
 			ArmorScrollBox->AddChild(Btn);
 		}
 	}
@@ -371,9 +362,6 @@ void USAOCharacterCreatorWidget::PopulateWeaponOptions()
 			UButton* Btn = NewObject<UButton>(this);
 			Btn->OnClicked.AddDynamic(this, &USAOCharacterCreatorWidget::OnWeaponButtonClicked);
 			WeaponButtons.Add(Mesh);
-			WeaponScrollBox->AddChild(Btn);
-		}
-	});
 			WeaponScrollBox->AddChild(Btn);
 		}
 	}
