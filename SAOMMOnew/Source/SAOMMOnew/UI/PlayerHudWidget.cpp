@@ -209,7 +209,7 @@ void UPlayerHudWidget::RefreshInventory()
 		Body += TEXT("(empty — kill enemies, grab pickups)\n");
 	}
 
-	Body += TEXT("\nWASD move · Mouse look · LMB attack · E interact · V camera · I inventory");
+	Body += TEXT("\nWASD move · Mouse look · LMB attack · E interact · V camera · Shift sprint · I inventory");
 	InvBody->SetText(FText::FromString(Body));
 }
 

@@ -8,6 +8,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
+#include "InputMappingContext.h"
+#include "Engine/LocalPlayer.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstance.h"
@@ -29,7 +31,7 @@ APlayerCharacter::APlayerCharacter()
 
 	if (GetCharacterMovement())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = 400.0f;
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -342,5 +344,71 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		{
 			EnhancedInput->BindAction(JumpAction, ETriggerEvent::Started, this, &APlayerCharacter::OnJump);
 		}
+
+		// Sprint: transient action + Shift mapping built in code, so the
+		// feature ships with zero InputAction/IMC assets (same guarantee
+		// as the code-only HUD).
+		EnsureSprintMapping();
+		if (SprintAction)
+		{
+			EnhancedInput->BindAction(SprintAction, ETriggerEvent::Started, this, &APlayerCharacter::OnSprintStarted);
+			EnhancedInput->BindAction(SprintAction, ETriggerEvent::Completed, this, &APlayerCharacter::OnSprintStopped);
+			EnhancedInput->BindAction(SprintAction, ETriggerEvent::Canceled, this, &APlayerCharacter::OnSprintStopped);
+		}
+	}
+}
+
+void APlayerCharacter::EnsureSprintMapping()
+{
+	if (SprintAction && SprintMapping)
+	{
+		// Already built; still make sure the local player has the mapping
+		// (respawn creates a fresh pawn against the same local player).
+	}
+	else
+	{
+		SprintAction = NewObject<UInputAction>(this, TEXT("IA_Sprint_Runtime"));
+		SprintMapping = NewObject<UInputMappingContext>(this, TEXT("IMC_Sprint_Runtime"));
+		if (SprintAction && SprintMapping)
+		{
+			SprintAction->ValueType = EInputActionValueType::Boolean;
+			SprintMapping->MapKey(SprintAction, EKeys::LeftShift);
+		}
+		else
+		{
+			SprintAction = nullptr;
+			SprintMapping = nullptr;
+			return;
+		}
+	}
+
+	if (const APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (ULocalPlayer* LP = PC->GetLocalPlayer())
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Sub = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+			{
+				if (!Sub->HasMappingContext(SprintMapping))
+				{
+					Sub->AddMappingContext(SprintMapping, 0);
+				}
+			}
+		}
+	}
+}
+
+void APlayerCharacter::OnSprintStarted(const FInputActionValue& Value)
+{
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->MaxWalkSpeed = SprintSpeed;
+	}
+}
+
+void APlayerCharacter::OnSprintStopped(const FInputActionValue& Value)
+{
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->MaxWalkSpeed = WalkSpeed;
 	}
 }

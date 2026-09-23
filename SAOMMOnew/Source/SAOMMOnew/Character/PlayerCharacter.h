@@ -11,6 +11,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
+class UInputMappingContext;
 class UCombatComponent;
 class UInventoryComponent;
 class UProgressionComponent;
@@ -123,6 +124,21 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = 0, ClampMax = 1000, Units = "cm"))
 	float ThirdPersonBoomLength = 300.0f;
 
+	/** Walk speed restored when sprint ends. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (ClampMin = 100, ClampMax = 1200, Units = "cm/s"))
+	float WalkSpeed = 400.0f;
+
+	/** Sprint speed while the sprint key is held (Shift, mapped in code). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (ClampMin = 100, ClampMax = 2000, Units = "cm/s"))
+	float SprintSpeed = 650.0f;
+
+	/** Sprint action + mapping built at possession time (no InputAction asset needed). */
+	UPROPERTY()
+	TObjectPtr<UInputAction> SprintAction = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UInputMappingContext> SprintMapping = nullptr;
+
 public:
 
 	APlayerCharacter();
@@ -178,6 +194,11 @@ protected:
 	void OnAttack(const FInputActionValue& Value);
 	void OnInteract(const FInputActionValue& Value);
 	void OnJump(const FInputActionValue& Value);
+	void OnSprintStarted(const FInputActionValue& Value);
+	void OnSprintStopped(const FInputActionValue& Value);
+
+	/** Builds the transient Shift sprint mapping (once per pawn) and registers it. */
+	void EnsureSprintMapping();
 
 	/** Repositions the camera for the active mode. */
 	void UpdateCameraAttachment();
