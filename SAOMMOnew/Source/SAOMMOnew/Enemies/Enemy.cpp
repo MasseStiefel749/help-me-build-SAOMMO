@@ -254,6 +254,13 @@ float AEnemy::TakeDamage(float Damage, const struct FDamageEvent& DamageEvent,
 
 	if (CurrentHealth <= 0.0f)
 	{
+		// Directional nudge for the ragdoll: away from whatever dealt the
+		// final blow (no impulse parameter on the TakeDamage path).
+		if (DamageCauser)
+		{
+			const FVector Away = (GetActorLocation() - DamageCauser->GetActorLocation()).GetSafeNormal();
+			PendingRagdollImpulse = Away * FMath::Clamp(Damage * 150.0f, 100.0f, 900.0f);
+		}
 		Die();
 	}
 	else
@@ -273,16 +280,35 @@ void AEnemy::Die()
 	bDead = true;
 	State = EEnemyState::Idle;
 
-	// Corpse handling: no collision (passes through cleanly), death fall
-	// animation (mesh keeps ticking; Tick() skips the FSM once bDead).
-	// Lifespan set below destroys the actor after the fall.
+	// Corpse handling: the capsule stops blocking (the player may walk
+	// through the body); Tick() skips the FSM once bDead. Lifespan below
+	// destroys the actor once the body has settled.
 	if (GetCapsuleComponent())
 	{
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
-	if (DeathAnim && GetMesh())
+
+	// Ragdoll-lite: the body falls under physics so the killing blow reads
+	// physical instead of playing a canned fall in place. Falls back to the
+	// death animation when the mesh has no physics asset to simulate.
+	if (USkeletalMeshComponent* Body = GetMesh())
 	{
-		GetMesh()->PlayAnimation(DeathAnim, false);
+		if (Body->GetPhysicsAsset())
+		{
+			Body->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			Body->SetCollisionObjectType(ECC_PhysicsBody);
+			Body->SetAllBodiesSimulatePhysics(true);
+			Body->SetSimulatePhysics(true); // also wakes the bodies
+			if (!PendingRagdollImpulse.IsNearlyZero())
+			{
+				// Velocity change (mass-independent): a small, predictable nudge.
+				Body->AddImpulse(PendingRagdollImpulse, NAME_None, /*bVelChange=*/true);
+			}
+		}
+		else if (DeathAnim)
+		{
+			Body->PlayAnimation(DeathAnim, false);
+		}
 	}
 	if (HealthBarComp)
 	{
@@ -341,6 +367,12 @@ void AEnemy::ApplyDamage(float Damage, AActor* DamageCauser, const FVector& Dama
 
 	if (CurrentHealth <= 0.0f)
 	{
+		// Ragdoll push: prefer the real damage impulse; the melee path passes
+		// zero, so push away from the hit location instead.
+		PendingRagdollImpulse = DamageImpulse.SizeSquared() > KINDA_SMALL_NUMBER
+			? DamageImpulse
+			: (GetActorLocation() - DamageLocation).GetSafeNormal()
+				* FMath::Clamp(Damage * 150.0f, 100.0f, 900.0f);
 		Die();
 	}
 	else

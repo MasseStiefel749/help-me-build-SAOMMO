@@ -119,6 +119,9 @@ protected:
 	/** True once Die() ran; guards the TakeDamage/ApplyDamage double-death. */
 	bool bDead = false;
 
+	/** Impulse handed to the ragdoll on death (set from the killing blow; zero = plain fall). */
+	FVector PendingRagdollImpulse = FVector::ZeroVector;
+
 	/** Controller credited with the kill (set from TakeDamage/ApplyDamage instigator). */
 	UPROPERTY()
 	TWeakObjectPtr<AController> Killer;
