@@ -214,6 +214,8 @@ void AEnemy::PerformAttack()
 	if (Dist <= AttackRange)
 	{
 		TargetPawn->TakeDamage(AttackDamage, FDamageEvent(), GetController(), this);
+		// Knockback: the victim gets shoved away from this enemy's attack.
+		PushAway(TargetPawn.Get(), GetActorLocation(), AttackKnockbackSpeed);
 		bAttackReady = false;
 		// Cooldown tied to the recover period (was SetTimerForNextTick = no cooldown).
 		if (UWorld* World = GetWorld())
@@ -266,9 +268,29 @@ float AEnemy::TakeDamage(float Damage, const struct FDamageEvent& DamageEvent,
 	else
 	{
 		UpdateHealthBar();
+		// Knockback while alive: the hit shoves the body away from the
+		// attacker (the ragdoll handles the dying case instead).
+		PushAway(this, DamageCauser ? DamageCauser->GetActorLocation() : GetActorLocation(), HitKnockbackSpeed);
 	}
 
 	return Damage;
+}
+
+void AEnemy::PushAway(AActor* Target, const FVector& Origin, float Speed)
+{
+	ACharacter* Character = Cast<ACharacter>(Target);
+	if (!Character || Speed <= 0.0f)
+	{
+		return;
+	}
+	FVector Away = Character->GetActorLocation() - Origin;
+	Away.Z = 0.0f;
+	if (Away.IsNearlyZero())
+	{
+		return; // origin sits exactly under the target - no sensible direction
+	}
+	// Pure horizontal launch: XY set to the push, existing vertical motion kept.
+	Character->LaunchCharacter(Away.GetSafeNormal() * Speed, /*bXYOverride=*/true, /*bZOverride=*/false);
 }
 
 void AEnemy::Die()
@@ -378,6 +400,11 @@ void AEnemy::ApplyDamage(float Damage, AActor* DamageCauser, const FVector& Dama
 	else
 	{
 		UpdateHealthBar();
+		// Knockback while alive: away from the damage causer, else away from
+		// the hit point (the melee path passes the sword as causer).
+		PushAway(this,
+			DamageCauser ? DamageCauser->GetActorLocation() : DamageLocation,
+			HitKnockbackSpeed);
 	}
 }
 

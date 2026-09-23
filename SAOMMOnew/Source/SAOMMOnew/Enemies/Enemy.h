@@ -64,6 +64,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (ClampMin = 0, ClampMax = 1000))
 	float AttackDamage = 1.0f;
 
+	/** Horizontal push applied to this enemy when hit while alive (0 = none). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (ClampMin = 0, ClampMax = 2000, Units = "cm/s"))
+	float HitKnockbackSpeed = 350.0f;
+
+	/** Push applied to the victim when this enemy lands an attack (0 = none). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (ClampMin = 0, ClampMax = 2000, Units = "cm/s"))
+	float AttackKnockbackSpeed = 300.0f;
+
 	/** XP granted to the killer's progression component on death. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rewards", meta = (ClampMin = 0))
 	float XPReward = 10.0f;
@@ -143,6 +151,9 @@ protected:
 
 	/** Performs a single melee attack against the target. */
 	void PerformAttack();
+
+	/** Horizontal shove: pushes Target away from Origin at Speed (0 = none, no vertical change). */
+	static void PushAway(AActor* Target, const FVector& Origin, float Speed);
 
 	/** Handles death and removal from the level. */
 	void Die();
