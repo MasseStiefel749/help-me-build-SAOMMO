@@ -35,7 +35,22 @@ ASword::ASword()
 	TipMesh->SetupAttachment(BladeCollision);
 	TipMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// Hero sword first: Atlas BlackSword parts share one origin and are
+	// Preferred hero: the authored one-mesh sword (source:
+	// ArtSource/Sword/make_sword.py, imported to /Game/Weapons). Origin at
+	// grip center, tip along local +Z (matches the aim code's up-vector
+	// convention), so identity assembly is exact.
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SAOSwordObj(
+		TEXT("/Game/Weapons/SM_SAOSword"));
+	if (SAOSwordObj.Succeeded())
+	{
+		Mesh->SetStaticMesh(SAOSwordObj.Object);
+		Mesh->SetRelativeLocation(FVector::ZeroVector);
+		Mesh->SetRelativeRotation(FRotator::ZeroRotator);
+		Mesh->SetRelativeScale3D(FVector::OneVector);
+		return;
+	}
+
+	// Fallback hero: Atlas BlackSword parts share one origin and are
 	// already vertical (tip +Z, pommel -Z, grip at 0), so identity assembly
 	// is exact - no rotations, no offsets, nothing to get wrong.
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> HeroBlade(
