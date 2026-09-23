@@ -4,12 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "TimerManager.h"
 #include "MainPlayerController.generated.h"
 
 class UInputMappingContext;
 class UInputAction;
 class APlayerCharacter;
 class UPlayerHudWidget;
+class UDeathScreenWidget;
 
 /**
  *  SAOMMO player controller (target architecture).
@@ -71,6 +73,29 @@ protected:
 
 	/** Transform used for respawns; can be updated to create checkpoints. */
 	FTransform RespawnTransform;
+
+	/** Fallback auto-respawn when the player never presses a key on the death screen. */
+	UPROPERTY(EditAnywhere, Category = "Respawn", meta = (ClampMin = 0, ClampMax = 60, Units = "s"))
+	float RespawnDelay = 15.0f;
+
+	/** Timer driving the fallback auto-respawn. */
+	FTimerHandle RespawnTimer;
+
+	/** True between death and the respawn the player triggers with any key. */
+	bool bPendingRespawn = false;
+
+	/** Death overlay shown between death and respawn (local players only). */
+	UPROPERTY()
+	TObjectPtr<UDeathScreenWidget> DeathScreen = nullptr;
+
+	/** Shows/refreshes the death overlay (call before arming the respawn timer). */
+	void BeginDeathScreen();
+
+	/** Any key press on the death screen ends the wait and respawns. */
+	virtual bool InputKey(const struct FInputKeyEventArgs& Params) override;
+
+	/** Spawns and possesses the respawn pawn (end point of the death delay). */
+	void DoRespawn();
 
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;

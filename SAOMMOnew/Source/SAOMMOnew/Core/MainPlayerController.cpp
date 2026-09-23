@@ -8,6 +8,7 @@
 #include "InputModifiers.h"
 #include "InputCoreTypes.h"
 #include "Blueprint/UserWidget.h"
+#include "InputKeyEventArgs.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
@@ -17,6 +18,7 @@
 #include "Sword.h"
 #include "MainGameMode.h"
 #include "PlayerHudWidget.h"
+#include "DeathScreenWidget.h"
 #include "PlayerSaveGame.h"
 #include "InventoryComponent.h"
 #include "ProgressionComponent.h"
@@ -306,6 +308,60 @@ bool AMainPlayerController::LoadProgress()
 
 void AMainPlayerController::OnPawnDestroyed(AActor* DestroyedActor)
 {
+	// Death beat: show the overlay first; the respawn is driven by the
+	// player (any key press - see InputKey) with RespawnDelay as the
+	// no-input fallback, so "die" and "restart" read as two distinct
+	// moments (Band 3 §13/§14).
+	if (RespawnDelay > 0.0f && IsLocalPlayerController() && GetWorld())
+	{
+		if (!DeathScreen)
+		{
+			DeathScreen = CreateWidget<UDeathScreenWidget>(this, UDeathScreenWidget::StaticClass());
+		}
+		if (DeathScreen)
+		{
+			bPendingRespawn = true;
+			BeginDeathScreen();
+			GetWorld()->GetTimerManager().SetTimer(
+				RespawnTimer, this, &AMainPlayerController::DoRespawn, RespawnDelay, false);
+			return;
+		}
+	}
+	DoRespawn();
+}
+
+bool AMainPlayerController::InputKey(const FInputKeyEventArgs& Params)
+{
+	// Death screen: any key press ends the wait and respawns right away.
+	if (bPendingRespawn && Params.Event == IE_Pressed)
+	{
+		if (GetWorld())
+		{
+			GetWorld()->GetTimerManager().ClearTimer(RespawnTimer);
+		}
+		DoRespawn();
+		return true;
+	}
+	return Super::InputKey(Params);
+}
+
+void AMainPlayerController::BeginDeathScreen()
+{
+	if (!DeathScreen)
+	{
+		return;
+	}
+	if (!DeathScreen->IsInViewport())
+	{
+		DeathScreen->AddToViewport(200);
+	}
+	DeathScreen->ShowDeath();
+}
+
+void AMainPlayerController::DoRespawn()
+{
+	bPendingRespawn = false;
+
 	TSubclassOf<APlayerCharacter> SpawnClass = CharacterClass;
 
 	if (!SpawnClass)
@@ -326,6 +382,11 @@ void AMainPlayerController::OnPawnDestroyed(AActor* DestroyedActor)
 		if (APlayerCharacter* Respawned = World->SpawnActor<APlayerCharacter>(SpawnClass, RespawnTransform))
 		{
 			Possess(Respawned);
+			// Back in the fight: drop the death overlay.
+			if (DeathScreen)
+			{
+				DeathScreen->RemoveFromParent();
+			}
 		}
 	}
 }
