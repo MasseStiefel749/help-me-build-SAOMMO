@@ -51,7 +51,7 @@
     },
     {
       "Name": "EnhancedInputSequence",
-      "Enabled": true,
+      "Enabled": false,
       "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/c33feca902ef41829dc5ea8c64bec183"
     },
     {
