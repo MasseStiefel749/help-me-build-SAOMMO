@@ -103,6 +103,32 @@ void ASword::BeginPlay()
 	PreviousLocation = GetActorLocation();
 }
 
+void ASword::DropPhysics()
+{
+	// No longer wielded: stop hit queries, drop the ownership chain that
+	// routes kill credit, and leave the wielder's hand.
+	bHitEnabled = false;
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	OwnerActor = nullptr;
+	SetOwner(nullptr);
+
+	if (BladeCollision)
+	{
+		// The root sphere becomes the physical body; the visual parts stay
+		// non-physical children and ride along. Shrink it so the blade rests
+		// close to the ground instead of balancing on a 30 cm sphere.
+		BladeCollision->SetSphereRadius(6.0f);
+		BladeCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		BladeCollision->SetCollisionObjectType(ECC_PhysicsBody);
+		BladeCollision->SetSimulatePhysics(true);
+		// Inherit the last swing so a killed wielder's blade keeps its motion.
+		BladeCollision->SetPhysicsLinearVelocity(SwingVelocity);
+	}
+
+	// Debris: despawn once the fight has moved on.
+	SetLifeSpan(30.0f);
+}
+
 void ASword::SetShadowCasting(bool bEnabled)
 {
 	if (Mesh)

@@ -302,11 +302,11 @@ float APlayerCharacter::Heal(float Amount)
 void APlayerCharacter::Die()
 {
 	OnDied.Broadcast();
-	// Respawn path (PlayerController) creates a fresh pawn; destroy the
-	// equipped sword with the old body so no orphan weapon actors linger.
+	// The blade falls to the ground and lingers as physical debris; the
+	// respawn path (PlayerController) equips a fresh sword on the new pawn.
 	if (EquippedSword)
 	{
-		EquippedSword->Destroy();
+		EquippedSword->DropPhysics();
 		EquippedSword = nullptr;
 	}
 	Destroy();

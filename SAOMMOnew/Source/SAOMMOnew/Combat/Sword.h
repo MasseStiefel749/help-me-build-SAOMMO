@@ -69,6 +69,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SetHitEnabled(bool bEnabled) { bHitEnabled = bEnabled; }
 
+	/** Detaches the weapon from its wielder and hands it to physics, so the
+	 *  blade falls to the ground instead of vanishing with a dead body.
+	 *  Inherits the last swing velocity as initial motion. */
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void DropPhysics();
+
 	/** Toggles shadow casting on all blade parts (off in first person: a
 	 *  floating sword shadow with no visible wielder reads as a bug). */
 	UFUNCTION(BlueprintCallable, Category = "Combat")
