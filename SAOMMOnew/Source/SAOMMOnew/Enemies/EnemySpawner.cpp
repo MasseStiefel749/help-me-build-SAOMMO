@@ -2,12 +2,19 @@
 
 #include "EnemySpawner.h"
 #include "Enemy.h"
+#include "Components/SceneComponent.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 
 AEnemySpawner::AEnemySpawner()
 {
 	PrimaryActorTick.bCanEverTick = false;
+
+	// Root is required for level placement: without one, SetActorLocation is
+	// a no-op and GetActorLocation() stays at the origin, so TrySpawn would
+	// drop enemies inside the safe town instead of the placed zone
+	// (spec: Band 4 test-arena §5 zones vs threat tier).
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
 	EnemyClass = AEnemy::StaticClass();
 }
