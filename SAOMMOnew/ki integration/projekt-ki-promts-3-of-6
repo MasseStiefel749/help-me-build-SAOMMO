@@ -235,6 +235,12 @@ Game Over
 Restart
 ```
 
+The game presents Death through a death-screen layer (see ADR-016): a full-screen
+overlay appears when the player character dies and offers the restart. The player
+presses any key to continue to Restart; a delay timer restarts the game only as a
+fallback when no key is pressed. The layer is presentational only: it adds no
+penalties, checkpoints or resurrection semantics. Those remain reserved for later.
+
 The final game can later support:
 
 * respawn systems
