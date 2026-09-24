@@ -15,9 +15,10 @@
 | ❌ **Not implemented** | No code path found. |
 | 🚫 **Headset-blocked** | Cannot be proven without an HMD, regardless of code state. |
 
-> **Honesty rule (Band 6 §26):** "Code evidence" is *not* "works". Points 1–4 are
-> considered *implemented but not runtime-proven in this audit*; the last known play proof
-> predates ADR-016 and is only as good as the last manual test recorded in the ADRs.
+> **Honesty rule (Band 6 §19 "AI Hallucination Prevention" + §20 "Verification Before
+> Completion"):** "Code evidence" is *not* "works". Points 1–4 are *implemented*, with
+> runtime evidence limited to the vertical-slice playtest recorded in ADR-016 (its
+> Consequences section covers the §20 desktop chain 1–4); this audit itself ran no PIE.
 
 ---
 
@@ -25,7 +26,7 @@
 
 | # | Slice point | Status | Evidence / gap |
 |---|-------------|--------|----------------|
-| 1 | Start the game | 🟡 | Boot config exists, but `GlobalDefaultGameMode` points at quarantined content (see P1 detail). |
+| 1 | Start the game | 🟡 | `GlobalDefaultGameMode` → `BP_MainGameMode`: file absent after rename-revert, name quarantined (see P1 detail). Level override rescues the boot today. |
 | 2 | Enter a test level | ✅ code | `GameDefaultMap=/Game/Levels/StartingReach/L_StartingReach` (`Config/DefaultEngine.ini:2`). Level is a native blockout (ADR-013). |
 | 3 | Move around | ✅ code / 🟡 runtime | `APlayerCharacter` movement input → `AddMovementInput` (`PlayerCharacter.cpp:231-232`). Runtime feel unproven in this audit. |
 | 4 | Switch FP/TP on desktop | ✅ code / 🟡 runtime | `OnToggleCamera` (`PlayerCharacter.cpp:251`), bound at `:351`, fallback key `V` (`MainPlayerController.cpp:199`). |
@@ -40,8 +41,8 @@
 | 13 | Die | ✅ code | `APlayerCharacter::Die` (`PlayerCharacter.cpp:322`) → pawn destroyed → `AMainPlayerController::OnPawnDestroyed` → death screen (`MainPlayerController.cpp:367-389`, ADR-016). |
 | 14 | Restart | ✅ code / 🟡 runtime | Any-key or `RespawnDelay` → `DoRespawn()` (`MainPlayerController.cpp:391-412`, `:427`). Spawns `APlayerCharacter` only — VR respawn gap (see Gaps). |
 
-**Score:** 8 points code-complete, 4 partial, 1 not implemented, plus points 5–7 which are
-headset-blocked for their *proof* even where code lands tonight.
+**Score:** 9 points code-complete, 4 partial, 1 not implemented (14 total). Points 5–7 are
+additionally headset-blocked for their *proof* even where code lands tonight.
 
 ---
 
@@ -55,13 +56,22 @@ headset-blocked for their *proof* even where code lands tonight.
 GlobalDefaultGameMode=/Game/Blueprints/BP_MainGameMode.BP_MainGameMode_C
 ```
 
-`BP_MainGameMode` is quarantined content per **ADR-014a** (broken content stays in place, is
-not used). So the *global default* GameMode references a Blueprint the project has declared
-unusable. The slice level does not depend on it — `L_StartingReach.umap` carries a native
-`AMainGameMode` World-Settings override (verified by string scan of the package: `/Script/SAOMMOnew`
+`BP_MainGameMode` does not exist as a file at all: git history shows `f33ee70` (ADR-012)
+renamed the assets *to* `BP_MainGameMode`, then `7dcadc6` renamed the filenames back to
+`BP_SAOMMO*` (file-only renames break internal asset names; proper renames need the GUI)
+— while `DefaultEngine.ini:4` still points at `BP_MainGameMode`, and the
+`[CoreRedirects]` package redirects (`:116`) map `BP_SAOMMOGameMode → BP_MainGameMode`,
+i.e. away from the file that exists. `BP_MainGameMode` is additionally quarantined content
+per **ADR-014a** (broken content stays in place, is not used). So the *global default*
+GameMode references a Blueprint that does not resolve.
+
+The failure is silent, not a crash: `LoadClass` returns null and `GameInstance.cpp:1594-1598`
+falls back to plain `AGameModeBase` (default pawn, default input — no slice gameplay).
+`L_StartingReach` never sees this: its native `AMainGameMode` World-Settings override wins
+(`GameInstance.cpp:1531`; verified by string scan of the package: `/Script/SAOMMOnew`
 actors present, no `BP_MainGameMode` string). Boot therefore works **because of a level
 override that rescues a broken global default**. That is a latent failure: any new map
-without an explicit override inherits the broken class.
+without an explicit override silently boots `AGameModeBase` instead of `MainGameMode`.
 
 **Verdict:** game starts today, by accident of the level override. Tracked as a separate,
 own-commit fix (one logical change per commit, Band 8).
@@ -77,8 +87,9 @@ Movement IA → `AddMovementInput` with controller-relative direction
 (`PlayerCharacter.cpp:231-232`). Input fallback mapping lives in `AMainPlayerController`
 (ADR-014b), so keyboard/mouse work even before Enhanced Input assets are assigned.
 
-**Not proven tonight:** no PIE run was executed in this audit. Prior ADRs record desktop
-movement as working; that record was not re-verified here.
+**Runtime evidence:** this audit ran no PIE. ADR-016 records a vertical-slice playtest of
+the desktop chain (points 1–4 exercised: move, attack, hit, die, restart) — that test is the
+proof of record, not re-verified here.
 
 ### P4 — FP/TP switch ✅ code, 🟡 runtime
 
@@ -86,7 +97,8 @@ movement as working; that record was not re-verified here.
 (`:349-351`), fallback key `V` (`MainPlayerController.cpp:199`). Camera attach paths for both
 modes at `PlayerCharacter.cpp:178-214` (including sword shadow-casting toggling per view).
 
-**Not proven tonight:** same as P3 — code evidence only.
+**Runtime evidence:** same as P3 — covered by the ADR-016 playtest record, not re-verified
+in this audit.
 
 ### P5 — Enter VR 🟡
 
@@ -116,10 +128,13 @@ Static `USceneComponent`s never move. The header itself admits the intent
 `UMotionControllerComponent` with `MotionSource = "Left"/"Right"` is attached, point 6 is
 not implementable, let alone provable.
 
-**Also:** the hand layout is wrong per Band 2 §7 as it stands — hands are attached to
-`VROrigin`, so they sit at fixed offsets from the origin rather than from the HMD/camera, and
-they are not mirrored into `FInputFrame` (no VR input provider exists; `InputFrame` only gets
-`SourceDevice = VRController` at `VRCharacter.cpp:38`).
+**Hierarchy check vs Band 2 §7:** the attachment tree itself is *correct* — Band 2 §7
+specifies `VROrigin → Camera / Left Hand / Right Hand`, and `VRCharacter.cpp:21-27` matches
+it. The band's actual requirement is on the next line: "*Motion controller components or the
+appropriate OpenXR tracking components provide tracked hand/controller data*" — that is the
+missing piece (static scene components track nothing). Also missing: no VR input provider
+mirrors hand pose into `FInputFrame` (`InputFrame` only gets `SourceDevice = VRController`
+at `VRCharacter.cpp:38`).
 
 ### P7 — Hold a sword 🟡
 
@@ -173,10 +188,11 @@ TSubclassOf<APlayerCharacter> SpawnClass = CharacterClass;
 if (APlayerCharacter* Respawned = World->SpawnActor<APlayerCharacter>(SpawnClass, RespawnTransform))
 ```
 
-`AVRCharacter` derives from `ACharacter`, **not** `APlayerCharacter` — so a VR player who
-dies would either fail to respawn or respawn as desktop. Not fixable "properly" without
-widening the controller's ownership model; documented as a known gap rather than patched
-tonight (ADR-017 records the decision).
+`AVRCharacter` derives from `ACharacter`, **not** `APlayerCharacter`, and both fields are
+typed `TSubclassOf<APlayerCharacter>` (`MainPlayerController.h:65`, `MainGameMode.h:29`) —
+so a VR class cannot even be assigned; a VR player who dies would always respawn as the
+desktop character. Not fixable "properly" without widening the controller's ownership model;
+documented as a known gap rather than patched tonight (planned ADR-017 records the decision).
 
 ---
 
@@ -184,18 +200,47 @@ tonight (ADR-017 records the decision).
 
 | ID | Gap | Severity | Where |
 |----|-----|----------|-------|
-| G1 | `GlobalDefaultGameMode` → quarantined `BP_MainGameMode` | High (latent boot failure) | `DefaultEngine.ini:4` |
+| G1 | `GlobalDefaultGameMode` → `BP_MainGameMode` (file absent after rename-revert; quarantined) — silent fallback to `AGameModeBase` on any map without override | High (latent, wrong GameMode) | `DefaultEngine.ini:4` |
 | G2 | `AVRCharacter` not spawned by anything | Blocker for slice P5 | `MainGameMode.cpp` |
 | G3 | Hands are static `USceneComponent`s, no motion controllers | Blocker for P6 | `VRCharacter.cpp:21-27` |
 | G4 | No sword / no `CombatComponent` on VR pawn | Blocker for P7/P8 | `VR/` |
 | G5 | `DoRespawn` spawns `APlayerCharacter` only | Blocker for VR P14 | `MainPlayerController.cpp:448` |
 | G6 | No XR activation check (`GEngine->XRSystem`) anywhere | P5 | whole module |
-| G7 | AGENTS.md names branch `going-to-make-an-project`; actual work is on `main` | Process/docs | `AGENTS.md` |
+| G7 | AGENTS.md names branch `going-to-make-an-project`; it exists only on origin (`0 ahead / 16 behind main`), no local checkout — actual work is on `main` | Process/docs | `AGENTS.md` |
 | G8 | Audit could not be runtime-verified (overnight no-build, no PIE, no headset) | Meta | this doc |
 
 ## What this audit deliberately did NOT do
 
 - No builds, no PIE runs, no editor restarts (overnight constraints; the no-build rule was
-  later relaxed to allow Live Coding — see ADR-017 for the state at commit time).
+  later relaxed to allow Live Coding — planned ADR-017 will record the compile state per
+  Block 3 commit).
 - No gameplay, balance or lore changes.
 - No fixes applied inside the audit commit itself; every fix is its own commit (Band 8).
+
+---
+
+## Relation to the other 5.8 documents (scope, no overlap)
+
+- **`WIRING_GUIDE_SAOMMO_5.8.md`** = the *how-to* for editor/content wiring, written before
+  ADR-012 (class/asset renames) and ADR-014 (content quarantine). Where it disagrees with the
+  current tree, **this audit and the ADRs win**; known stale spots (not silently rewritten
+  here, tracked for a docs pass):
+  - §6 claims `Config/DefaultEngine.ini:4` holds `BP_ThirdPersonGameMode` and that the
+    level override should be `BP_SAOMMOGameMode` — actual state: `:4` is `BP_MainGameMode`
+    (ADR-012 rename) and the override in `L_StartingReach` is the **native**
+    `AMainGameMode` (string-scanned in this audit).
+  - §6 also says "`DefaultEngine.ini:2` [is] `Lvl_ThirdPerson` until slice proven" — the
+    slice shipped: `:2` is `L_StartingReach` (ADR-008); its suggested "when ready" block
+    would point `GlobalDefaultGameMode` at `BP_SAOMMOGameMode`, which is quarantined now.
+  - Names throughout are pre-ADR-012 (`ASAOMMOCharacter`, `BP_SAOMMO*`, `IMC_SAOMMO`);
+    `IMC_SAOMMO` itself is quarantined per ADR-014 — the guide's §1/§2/§5 editor checks
+    cannot be followed as written.
+  - §7 says motion controllers are "blocked: OpenXR headset" — only their *proof* is; adding
+    `UMotionControllerComponent` in C++ needs no headset (this audit's P6).
+- **`PLUGIN_AUDIT_5.8.md`** = plugin-reduction evidence (Band 2 §12-13); its recommendations
+  were superseded by ADR-008c/ADR-009a (minimal plugin set). Not a slice document, no
+  overlap with this audit.
+- **`Docs/` (World/AI)** = lore/world/AI scope; this audit touches none of it.
+- Contradictions found between bands, ADRs and this audit are recorded in the project vault
+  (`D:\SecondBrain`, note *SAOMMO — Widerspruchstagebuch*) instead of being resolved
+  unilaterally here.
