@@ -4,6 +4,7 @@
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
 #include "Components/CapsuleComponent.h"
+#include "MotionControllerComponent.h"
 
 AVRCharacter::AVRCharacter()
 {
@@ -18,12 +19,17 @@ AVRCharacter::AVRCharacter()
 	VRCamera->SetupAttachment(VROrigin);
 	VRCamera->bUsePawnControlRotation = false;
 
-	LeftHand = CreateDefaultSubobject<USceneComponent>(TEXT("LeftHand"));
+	// Tracked hand anchors (Band 2 §7, audit P6): motion controllers bound to
+	// the standard OpenXR grip poses. Without tracking they keep these offsets
+	// (the component falls back to its current relative transform).
+	LeftHand = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("LeftHand"));
 	LeftHand->SetupAttachment(VROrigin);
+	LeftHand->SetTrackingMotionSource(FName(TEXT("Left")));
 	LeftHand->SetRelativeLocation(FVector(0.0f, -30.0f, 0.0f));
 
-	RightHand = CreateDefaultSubobject<USceneComponent>(TEXT("RightHand"));
+	RightHand = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("RightHand"));
 	RightHand->SetupAttachment(VROrigin);
+	RightHand->SetTrackingMotionSource(FName(TEXT("Right")));
 	RightHand->SetRelativeLocation(FVector(0.0f, 30.0f, 0.0f));
 
 	InputFrame = CreateDefaultSubobject<UInputFrameComponent>(TEXT("InputFrame"));
@@ -38,11 +44,29 @@ void AVRCharacter::BeginPlay()
 		InputFrame->CurrentFrame.SourceDevice = EInputDevice::VRController;
 	}
 
-	// In a full OpenXR build, the camera is driven by the HMD and the hands by
-	// motion controllers. The transforms are mirrored into FInputFrame by the
-	// VR input provider so gameplay stays device-independent (Band 2 §4, §7).
+	// With a full OpenXR build the camera is driven by the HMD and the hands by
+	// motion controllers; Tick mirrors those transforms into FInputFrame so
+	// gameplay stays device-independent (Band 2 §4, §7).
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		PC->SetViewTarget(this);
+	}
+}
+
+void AVRCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	// Mirror the tracked HMD/hand poses into the device-independent frame
+	// (Band 2 §3/§4): gameplay reads FInputFrame, never OpenXR types. Poses are
+	// world space; on non-VR devices FInputFrame::Reset() keeps them neutral.
+	if (InputFrame && LeftHand && RightHand && VRCamera)
+	{
+		FInputFrame& Frame = InputFrame->CurrentFrame;
+		Frame.HeadRotation = VRCamera->GetComponentRotation();
+		Frame.LeftHandPosition = LeftHand->GetComponentLocation();
+		Frame.LeftHandRotation = LeftHand->GetComponentRotation();
+		Frame.RightHandPosition = RightHand->GetComponentLocation();
+		Frame.RightHandRotation = RightHand->GetComponentRotation();
 	}
 }
