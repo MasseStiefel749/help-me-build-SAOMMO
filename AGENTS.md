@@ -18,4 +18,4 @@ Live code: `SAOMMOnew/` (Unreal Engine 5.8, C++). Docs may mention 5.4.4 histori
 - Verify before completion: compiles, no regressions, changes in scope, docs still accurate.
 - Small reviewable commits with meaningful messages. Never force-push, never rewrite history.
 - `generated.h` stays the last include. Prefer C++ over Blueprints, Enhanced Input over legacy.
-- Branch: `going-to-make-an-project`. Working tree must be clean before agent edits (`git status`).
+- Branch: work on `main` (default branch, kept in sync with origin). `going-to-make-an-project` exists only on origin and is fully merged into `main` (0 unique commits; `main` 33 ahead as of 2026-09-25) — never check it out. Working tree must be clean before agent edits (`git status`).
