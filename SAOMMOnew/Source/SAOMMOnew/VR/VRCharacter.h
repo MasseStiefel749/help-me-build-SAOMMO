@@ -76,6 +76,11 @@ public:
 
 	AVRCharacter();
 
+	/** The single XR activation gate (ADR-017c): true while an XR system (HMD)
+	 *  is registered with the engine. Shared by MainGameMode (initial spawn) and
+	 *  MainPlayerController (respawn) so the two paths cannot drift. */
+	static bool IsXRSessionActive();
+
 	UFUNCTION(BlueprintCallable, Category = "VR")
 	UMotionControllerComponent* GetLeftHand() const { return LeftHand; }
 

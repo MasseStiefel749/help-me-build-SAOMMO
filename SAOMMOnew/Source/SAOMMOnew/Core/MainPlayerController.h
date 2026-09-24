@@ -10,6 +10,7 @@
 class UInputMappingContext;
 class UInputAction;
 class APlayerCharacter;
+class AVRCharacter;
 class UPlayerHudWidget;
 class UDeathScreenWidget;
 class USAOCharacterCreatorWidget;
@@ -63,6 +64,11 @@ protected:
 	/** Character class to respawn when the possessed pawn is destroyed. */
 	UPROPERTY(EditAnywhere, Category = "Respawn")
 	TSubclassOf<APlayerCharacter> CharacterClass;
+
+	/** VR class to respawn while an XR session is active (ADR-017c); the
+	 *  controller picks between this and CharacterClass via the shared gate. */
+	UPROPERTY(EditAnywhere, Category = "Respawn")
+	TSubclassOf<AVRCharacter> VRCharacterClass;
 
 	/** HUD widget class spawned for local players (defaults to the code HUD). */
 	UPROPERTY(EditAnywhere, Category = "HUD")

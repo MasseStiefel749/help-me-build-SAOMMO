@@ -17,6 +17,7 @@
 #include "PlayerCharacter.h"
 #include "Sword.h"
 #include "MainGameMode.h"
+#include "VRCharacter.h"
 #include "PlayerHudWidget.h"
 #include "DeathScreenWidget.h"
 #include "SAOCharacterCreatorWidget.h"
@@ -30,6 +31,10 @@ AMainPlayerController::AMainPlayerController()
 	// Code-only HUD works with zero Editor setup; a Blueprint child can
 	// override HudWidgetClass with a styled widget later.
 	HudWidgetClass = UPlayerHudWidget::StaticClass();
+
+	// ADR-017c: respawn class for XR sessions (defaults to the native VR pawn;
+	// DoRespawn picks between this and CharacterClass via the shared gate).
+	VRCharacterClass = AVRCharacter::StaticClass();
 
 	// Fallback actions: same FObjectFinder defaults as the character, so the
 	// transient mapping below always matches the pawn's bindings.
@@ -428,14 +433,27 @@ void AMainPlayerController::DoRespawn()
 {
 	bPendingRespawn = false;
 
-	TSubclassOf<APlayerCharacter> SpawnClass = CharacterClass;
-
-	if (!SpawnClass)
+	// ADR-017c: while an XR session is active, respawn into the VR pawn — the
+	// same shared gate AMainGameMode uses for the initial pawn choice. The
+	// desktop path below is unchanged (CharacterClass, then GameMode fallback).
+	// Audit G5: the VR branch is only reachable once the VR pawn has a death
+	// flow (backlog #15); OnPawnDestroyed itself is pawn-type-agnostic.
+	UClass* SpawnClass = nullptr;
+	if (AVRCharacter::IsXRSessionActive())
 	{
-		if (const AMainGameMode* GameMode = GetWorld() ? GetWorld()->GetAuthGameMode<AMainGameMode>() : nullptr)
+		SpawnClass = VRCharacterClass ? VRCharacterClass.Get() : AVRCharacter::StaticClass();
+	}
+	else
+	{
+		TSubclassOf<APlayerCharacter> DesktopClass = CharacterClass;
+		if (!DesktopClass)
 		{
-			SpawnClass = GameMode->DefaultCharacterClass;
+			if (const AMainGameMode* GameMode = GetWorld() ? GetWorld()->GetAuthGameMode<AMainGameMode>() : nullptr)
+			{
+				DesktopClass = GameMode->DefaultCharacterClass;
+			}
 		}
+		SpawnClass = DesktopClass.Get();
 	}
 
 	if (!SpawnClass)
@@ -445,7 +463,7 @@ void AMainPlayerController::DoRespawn()
 
 	if (UWorld* World = GetWorld())
 	{
-		if (APlayerCharacter* Respawned = World->SpawnActor<APlayerCharacter>(SpawnClass, RespawnTransform))
+		if (APawn* Respawned = World->SpawnActor<APawn>(SpawnClass, RespawnTransform))
 		{
 			Possess(Respawned);
 			// Back in the fight: drop the death overlay.

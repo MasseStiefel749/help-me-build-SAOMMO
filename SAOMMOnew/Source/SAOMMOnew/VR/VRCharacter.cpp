@@ -4,6 +4,7 @@
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/Engine.h"
 #include "MotionControllerComponent.h"
 #include "Sword.h"
 #include "CombatComponent.h"
@@ -103,4 +104,12 @@ void AVRCharacter::Tick(float DeltaSeconds)
 		Frame.RightHandPosition = RightHand->GetComponentLocation();
 		Frame.RightHandRotation = RightHand->GetComponentRotation();
 	}
+}
+
+bool AVRCharacter::IsXRSessionActive()
+{
+	// Single XR activation gate (ADR-017c): GEngine->XRSystem (Engine.h) is the
+	// registered IXRTrackingSystem — MainGameMode's initial pawn choice and
+	// MainPlayerController's respawn both ask this one question.
+	return GEngine && GEngine->XRSystem.IsValid();
 }
