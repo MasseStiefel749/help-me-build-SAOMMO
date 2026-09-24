@@ -31,4 +31,11 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
+
+	/**
+	 *  Band 3 §20 point 5 (audit gaps G2 + G6): while an XR system (HMD) is
+	 *  active, players spawn as the Band 2 §7 VR pawn; otherwise the desktop
+	 *  character (default pawn class) is used unchanged.
+	 */
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 };

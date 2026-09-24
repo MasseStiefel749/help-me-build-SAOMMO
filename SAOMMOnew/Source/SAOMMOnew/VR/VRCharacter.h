@@ -27,7 +27,7 @@ class UCameraComponent;
  *  character shares the device-independent input frame with the desktop
  *  character (Band 2 §4).
  */
-UCLASS(abstract, Blueprintable)
+UCLASS(Blueprintable)
 class AVRCharacter : public ACharacter
 {
 	GENERATED_BODY()
