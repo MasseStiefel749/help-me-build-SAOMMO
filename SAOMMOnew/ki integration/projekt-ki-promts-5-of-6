@@ -59,6 +59,13 @@ Character systems should be designed to support both:
 * first-person presentation
 * third-person presentation
 
+**Spec gap (open):** The bands do not define character creation. Which body types
+exist and which skin, hair and eye colors the creator offers is undecided; the
+current code-only creator persists these values as interim behavior (see ADR-016).
+Hair and eye colors have no visual target until hair/eye assets exist, and a skin
+tint only applies when the material exposes a color parameter. Until an owner
+decision closes this gap, ADR-016 is interim behavior, not spec.
+
 ---
 
 # 4. First-Person Presentation
