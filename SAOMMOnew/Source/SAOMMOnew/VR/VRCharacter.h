@@ -11,6 +11,8 @@
 class USceneComponent;
 class UCameraComponent;
 class UMotionControllerComponent;
+class UCombatComponent;
+class ASword;
 
 /**
  *  VR player character (Band 2 §7).
@@ -27,6 +29,11 @@ class UMotionControllerComponent;
  *  mirrored into the shared FInputFrame (LeftHandPosition / LeftHandRotation /
  *  ...) every tick, keeping the gameplay layer device-independent (Band 2 §3,
  *  §4). The character shares that input frame with the desktop character.
+ *
+ *  Block 3c (Band 3 §20 P7/P8, audit G4): spawns a sword attached to the right
+ *  tracked hand and owns a CombatComponent that arms it from swing velocity.
+ *  The component itself is device-independent by design and stays untouched
+ *  (audit P8: "do not touch CombatComponent for Block 3").
  */
 UCLASS(Blueprintable)
 class AVRCharacter : public ACharacter
@@ -53,6 +60,18 @@ class AVRCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UInputFrameComponent* InputFrame;
 
+	/** Combat component; owns swing detection and arms the sword (Band 2 §8). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UCombatComponent* CombatComponent;
+
+	/** Sword class spawned and attached to the right hand on BeginPlay. */
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<ASword> DefaultSwordClass;
+
+	/** Currently equipped sword (spawned at runtime). */
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<ASword> EquippedSword;
+
 public:
 
 	AVRCharacter();
@@ -65,6 +84,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	UInputFrameComponent* GetInputFrame() const { return InputFrame; }
+
+	/** Equipped sword (nullptr until BeginPlay). */
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	ASword* GetEquippedSword() const { return EquippedSword; }
 
 protected:
 
