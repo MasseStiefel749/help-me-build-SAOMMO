@@ -72,6 +72,14 @@ class AVRCharacter : public ACharacter
 	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<ASword> EquippedSword;
 
+	/** Maximum health on spawn (Band 3 §11; mirrors the desktop contract). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", ClampMin = 1, ClampMax = 1000))
+	float MaxHealth = 10.0f;
+
+	/** Current health; set to MaxHealth on BeginPlay, reaches 0 on death. */
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	float CurrentHealth = 0.0f;
+
 public:
 
 	AVRCharacter();
@@ -93,6 +101,13 @@ public:
 	/** Equipped sword (nullptr until BeginPlay). */
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	ASword* GetEquippedSword() const { return EquippedSword; }
+
+	/** Band 3 §11 damage entry point (Enemy::PerformAttack calls TakeDamage). */
+	virtual float TakeDamage(float Damage, const struct FDamageEvent& DamageEvent,
+		class AController* EventInstigator, AActor* DamageCauser) override;
+
+	/** Health = 0 → drop the sword as debris → destroy the pawn (Band 3 §11). */
+	void Die();
 
 protected:
 

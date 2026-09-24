@@ -49,6 +49,8 @@ void AVRCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CurrentHealth = MaxHealth;
+
 	if (InputFrame)
 	{
 		InputFrame->CurrentFrame.SourceDevice = EInputDevice::VRController;
@@ -112,4 +114,37 @@ bool AVRCharacter::IsXRSessionActive()
 	// registered IXRTrackingSystem — MainGameMode's initial pawn choice and
 	// MainPlayerController's respawn both ask this one question.
 	return GEngine && GEngine->XRSystem.IsValid();
+}
+
+float AVRCharacter::TakeDamage(float Damage, const struct FDamageEvent& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	// Band 3 §11 — same clamp semantics as APlayerCharacter::TakeDamage.
+	if (CurrentHealth <= 0.0f || Damage <= 0.0f)
+	{
+		return 0.0f;
+	}
+
+	CurrentHealth = FMath::Max(0.0f, CurrentHealth - Damage);
+
+	if (CurrentHealth <= 0.0f)
+	{
+		Die();
+	}
+
+	return Damage;
+}
+
+void AVRCharacter::Die()
+{
+	// Band 3 §11 (Health = 0 → Death): drop the blade as physical debris like
+	// the desktop pawn, then destroy — AMainPlayerController::OnPawnDestroyed
+	// (pawn-type-agnostic) shows the death screen and drives DoRespawn, whose
+	// XR branch respawns this pawn (ADR-017c).
+	if (EquippedSword)
+	{
+		EquippedSword->DropPhysics();
+		EquippedSword = nullptr;
+	}
+	Destroy();
 }
