@@ -50,6 +50,23 @@ a long misdiagnosis as "missing game classes". Consequences:
   post-init and is the correct vehicle. (`MapCheck` commandlet does not
   exist in 5.8.)
 
+### ADR-013d — Level saves must use save_map (lesson, R9)
+
+- `EditorAssetLibrary.save_asset()` reported `True` **without touching the
+  `.umap`** (verified via file mtime across five runs; no file lock, no
+  read-only flag, no `LogSavePackage` output — root cause unknown, started
+  after a routine module rebuild).
+- `EditorLoadingAndSavingUtils.save_map(world, asset_path)` writes
+  reliably (mtime probe 00:57:57) → **mandatory for level saves in
+  headless scripts**; keep `save_asset` for non-level assets only.
+- Freshly spawned actors seemed to persist while edits to pre-existing
+  actors did not — do not trust `save_asset`'s boolean, verify by mtime or
+  a fresh-process reload.
+- Actors without a root component (e.g. `AEnemySpawner` before the R9 fix)
+  ignore spawn/set locations and report no error. Ctor-created roots are
+  present on load after the C++ fix, so old instances only needed
+  re-placing, not re-spawning.
+
 ## Verify
 
 - `Content/Python/build_blockout.py` result: `success=True`, `placed=17`,
