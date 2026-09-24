@@ -41,8 +41,9 @@
 | 13 | Die | ✅ code | `APlayerCharacter::Die` (`PlayerCharacter.cpp:322`) → pawn destroyed → `AMainPlayerController::OnPawnDestroyed` → death screen (`MainPlayerController.cpp:367-389`, ADR-016). |
 | 14 | Restart | ✅ code / 🟡 runtime | Any-key or `RespawnDelay` → `DoRespawn()` (`MainPlayerController.cpp:391-412`, `:427`). Spawns `APlayerCharacter` only — VR respawn gap (see Gaps). |
 
-**Score:** 9 points code-complete, 4 partial, 1 not implemented (14 total). Points 5–7 are
-additionally headset-blocked for their *proof* even where code lands tonight.
+**Score:** 9 points code-complete, 4 partial, 1 not implemented (14 total). Points 5–8 form
+the VR block (Band 3 §20): their *VR* proof is headset-blocked even where code lands tonight —
+points 7 and 8 additionally have desktop analogues covered by the combat chain.
 
 ---
 
