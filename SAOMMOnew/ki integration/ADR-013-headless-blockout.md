@@ -67,6 +67,42 @@ a long misdiagnosis as "missing game classes". Consequences:
   present on load after the C++ fix, so old instances only needed
   re-placing, not re-spawning.
 
+### ADR-013e - Headless navmesh build + save (R11, backlog #17)
+
+- `RebuildNavigation` (FNavigationSystemExec) -> `UNavigationSystemV1::Build()`
+  exists and blocks synchronously (`RebuildAll` + `EnsureBuildCompletion` ->
+  `AsyncTask::EnsureCompletion`), so the build itself needs no engine ticks.
+- In python commandlets the build is refused: `flags: 0x20` =
+  `ENavigationBuildLock::AsyncLoadLock`, added by `DoInitialSetup()` when
+  `bWaitForAsyncLoadingBeforeBuildingNavigationAutomatically` (UPROPERTY
+  config, UCLASS config=Engine) && auto-update && EditorMode. The lock is only
+  released by an FTSTicker path (>=16 ticks + 2 s) which commandlets never
+  pump (frame counter stays 0). Recipe: temporarily append to
+  `Config/DefaultEngine.ini` BEFORE launching the commandlet, restore after
+  (see build_navmesh.py docstring):
+  `[/Script/NavigationSystem.NavigationSystemV1]` /
+  `bWaitForAsyncLoadingBeforeBuildingNavigationAutomatically=False`.
+- Queries need the build in the same process: `ProcessRegistrationCandidates()`
+  runs inside `Build()`; a non-ticking commandlet never registers loaded nav
+  data otherwise (all path queries come back invalid).
+- Python signatures (UE 5.8): statics do NOT auto-bind the instance -
+  `is_navigation_being_built(world)`, `project_point_to_navigation(world,
+  point, nav_data, filter_class, query_extent)` (out-params hoisted to the
+  return value), `find_path_to_location_synchronously(world, start, end)`.
+  `get_actor_bounds` returns a plain `(origin, extent)` tuple;
+  `EditorActorSubsystem` has `get_all_level_actors()` (no
+  `get_all_actors_of_class`).
+- Path endpoints are projected internally with a limited z extent: queries from
+  z=60 (floor top at z=0) are valid; synthetic z=300 endpoints fail - not a
+  data problem.
+- `NavMeshBoundsVolume NavMesh_StartingReach` covered only x 3000..15000;
+  resized to x -2000..21000 (scale 60,30,6 -> 115,30,6) so spawn (-1500), all
+  three spawners (14000/15400/17800) and monument/ruin (19500..20500) sit on
+  nav.
+- Verification: `Build total execution time 0.05s`, path Spawn->Monument valid
+  (21381uu), `-game` smoke: 0x `SpawnMissingNavigationData` + 0x
+  `CrowdFollowing: Unable to find RecastNavMesh` (before: every boot + 16x).
+
 ## Verify
 
 - `Content/Python/build_blockout.py` result: `success=True`, `placed=17`,
