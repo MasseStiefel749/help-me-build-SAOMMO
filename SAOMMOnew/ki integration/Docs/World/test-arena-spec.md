@@ -48,6 +48,10 @@ Players must identify areas without minimap (slice has no full UI):
 3. **Broken gate arch** — wilderness entry
 4. **Collapsed dome or blade monument** — ruin entrance
 
+Realized in `L_StartingReach` (actor evidence, reconciliation in §10): well
+`Well`, training posts `Dummy` ×3, broken arch `Arch`, blade monument
+`BladeMonument` — plus `Checkpoint` and `PlayerStart`.
+
 ---
 
 ## 4. Boundaries
@@ -119,6 +123,9 @@ When vertical slice complete:
 Starting Reach vertical slice: town, training, wilderness, ruin teaser
 ```
 
+Both milestones were executed — the actual commits are listed in the
+§10 reconciliation table.
+
 ---
 
 ## 10. Status — Headless Audit (2026-09-25)
@@ -187,3 +194,28 @@ explicit OPEN item (Simon F5: walk into rack/barrel/bench).
 ```text
 UnrealEditor-Cmd.exe <uproject> -run=pythonscript -script=<project>/Content/Python/verify_arena.py -stdout -unattended -nosplash
 ```
+
+**Reconciliation 2026-09-25 (Dauerbetrieb R27, backlog #37 — Band 4 §23:
+"actual level names and asset paths").** Documentation of committed
+state only; no spec requirement was changed.
+
+| Spec item | Actual (committed evidence) |
+| --------- | --------------------------- |
+| Level (§1) | `Content/Levels/StartingReach/L_StartingReach.umap` (139,229 B) — the built slice level, played through native `MainGameMode` (name-table hit; `DefaultEngine.ini` global + level override, R1) |
+| "instanced dungeon sub-level" (§1) | `L_StartingReach_Ruine.umap` (12,844 B) is **not** that: it overrides with the load-broken `BP_SAOMMOGameMode`, has no `PlayerStart` and no `MainGameMode` string — quarantined template leftover (ADR-014a, region doc §10.1) |
+| Landmarks (§3) | `Well`, `Dummy` ×3, `Arch`, `BladeMonument` present; also `Checkpoint`, `PlayerStart` |
+| Zones (§2/§5) | zone identifiers `Brunnfeld`/`Klingenhof`/`Grauwaldrand`/`Ruine` in the map; 2 `EnemySpawner` zoned x 14000/15400 (Grauwaldrand) and x 17800 (Ruine approach), counts 2 + 1 = §5 ranges |
+| NavMesh (§1) | `NavMeshBoundsVolume` present, nav built + saved (R11, ADR-013e) |
+| Lighting (§6) | `SkyAtmosphere` + `PointLight` present (see §6 status above) |
+| Lore props (§7) | `Content/Materials`: `MI_Ground037`/`MI_Rock063`/`MI_Planks009`/`MI_PracticeBlade` on parents `M_CC0Surface`/`M_CC0Metal`; meshes `SM_BladeRack_Klingenhof`/`SM_Barrel_Brunnfeld`/`SM_Bench_Brunnfeld`; labels `Rack`/`Barrel`/`Bench`/`PracticeBlade` in the map |
+| Milestones (§9) | executed: `03d0598` (dress+zone), `14a2975` (master material), `73ad69b`/`8027aea` (metal MI), `b7af0cb`/`7dd219b` (CC0 props + dress), `de0ab78` (blocking collision), `5b8729e` (nav rebuild) |
+
+Evidence method: `findstr /M /C:"<Name>" L_StartingReach.umap` (exported
+actor/class names in the package name table — R24 recipe), directory
+listing (byte sizes), commit history. Zone *sizes* (§2) remain blockout
+guides; no headless measurement is claimed. Cross-reference check (row
+37): `Docs/World/README.md` L12, `world-ai.md` L9,
+`regions/01-starting-reach.md` L10/L243 and
+`Docs/Localization/player-string-inventory.md` L115 all point at this
+file and resolve; open items in §8 stay open (playtest = backlog #2,
+headset = #8).
