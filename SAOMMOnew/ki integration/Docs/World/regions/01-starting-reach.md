@@ -3,9 +3,11 @@
 **Status:** Provisional — first playable test region
 **Threat tier:** Safe → Low → Medium (progression within one connected area)
 **Companion:** Band 7 §7, Band 3 §20 (vertical slice)
-**Date:** 2026-08-15
+**Date:** 2026-08-15 · **Reconciled:** 2026-09-25 against Band 4 §17/§19 and the built level (status table §10.1)
 
-> All proper names in this document are **working names** until approved by the project author. See `open-questions.md`.
+> All proper names in this document are **working names** until approved by the project author. See `../open-questions.md`.
+
+> Companion documents: `../terminology.md` — Band 4 §19 vocabulary, use these terms in all new content; `../open-questions.md` — provisional-name approvals; `../test-arena-spec.md` §10 — headless implementation status; `../factions/initial-factions.md` — territory/footprint context.
 
 ---
 
@@ -204,6 +206,28 @@ Content/Levels/StartingReach/
 Content/World/StartingReach/   (data assets, spawn tables)
 ```
 
+Both paths exist as of 2026-09-25: the two maps live in `Content/Levels/StartingReach/`, and `Content/World/StartingReach/` holds a README that reserves `DA_StartingReach` / spawn tables for post-slice — slice spawns stay hardcoded in the level (Band 4 §11–12).
+
+### 10.1 Implementation state (reconciled 2026-09-25)
+
+Concept (this document) versus the built `L_StartingReach`. Evidence = committed headless runs (`verify_arena.py` → `Saved/ArenaCheckResult.txt`, verdict `ok=True`) plus a string scan of the map package; everything playtest-shaped stays open.
+
+| Element | In the level today | Status |
+| ------- | ------------------ | ------ |
+| Brunnfeld spawn (§3) | `PlayerStart` present in the map package; headless `-game` smokes possess a pawn here | done (boot smokes) |
+| Reconstruction visuals (§3) | 2 scaffolds + dressing (platform, path slabs, rocks, ruin walls), all `MI_`-dressed (`dressed=31 bare=[]`) | done (#9/#20) |
+| Inn / merchant / quest board (§3) | not built — still the placeholders of the feature table | open (post-slice) |
+| Respawn anchor (§3) | `Checkpoint` references present in the map package; death respawn = any key (15 s fallback, ADR-011) — the inn marker stays a future nicety | checkpoint flow done; inn = placeholder |
+| Klingenhof training (§4) | blade rack (CC0, scale 4.0) + 3 practice blades on `MI_PracticeBlade` + 3 training dummies | done (#20/#24) |
+| Grauwaldrand enemies (§5) | spawners zoned x 14000 / 15400 (+ x 17800 at the Ruine approach), counts 2 + 1 inside the §5 ranges, `EnemyClass = Enemy` placeholder mannequin — "Scavenger beast" not authored yet | placeholder done; real enemy open |
+| Ruine teaser (§6) | `BladeMonument` + warm 3500 K accent light on the niche, zero Artifact pickups | done (teaser only) |
+| Ruine interior structure (§6) | **not built** — the separate `L_StartingReach_Ruine.umap` is a template leftover (ThirdPerson/GameMode strings, no `PlayerStart`), quarantined by ADR-014a → backlog #26 | open (#26) |
+| Landmarks (spec §3) | well, 3 dummies, gate arch, blade monument placed — *visibility from zone entry* needs a playtest look | placement done; visibility → #2 |
+| Progression path (§7) | unverified — needs PIE traversal | open (#2) |
+| Per-zone atmosphere (§6) | one directional light for the whole map; Brunnfeld-warm / wilderness-cool / ruin-dim needs an atmosphere pass | open (backlog candidate) |
+
+Terms and threat tiers in this document were checked against `../terminology.md` (Band 4 §19): Starting Reach / Brunnfeld-Gürtel, Safe → Low → Medium, and the place types match one-to-one. Band 4 §17's four working names match §3–§6 exactly; approvals still live in `../open-questions.md`.
+
 ---
 
 ## 11. Consistency Checklist
@@ -215,3 +239,5 @@ Before adding content to this region, verify (Band 4 §14):
 - [ ] Location name not duplicated elsewhere
 - [ ] Enemy fits threat tier
 - [ ] Uncertainty logged in `open-questions.md`
+- [x] Terms and threat tiers match `../terminology.md` (Band 4 §19, checked 2026-09-25 — see §10.1)
+- [x] Cross-references present: `../terminology.md`, `../open-questions.md`, `../test-arena-spec.md`, `../factions/initial-factions.md`
