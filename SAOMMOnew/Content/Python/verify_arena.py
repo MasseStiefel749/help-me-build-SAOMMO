@@ -114,7 +114,8 @@ def main():
               "sun=%s sky=%s accent=%s" % (bool(sun), len(sky), accent))
 
         # [6] dressing carries MI_ materials (Band 5 §9).
-        mi_names = ["MI_Ground037", "MI_Rock063", "MI_Planks009"]
+        mi_names = ["MI_Ground037", "MI_Rock063", "MI_Planks009",
+                    "MI_PracticeBlade"]
         mi_paths = ["%s/%s" % (MI_DIR, n) for n in mi_names]
         mi_objs = [unreal.EditorAssetLibrary.load_asset(p) for p in mi_paths]
         mats_ok = all(o is not None for o in mi_objs)
@@ -136,9 +137,9 @@ def main():
                 dressed.append(label)
             elif label.startswith(("Rock_", "RuineWall_", "Path_", "Platform_",
                                    "Ground", "Well", "Scaffold", "BladeRack",
-                                   "BladeMonument")):
-                # PracticeBlade intentionally absent: no metal MI in the slice
-                # yet (documented spec gap, bare blockout proxies are OK).
+                                   "BladeMonument", "PracticeBlade")):
+                # PracticeBlade must carry MI_PracticeBlade since backlog #20
+                # (M_CC0Metal closed the spec-§7 "no metal MI" gap).
                 bare.append("%s:%s" % (label, mat_name))
         check("dressing/props use MI_ instances",
               mats_ok and not bare and len(dressed) >= 10,

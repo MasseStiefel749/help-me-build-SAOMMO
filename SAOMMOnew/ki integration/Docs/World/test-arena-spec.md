@@ -152,9 +152,11 @@ pass (backlog candidate).
 **§7 lore props (blockout state):** Done — 2 reconstruction scaffolds in
 Brunnfeld, blade rack with 3 practice blades at Klingenhof, blade-motif
 monument at the Ruine; dressing (platform, path slabs, rocks, ruin walls)
-placed and all dressed with `MI_Ground037` / `MI_Rock063` / `MI_Planks009`.
-Known gap: practice blades stay on the default grid material — the slice
-has no metal material instance yet (open material task).
+placed and all dressed with `MI_Ground037` / `MI_Rock063` / `MI_Planks009`
+/ `MI_PracticeBlade`. Gap closed 2026-09-25 (backlog #20): the blades now
+carry `MI_PracticeBlade` (parent `M_CC0Metal`, CC0 ambientCG `Metal038`
+scratched steel) — verify re-run → `ok=True`, `dressed=31 bare=[]`,
+check [6] includes `PracticeBlade` labels.
 
 **Re-run:**
 

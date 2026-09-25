@@ -6,8 +6,8 @@ Idempotent (dedupe by actor label, materials re-applied every run):
 
   * blockout dressing that dressing.py never got into the map save
     (training platform, path slabs, Grauwaldrand rocks, ruin walls)
-  * material assignment MI_Ground037 / MI_Rock063 / MI_Planks009
-    (backlog #9 instances, Band 5 §9 organized-materials rule)
+  * material assignment MI_Ground037 / MI_Rock063 / MI_Planks009 /
+    MI_PracticeBlade (backlog #9 instances + #20 metal MI, Band 5 §9 rule)
   * spec §3 landmark 1: Brunnfeld well (stone)
   * spec §6: warm accent light at the Ruine Artifact niche (BladeMonument)
   * spec §7: scaffolds (Brunnfeld reconstruction tone), blade rack with
@@ -26,6 +26,7 @@ MI = {
     "ground": "/Game/Materials/MI_Ground037",
     "rock": "/Game/Materials/MI_Rock063",
     "planks": "/Game/Materials/MI_Planks009",
+    "metal": "/Game/Materials/MI_PracticeBlade",
 }
 CUBE = "/Engine/BasicShapes/Cube.Cube"
 CYLINDER = "/Engine/BasicShapes/Cylinder.Cylinder"
@@ -67,10 +68,10 @@ BOXES = [
     ("BladeRack_Klingenhof_Post1", (5400.0, -300.0, 110.0), (0.15, 0.15, 1.6), "planks"),
     ("BladeRack_Klingenhof_Post2", (5800.0, -300.0, 110.0), (0.15, 0.15, 1.6), "planks"),
     ("BladeRack_Klingenhof_Bar", (5600.0, -300.0, 185.0), (4.4, 0.12, 0.12), "planks"),
-    # Practice blades: no metal MI in the slice yet (documented gap), bare OK.
-    ("PracticeBlade_01", (5500.0, -360.0, 85.0), (0.06, 0.06, 1.1), None),
-    ("PracticeBlade_02", (5600.0, -360.0, 85.0), (0.06, 0.06, 1.1), None),
-    ("PracticeBlade_03", (5700.0, -360.0, 85.0), (0.06, 0.06, 1.1), None),
+    # Practice blades (spec §7): dressed with the metal MI (backlog #20).
+    ("PracticeBlade_01", (5500.0, -360.0, 85.0), (0.06, 0.06, 1.1), "metal"),
+    ("PracticeBlade_02", (5600.0, -360.0, 85.0), (0.06, 0.06, 1.1), "metal"),
+    ("PracticeBlade_03", (5700.0, -360.0, 85.0), (0.06, 0.06, 1.1), "metal"),
 ]
 
 # Existing actors that get their MI re-applied every run.
