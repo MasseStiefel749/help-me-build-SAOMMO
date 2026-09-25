@@ -87,6 +87,8 @@ Use props only — no mandatory lore dumps:
 * Scaffolding and half-repaired walls (reconstruction)
 * Worn practice blades on racks (blade tradition)
 * Ancient stone with blade motif at ruin (Artifact tease)
+* Settled-life props — wooden bench at the Brunnfeld well, barrel by the
+  scaffolds, blade rack at the Klingenhof (CC0 Poly Haven, §10)
 
 ---
 
@@ -157,6 +159,28 @@ placed and all dressed with `MI_Ground037` / `MI_Rock063` / `MI_Planks009`
 carry `MI_PracticeBlade` (parent `M_CC0Metal`, CC0 ambientCG `Metal038`
 scratched steel) — verify re-run → `ok=True`, `dressed=31 bare=[]`,
 check [6] includes `PracticeBlade` labels.
+
+**§7 CC0 props (backlog #24, 2026-09-25):** The three blockout proxies
+were replaced by real CC0 meshes (Poly Haven, CC0 1.0, rows in
+`ASSET-LICENSES.csv`): `SM_BladeRack_Klingenhof`,
+`SM_Barrel_Brunnfeld`, `SM_Bench_Brunnfeld` — all single-slot, all
+dressed with `MI_Planks009`, placed by `dress_arena.py` (rack at scale
+4.0 on the platform, barrel by the scaffolds, bench at the well).
+Blocking collision: the FBX files were re-exported through Blender
+headless (`ArtSource/Props/add_ubx_collision.py`) with a
+`UBX_<mesh>_00` box; UE 5.8's Interchange importer silently drops those
+collision nodes, so `import_cc0_meshes.py` flips
+`Interchange.FeatureFlags.Import.FBX 0` (session CVar, Epic forum
+workaround) to route through the legacy importer, then keeps AggGeom
+box-only (`box=1 convex=0`, `flag=CTF_USE_DEFAULT`). Verify check [7]
+"CC0 props carry blocking collision" is green on fresh-process evidence
+(disk primitives + component `BlockAll/ECR_BLOCK/QUERY_AND_PHYSICS` +
+control slab HIT). *Probe limitation documented:* the capsule sweep
+itself is not used as pass criterion because even the engine cube
+control flips HIT/MISS between non-ticking commandlet processes
+(evidence: `Saved/MeshBodySwapProbe.txt`,
+`Saved/MeshCollisionDiff.txt`) — actual blocking in PIE is therefore an
+explicit OPEN item (Simon F5: walk into rack/barrel/bench).
 
 **Re-run:**
 
