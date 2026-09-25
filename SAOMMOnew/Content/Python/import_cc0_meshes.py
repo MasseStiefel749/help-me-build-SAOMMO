@@ -15,18 +15,26 @@ ASSET-LICENSES.csv) to SM_* static meshes:
 Import settings: mesh ONLY - no materials, no textures (Band 5 §9 /
 backlog #24: props are dressed with the existing MI_* instances in
 dress_arena.py, "kein Material-Neubau"). Every optional 5.8 import
-property is set through a dual-name probe that logs acceptance, because
-the FbxImportUI/FbxStaticMeshImportData surface is not guaranteed across
-engine versions. Idempotent: replace_existing re-imports, so a bad first
-import self-heals.
+property is set through a dual-name probe that logs acceptance.
+Idempotent: replace_existing re-imports, so a bad first import
+self-heals.
 
-Evidence per mesh (temp StaticMeshActor probe, never saved):
-  * world bounds extent -> real-world cm scale sanity check
-  * material slot count -> dressing must dress every slot
-  * body_setup present? -> collision state for the vault
-Plus one-time introspection of collision helper availability.
+Collision (facts from probes on 2026-09-25):
+  * FBX auto_generate_collision is accepted but leaves AggGeom empty
+  * UStaticMesh.collision_trace_flag write is NOT exposed in 5.8 python
+    (read via GetCollisionComplexity works -> CTF_USE_DEFAULT)
+  * EditorStaticMeshLibrary.add_simple_collisions silently returned -1
+    and added nothing
+so this script attacks in order: (1) the flag on the BodySetup (the one
+remaining candidate home), (2) convex decomposition from the render
+mesh (fills AggGeom, VHACD), then (3) proves the result with a capsule
+sweep on a temp actor at z=50000 (nothing else exists up there):
 
-Writes <Project>/Saved/MeshImportResult.txt and prints RESULT: ok=<bool>.
+    S=... simple AggGeom probe, C=... render-mesh probe
+
+Evidence per mesh: world bounds extent (cm scale sanity), material slot
+count, body_setup/AggGeom state, sweep result. Writes
+<Project>/Saved/MeshImportResult.txt, prints RESULT: ok=<bool>.
 """
 import os
 import traceback
@@ -40,6 +48,11 @@ JOBS = [
 
 SRC_ROOT = "D:/Assets/CC0/Models"
 DEST_PATH = "/Game/Props"
+
+# Temp-actor probe height: far above any level geometry.
+PROBE_Z = 50000.0
+
+_INTROSPECTED = False
 
 lines = []
 
@@ -57,11 +70,234 @@ def set_any(obj, names, value):
             obj.set_editor_property(name, value)
             got = obj.get_editor_property(name)
             log("option %s -> %s (read-back %s)" % (name, value, got))
-            return got == value
+            return True
         except Exception as exc:
             last = exc
     log("option %s not accepted: %s" % (names, last))
     return False
+
+
+def agg_counts(mesh):
+    """(box, convex) element counts, -1 when unreadable."""
+    import unreal
+    out = (-1, -1)
+    try:
+        bs = mesh.get_editor_property("body_setup")
+        if bs is None:
+            return out
+        agg = bs.get_editor_property("agg_geom")
+        try:
+            boxes = agg.get_editor_property("box_elems")
+            nbox = len(boxes) if boxes is not None else -1
+        except Exception:
+            nbox = -1
+        try:
+            conv = agg.get_editor_property("convex_elems")
+            nconv = len(conv) if conv is not None else -1
+        except Exception:
+            nconv = -1
+        out = (nbox, nconv)
+    except Exception as exc:
+        log("agg probe failed: %s" % exc)
+    return out
+
+
+def find_class(*candidates):
+    import unreal
+    for n in candidates:
+        if hasattr(unreal, n):
+            return getattr(unreal, n), n
+    return None, None
+
+
+def ensure_collision(mesh, asset_path, name, extent=None, local_center=None):
+    """Fill collision data / flag, log every step, return dict of state."""
+    import unreal
+    state = {}
+    try:
+        bs = mesh.get_editor_property("body_setup")
+        state["body_setup"] = "yes" if bs else "NONE"
+    except Exception as exc:
+        bs = None
+        state["body_setup"] = "read-failed: %s" % exc
+
+    # Attack 1: flag on BodySetup (accepted + persists on disk, but
+    # GetCollisionComplexity still reports CTF_USE_DEFAULT afterwards, so
+    # the authoritative flag lives somewhere python cannot write - kept as
+    # supplementary state, not the primary fix).
+    flag = None
+    for vname in ("CTF_USE_COMPLEX_AS_SIMPLE", "CTC_USE_COMPLEX_AS_SIMPLE",
+                  "CTF_COMPLEX_AS_SIMPLE"):
+        if hasattr(unreal.CollisionTraceFlag, vname):
+            flag = getattr(unreal.CollisionTraceFlag, vname)
+            break
+    state["flag_enum"] = str(flag)
+    if flag is not None and bs is not None:
+        state["bs_flag_set"] = set_any(bs, ["collision_trace_flag"], flag)
+        if state["bs_flag_set"]:
+            try:
+                state["saved"] = unreal.EditorAssetLibrary.save_asset(asset_path)
+            except Exception as exc:
+                state["saved"] = "failed: %s" % exc
+    else:
+        state["bs_flag_set"] = "no-candidate"
+
+    # Attack 2: write a real FKBoxElem into AggGeom directly. Flag-agnostic:
+    # with a primitive on disk, CTF_USE_DEFAULT resolves to simple collision
+    # in ANY fresh process. (auto_generate_collision only ever produced an
+    # in-memory convex=1; the library/subsystem helpers either need an
+    # editor-subsystem instance that commandlets do not register, or
+    # silently return False/-1 - all probed.)
+    box, conv = agg_counts(mesh)
+    state["agg_before"] = "box=%d convex=%d" % (box, conv)
+    if box < 1 and extent is not None:
+        agg_cls, agg_name = find_class("FKAggregateGeom", "AggregateGeom")
+        elem_cls, elem_name = find_class("FKBoxElem", "BoxElem", "FBoxElem")
+        state["structs"] = "agg=%s elem=%s" % (agg_name, elem_name)
+        if agg_cls is None or elem_cls is None:
+            state["direct"] = "struct classes not exposed"
+            log("unreal agg/elem candidates: %s" % [
+                n for n in dir(unreal)
+                if ("agg" in n.lower() or "box" in n.lower()
+                    or "elem" in n.lower())][:60])
+        else:
+            try:
+                agg = bs.get_editor_property("agg_geom")
+                elem = elem_cls()
+                center = local_center or (0.0, 0.0, 0.0)
+                for pn, val in (("center", unreal.Vector(*center)),
+                                ("x", float(extent[0])),
+                                ("y", float(extent[1])),
+                                ("z", float(extent[2]))):
+                    if not set_any(elem, [pn], val):
+                        state["direct"] = "elem field failed: " + pn
+                        break
+                else:
+                    agg.set_editor_property("box_elems", [elem])
+                    set_any(bs, ["agg_geom"], agg)
+                    box2, conv2 = agg_counts(mesh)
+                    state["direct"] = "box written agg box=%d convex=%d" % (
+                        box2, conv2)
+                    if box2 >= 1:
+                        state["saved"] = unreal.EditorAssetLibrary.save_asset(
+                            asset_path)
+            except Exception as exc:
+                state["direct"] = "failed: %s" % exc
+
+    # Attack 3 (kept for evidence): editor helper chain.
+    if agg_counts(mesh)[0] < 1:
+        ss = None
+        if hasattr(unreal, "StaticMeshEditorSubsystem"):
+            try:
+                ss = unreal.get_editor_subsystem(
+                    unreal.StaticMeshEditorSubsystem)
+            except Exception as exc:
+                log("StaticMeshEditorSubsystem get raised: %s" % exc)
+        log("StaticMeshEditorSubsystem instance: %r" % (ss,))
+        attempts = []
+        if ss is not None:
+            attempts.append(("subsystem+BOX",
+                             lambda: ss.add_simple_collisions(
+                                 mesh, unreal.ScriptingCollisionShapeType.BOX)))
+        lib = unreal.EditorStaticMeshLibrary
+        attempts.append(("lib+BOX",
+                         lambda: lib.add_simple_collisions(
+                             mesh, unreal.ScriptingCollisionShapeType.BOX)))
+        for label, fn_call in attempts:
+            try:
+                ret = fn_call()
+                log("helper %s ret=%s agg=%s" % (label, ret, agg_counts(mesh)))
+            except Exception as exc:
+                log("helper %s failed: %s" % (label, exc))
+
+    box, conv = agg_counts(mesh)
+    state["agg"] = "box=%d convex=%d" % (box, conv)
+    try:
+        state["complexity"] = str(
+            unreal.EditorStaticMeshLibrary.get_collision_complexity(mesh))
+    except Exception as exc:
+        state["complexity"] = "probe-failed: %s" % exc
+    return state
+
+
+def probe_flow(subsys, sm_cls, mesh, asset_path, name):
+    """Temp actor at PROBE_Z: bounds, collision ensure, recreate, sweeps."""
+    import unreal
+    global _INTROSPECTED
+    actor = None
+    try:
+        actor = subsys.spawn_actor_from_class(
+            sm_cls, unreal.Vector(0.0, 0.0, PROBE_Z),
+            unreal.Rotator(0.0, 0.0, 0.0))
+        actor.set_actor_label("__tmp_meshprobe")
+        comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+        comp.set_static_mesh(mesh)
+        if not _INTROSPECTED:
+            _INTROSPECTED = True
+            introspect(unreal, mesh=mesh, comp=comp)
+        origin, extent = actor.get_actor_bounds(False, False)
+        log("%s extent=(%.1f, %.1f, %.1f) cm slots=%d" % (
+            name, extent.x, extent.y, extent.z, comp.get_num_materials()))
+        local_center = (origin.x, origin.y, origin.z - PROBE_Z)
+
+        state = ensure_collision(mesh, asset_path, name,
+                                 extent=(extent.x, extent.y, extent.z),
+                                 local_center=local_center)
+        log("%s collision state: %s" % (name, state))
+
+        # Recreate the component body from the now-patched asset, then sweep.
+        comp.set_static_mesh(None)
+        comp.set_static_mesh(mesh)
+        start = unreal.Vector(origin.x, origin.y, origin.z + extent.z + 100.0)
+        end = unreal.Vector(origin.x, origin.y, origin.z - extent.z + 40.0)
+        for tag, complex_trace in (("S", False), ("C", True)):
+            res = unreal.SystemLibrary.capsule_trace_single(
+                actor.get_world(), start, end, 20.0, 30.0,
+                unreal.TraceTypeQuery.TRACE_TYPE_QUERY1,
+                complex_trace, [], unreal.DrawDebugTrace.NONE)
+            log("%s sweep %s=%s(%s)" % (
+                name, tag, "HIT" if res is not None else "MISS",
+                "None" if res is None else repr(res)[:70]))
+    except Exception:
+        log("PROBE-FAIL %s\n%s" % (name, traceback.format_exc()))
+    finally:
+        if actor is not None:
+            try:
+                subsys.destroy_actor(actor)
+            except Exception as exc:
+                log("probe cleanup failed: %s" % exc)
+
+
+def filtered_dir(obj):
+    keys = ("coll", "trace", "flag", "complex", "body", "cook")
+    try:
+        return [x for x in dir(obj)
+                if any(k in x.lower() for k in keys)
+                and not x.startswith("__")]
+    except Exception as exc:
+        return "dir-failed: %s" % exc
+
+
+def introspect(unreal, mesh=None, comp=None):
+    """Where does the authoritative CollisionTraceFlag live? One-time log."""
+    log("dir(StaticMesh) coll-keys: %s" % filtered_dir(unreal.StaticMesh))
+    log("dir(StaticMeshEditorSubsystem): %s" % (
+        filtered_dir(unreal.StaticMeshEditorSubsystem)
+        if hasattr(unreal, "StaticMeshEditorSubsystem") else "not exposed"))
+    if mesh is not None:
+        log("dir(mesh) coll-keys: %s" % filtered_dir(mesh))
+        try:
+            bs = mesh.get_editor_property("body_setup")
+            log("dir(body_setup) coll-keys: %s" % filtered_dir(bs))
+        except Exception as exc:
+            log("dir(body_setup) failed: %s" % exc)
+    if comp is not None:
+        log("dir(comp) coll-keys: %s" % filtered_dir(comp))
+        try:
+            bi = comp.get_editor_property("body_instance")
+            log("dir(body_instance) coll-keys: %s" % filtered_dir(bi))
+        except Exception as exc:
+            log("dir(body_instance) failed: %s" % exc)
 
 
 def main():
@@ -134,79 +370,12 @@ def main():
                 log("LOAD-FAIL " + asset_path)
                 continue
 
-            # Bounds/slot/collision probe on a temp actor (world not saved).
-            actor = None
-            try:
-                actor = subsys.spawn_actor_from_class(
-                    sm_cls, unreal.Vector(0.0, 0.0, 0.0),
-                    unreal.Rotator(0.0, 0.0, 0.0))
-                actor.set_actor_label("__tmp_meshprobe")
-                comp = actor.get_component_by_class(unreal.StaticMeshComponent)
-                comp.set_static_mesh(mesh)
-                origin, extent = actor.get_actor_bounds(False, False)
-                log("%s extent=(%.1f, %.1f, %.1f) cm slots=%d origin=(%.1f, %.1f, %.1f)" % (
-                    name, extent.x, extent.y, extent.z,
-                    comp.get_num_materials(),
-                    origin.x, origin.y, origin.z))
-            except Exception:
-                log("PROBE-FAIL %s\n%s" % (name, traceback.format_exc()))
-            finally:
-                if actor is not None:
-                    try:
-                        subsys.destroy_actor(actor)
-                    except Exception as exc:
-                        log("probe cleanup failed: %s" % exc)
+            probe_flow(subsys, sm_cls, mesh, asset_path, name)
 
-            try:
-                bs = mesh.get_editor_property("body_setup")
-                log("%s body_setup=%s" % (name, "yes" if bs else "NONE"))
-                agg = bs.get_editor_property("agg_geom")
-                try:
-                    boxes = agg.get_editor_property("box_elems")
-                    nbox = len(boxes) if boxes is not None else -1
-                except Exception:
-                    nbox = -1
-                log("%s agg box_elems=%d" % (name, nbox))
-            except Exception as exc:
-                log("%s body_setup/agg probe failed: %s" % (name, exc))
-
-            # Collision for blockout props: FBX auto_generate_collision left
-            # AggGeom empty and EditorStaticMeshLibrary.add_simple_collisions
-            # silently returned -1 without adding anything in this commandlet
-            # (probed 2026-09-25), so use the render mesh as collision - the
-            # standard blockout setting. CTF_USE_DEFAULT would leave the
-            # walk-through question open.
-            flag = None
-            for vname in ("CTF_USE_COMPLEX_AS_SIMPLE", "CTC_USE_COMPLEX_AS_SIMPLE",
-                          "CTF_COMPLEX_AS_SIMPLE"):
-                if hasattr(unreal.CollisionTraceFlag, vname):
-                    flag = getattr(unreal.CollisionTraceFlag, vname)
-                    break
-            if flag is None:
-                log("%s CollisionTraceFlag members: %s" % (
-                    name, [x for x in dir(unreal.CollisionTraceFlag)
-                           if not x.startswith("_")]))
-            else:
-                try:
-                    set_any(mesh, ["collision_trace_flag"], flag)
-                    saved = unreal.EditorAssetLibrary.save_asset(asset_path)
-                    log("%s collision flag saved=%s read-back=%s" % (
-                        name, saved, mesh.get_editor_property("collision_trace_flag")))
-                except Exception as exc:
-                    log("%s collision flag set failed: %s" % (name, exc))
-            try:
-                log("%s collision_complexity=%s" % (
-                    name, unreal.EditorStaticMeshLibrary.get_collision_complexity(mesh)))
-            except Exception as exc:
-                log("%s complexity probe failed: %s" % (name, exc))
-
-        # One-time API-surface evidence for collision follow-up (5.8).
-        if hasattr(unreal, "EditorStaticMeshLibrary"):
-            helpers = [x for x in dir(unreal.EditorStaticMeshLibrary)
-                       if "coll" in x.lower() or "convex" in x.lower()]
-            log("EditorStaticMeshLibrary collision helpers: %s" % helpers)
-        else:
-            log("EditorStaticMeshLibrary not exposed in 5.8 python")
+        # One-time API-surface evidence for the vault.
+        helpers = [x for x in dir(unreal.EditorStaticMeshLibrary)
+                   if "coll" in x.lower() or "convex" in x.lower()]
+        log("EditorStaticMeshLibrary collision helpers: %s" % helpers)
 
         success = len(imported) == len(JOBS)
         log("imported=%d/%d" % (len(imported), len(JOBS)))

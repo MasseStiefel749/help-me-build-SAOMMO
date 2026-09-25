@@ -12,6 +12,11 @@ Idempotent (dedupe by actor label, materials re-applied every run):
   * spec §6: warm accent light at the Ruine Artifact niche (BladeMonument)
   * spec §7: scaffolds (Brunnfeld reconstruction tone), blade rack with
     practice blades (Klingenhof)
+  * backlog #24: the cube/cylinder blade-rack proxies are retired and
+    replaced by the real CC0 meshes (import_cc0_meshes.py): rack at
+    Klingenhof (actor scale 4x - katana_stand_01 imports 30x18cm),
+    barrel + bench in Brunnfeld; bottom-aligned via world bounds, MI on
+    every material slot (Band 5 §9, no material build)
   * spec §5 zones: EnemySpawner spawns inside SpawnRadius around its own
     actor location - both spawners stood at (0,0,0), i.e. inside the safe
     town. Move them into Grauwaldrand / Ruine approach, add a second
@@ -64,14 +69,37 @@ BOXES = [
     ("Scaffold_Brunnfeld_02_Post1", (560.0, -950.0, 150.0), (0.2, 0.2, 3.0), "planks"),
     ("Scaffold_Brunnfeld_02_Post2", (760.0, -950.0, 150.0), (0.2, 0.2, 3.0), "planks"),
     ("Scaffold_Brunnfeld_02_Deck", (660.0, -950.0, 315.0), (2.4, 1.0, 0.15), "planks"),
-    # Spec §7: blade rack + practice blades at Klingenhof.
-    ("BladeRack_Klingenhof_Post1", (5400.0, -300.0, 110.0), (0.15, 0.15, 1.6), "planks"),
-    ("BladeRack_Klingenhof_Post2", (5800.0, -300.0, 110.0), (0.15, 0.15, 1.6), "planks"),
-    ("BladeRack_Klingenhof_Bar", (5600.0, -300.0, 185.0), (4.4, 0.12, 0.12), "planks"),
-    # Practice blades (spec §7): dressed with the metal MI (backlog #20).
+    # Spec §7: practice blades at Klingenhof, dressed with the metal MI
+    # (backlog #20). The rack itself is a real CC0 mesh since backlog #24
+    # - see MESH_PROPS + RETIRE below.
     ("PracticeBlade_01", (5500.0, -360.0, 85.0), (0.06, 0.06, 1.1), "metal"),
     ("PracticeBlade_02", (5600.0, -360.0, 85.0), (0.06, 0.06, 1.1), "metal"),
     ("PracticeBlade_03", (5700.0, -360.0, 85.0), (0.06, 0.06, 1.1), "metal"),
+]
+
+# Backlog #24: cube/cylinder proxies replaced by the CC0 blade rack mesh.
+# Destructive on purpose (Band 6 §21): named here, in task row #24 and in
+# the commit message. The practice blades stay (spec §7, metal MI).
+RETIRE = [
+    "BladeRack_Klingenhof_Post1",
+    "BladeRack_Klingenhof_Post2",
+    "BladeRack_Klingenhof_Bar",
+]
+
+# (label, mesh asset, x/y/ground-z, actor scale, material key).
+# ground-z = target plane for the mesh BOTTOM: the prop is world-bounds
+# aligned after scaling, so pivot differences cannot sink or float it.
+MESH_PROPS = [
+    # Klingenhof platform top is z=30 (cube 100cm * 0.3 scale + center 15).
+    ("BladeRack_Klingenhof", "/Game/Props/SM_BladeRack_Klingenhof",
+     (5600.0, -300.0, 30.0), 4.0, "planks"),
+    # Brunnfeld ground slab top is z=0 (build_blockout.py, scale z 2.0,
+    # center z -100). Barrel next to the reconstruction scaffolds ...
+    ("Barrel_Brunnfeld", "/Game/Props/SM_Barrel_Brunnfeld",
+     (950.0, -700.0, 0.0), 1.0, "planks"),
+    # ... bench at the town well (spec §3.1 landmark).
+    ("Bench_Brunnfeld", "/Game/Props/SM_Bench_Brunnfeld",
+     (-400.0, -1450.0, 0.0), 1.0, "planks"),
 ]
 
 # Existing actors that get their MI re-applied every run.
@@ -164,6 +192,61 @@ def main():
                 if mat_key:
                     comp.set_material(0, mats[mat_key])
         log("boxes placed=%d skipped-existing=%d/%d" % (placed, skipped, len(BOXES)))
+
+        # 1b) Backlog #24: retire the cube proxies the CC0 rack replaces.
+        retired = 0
+        for label in RETIRE:
+            stale = by_label.pop(label, None)
+            if stale is not None:
+                subsys.destroy_actor(stale)
+                retired += 1
+                log("retired proxy " + label)
+        log("proxies retired=%d/%d" % (retired, len(RETIRE)))
+
+        # 1c) Backlog #24: real CC0 meshes, bottom-aligned to ground z,
+        # MI on every material slot (Band 5 §9 - slots stay consistent
+        # even if an import ever yields more than one).
+        mesh_placed = mesh_kept = 0
+        for label, mesh_path, loc, scale, mat_key in MESH_PROPS:
+            mesh = unreal.EditorAssetLibrary.load_asset(mesh_path)
+            if mesh is None:
+                log("MESH-MISSING " + mesh_path)
+                continue
+            actor = by_label.get(label)
+            first_place = actor is None
+            if first_place:
+                try:
+                    actor = subsys.spawn_actor_from_class(
+                        sm_cls, unreal.Vector(*loc), unreal.Rotator(0.0, 0.0, 0.0))
+                    actor.set_actor_label(label)
+                    by_label[label] = actor
+                    mesh_placed += 1
+                except Exception:
+                    log("MESH-SPAWN-FAIL %s\n%s" % (label, traceback.format_exc()))
+                    continue
+            else:
+                mesh_kept += 1
+            comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+            if comp is None:
+                log("MESH-NO-COMP " + label)
+                continue
+            comp.set_static_mesh(mesh)
+            actor.set_actor_scale3d(unreal.Vector(scale, scale, scale))
+            try:
+                origin, extent = actor.get_actor_bounds(False, False)
+                bottom = origin.z - extent.z
+                dz = loc[2] - bottom
+                actor.set_actor_location(
+                    unreal.Vector(loc[0], loc[1], loc[2] + dz), False, False)
+                log("mesh %s placed=%s scale=%.1f bottom %.1f -> %.1f" % (
+                    label, first_place, scale, bottom, loc[2]))
+            except Exception:
+                log("MESH-ALIGN-FAIL %s\n%s" % (label, traceback.format_exc()))
+            mat = mats[mat_key]
+            for slot in range(max(1, comp.get_num_materials())):
+                comp.set_material(slot, mat)
+        log("mesh props placed=%d kept-existing=%d/%d" % (
+            mesh_placed, mesh_kept, len(MESH_PROPS)))
 
         # 2) Re-apply MI on pre-existing landmark props.
         for label, mat_key in MATERIAL_MAP.items():

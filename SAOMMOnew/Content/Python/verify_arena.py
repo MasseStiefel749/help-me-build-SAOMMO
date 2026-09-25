@@ -11,6 +11,7 @@ spec-arena checklist items that can be proven without a headset:
   [4] ruin Artifact teaser (monument + accent light, no item pickup)
   [5] lighting rig complete (sun/skylight/atmosphere + ruin accent)
   [6] dressing/props carry the MI_ materials (Band 5 §9)
+  [7] CC0 props (backlog #24) block: capsule sweep, simple + complex
 
 Items needing PIE/headset (real traversal, VR+desktop camera, feel) are
 reported as OPEN - they belong to Simon's playtest (backlog #2/#8).
@@ -137,13 +138,222 @@ def main():
                 dressed.append(label)
             elif label.startswith(("Rock_", "RuineWall_", "Path_", "Platform_",
                                    "Ground", "Well", "Scaffold", "BladeRack",
-                                   "BladeMonument", "PracticeBlade")):
+                                   "BladeMonument", "PracticeBlade",
+                                   "Barrel_", "Bench_")):
                 # PracticeBlade must carry MI_PracticeBlade since backlog #20
                 # (M_CC0Metal closed the spec-§7 "no metal MI" gap).
+                # Barrel_/Bench_ = CC0 props since backlog #24.
                 bare.append("%s:%s" % (label, mat_name))
         check("dressing/props use MI_ instances",
               mats_ok and not bare and len(dressed) >= 10,
               "dressed=%d bare=%s" % (len(dressed), bare))
+
+        # [7] CC0 props (backlog #24) must block: capsule sweep through the
+        # prop volume, ending 40 above the mesh bottom so the supporting
+        # ground/platform cannot produce a false hit. S probes simple
+        # AggGeom, C the render mesh. UE 5.8 python contract (dev docs):
+        # SystemLibrary.capsule_trace_single(...) -> HitResult or None.
+        # Diagnostics per prop: BodySetup flag read back from disk (did the
+        # importer's save persist?) and one physics-state recreate
+        # (set_static_mesh None -> mesh) before re-probing - a commandlet
+        # never ticks, so a pending async body cook is the suspected cause
+        # of MISS even with collision data on disk.
+        cc0_labels = ["BladeRack_Klingenhof", "Barrel_Brunnfeld",
+                      "Bench_Brunnfeld"]
+        world = unreal.EditorLevelLibrary.get_editor_world()
+        probe = []
+        probe_err = ""
+
+        def pair_sweep(act, start, end):
+            out = []
+            for tag, complex_trace in (("S", False), ("C", True)):
+                res = unreal.SystemLibrary.capsule_trace_single(
+                    act.get_world(), start, end, 20.0, 30.0,
+                    unreal.TraceTypeQuery.TRACE_TYPE_QUERY1,
+                    complex_trace, [], unreal.DrawDebugTrace.NONE)
+                out.append("%s=%s" % (tag,
+                                      "HIT" if res is not None else "MISS"))
+            return out
+
+        # Control FIRST: the ground slab is an engine cube with cooked
+        # collision - if the control misses too, the probe environment
+        # (world/channel) is broken, not the props.
+        ctrl = next((a for a in actors
+                     if a.get_actor_label() == "Ground_BrunnfeldSlab"), None)
+        if ctrl is None:
+            probe.append("CONTROL:NO-ACTOR")
+        else:
+            o, e = ctrl.get_actor_bounds(False, False)
+            try:
+                res = unreal.SystemLibrary.capsule_trace_single(
+                    world, unreal.Vector(o.x, o.y, o.z + e.z + 100.0),
+                    unreal.Vector(o.x, o.y, o.z), 20.0, 30.0,
+                    unreal.TraceTypeQuery.TRACE_TYPE_QUERY1,
+                    False, [], unreal.DrawDebugTrace.NONE)
+                probe.append("CONTROL-S=%s" % (
+                    "HIT" if res is not None else "MISS"))
+            except Exception:
+                probe.append("CONTROL-ERR " + traceback.format_exc().replace("\n", " | "))
+
+        for label in cc0_labels:
+            actor = next((a for a in actors
+                          if a.get_actor_label() == label), None)
+            if actor is None:
+                probe.append(label + ":NO-ACTOR")
+                continue
+            comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+            disk = "?"
+            try:
+                m = comp.get_editor_property("static_mesh")
+                bs = m.get_editor_property("body_setup")
+                disk = str(bs.get_editor_property("collision_trace_flag"))
+            except Exception as exc:
+                disk = "read-failed:%s" % exc
+            o, e = actor.get_actor_bounds(False, False)
+            # Component-level state: distinguishes "body/geometry missing"
+            # from "collision disabled or not answering the channel".
+            st = []
+            try:
+                st.append("ce=%s" % comp.get_collision_enabled())
+                st.append("prof=%s" % comp.get_collision_profile_name())
+                st.append("obj=%s" % comp.get_collision_object_type())
+            except Exception as exc:
+                st.append("state-ERR:%s" % exc)
+            try:
+                st.append("respVis=%s" % comp.get_collision_response_to_channel(
+                    unreal.CollisionChannel.ECC_VISIBILITY))
+            except Exception as exc:
+                st.append("respVis=ERR:%s" % str(exc)[:60])
+            try:
+                st.append("closest=%s" % (
+                    comp.get_closest_point_on_collision(
+                        unreal.Vector(o.x, o.y, o.z), ""),))
+            except Exception as exc:
+                st.append("closest=ERR:%s" % str(exc)[:60])
+            start = unreal.Vector(o.x, o.y, o.z + e.z + 100.0)
+            end = unreal.Vector(o.x, o.y, o.z - e.z + 40.0)
+            try:
+                per = pair_sweep(actor, start, end)
+                if not any(x.endswith("HIT") for x in per):
+                    m = comp.get_editor_property("static_mesh")
+                    comp.set_static_mesh(None)
+                    comp.set_static_mesh(m)
+                    per.append("recreate=" + "/".join(pair_sweep(actor, start, end)))
+            except Exception:
+                probe_err = "%s | doc=%s" % (
+                    traceback.format_exc().replace("\n", " | "),
+                    unreal.SystemLibrary.capsule_trace_single.__doc__)
+                break
+            # Component-level query: bypasses the world query structure to
+            # separate "no body at all" from "body exists but is not
+            # registered in the scene".
+            try:
+                res = comp.line_trace_component(start, end, False)
+                per.append("compTrace=%s" % (
+                    res if not isinstance(res, tuple) else "/".join(
+                        str(x) for x in res)))
+            except Exception as exc:
+                per.append("compTrace=ERR:%s" % str(exc)[:70])
+            # Force a physics state rebuild by cycling collision enabled.
+            try:
+                comp.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+                comp.set_collision_enabled(
+                    unreal.CollisionEnabled.QUERY_AND_PHYSICS)
+                per.append("toggle=" + "/".join(pair_sweep(actor, start, end)))
+            except Exception as exc:
+                per.append("toggle=ERR:%s" % str(exc)[:60])
+            probe.append("%s[%s]{%s}:%s" % (
+                label, disk, " ".join(st), " ".join(per)))
+
+        # Discriminator: same asset, freshly spawned actor in THIS process.
+        # HIT here + MISS on the map actor => map component state is the
+        # culprit; MISS here too => the asset yields no body in a fresh
+        # process (cook/state issue), independent of the saved level.
+        # Sub-probes: FRESH-GROUND at level height (rules out z=50000),
+        # CUBE-FRESH engine cube as control, AFTER-GC re-sweep (rules in
+        # out an async body cook that only lands when something pumps),
+        # mass as a body-existence readout.
+        fresh_res = []
+        try:
+            sm_cls = unreal.load_class(None, "/Script/Engine.StaticMeshActor")
+            subsys = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+
+            def fresh_probe(mesh_path, x, tag):
+                m = unreal.EditorAssetLibrary.load_asset(mesh_path)
+                fa = subsys.spawn_actor_from_class(
+                    sm_cls, unreal.Vector(x, 0.0, 0.0),
+                    unreal.Rotator(0.0, 0.0, 0.0))
+                fc = fa.get_component_by_class(unreal.StaticMeshComponent)
+                fc.set_static_mesh(m)
+                oo, ee = fa.get_actor_bounds(False, False)
+                res = pair_sweep(
+                    fa,
+                    unreal.Vector(oo.x, oo.y, oo.z + ee.z + 100.0),
+                    unreal.Vector(oo.x, oo.y, oo.z - ee.z + 40.0))
+                try:
+                    mass = "m=%.1f" % fc.get_mass()
+                except Exception:
+                    mass = "m=?"
+                return fa, fc, "%s:%s/%s(%s)" % (
+                    tag, res[0], res[1], mass)
+
+            fa, fc, r1 = fresh_probe(
+                "/Game/Props/SM_BladeRack_Klingenhof", 3000.0, "FRESH-GROUND")
+            fresh_res.append(r1)
+            # Async-cook hypothesis: pump once (GC) and re-sweep.
+            try:
+                unreal.SystemLibrary.collect_garbage()
+                oo, ee = fa.get_actor_bounds(False, False)
+                res = pair_sweep(
+                    fa, unreal.Vector(oo.x, oo.y, oo.z + ee.z + 100.0),
+                    unreal.Vector(oo.x, oo.y, oo.z - ee.z + 40.0))
+                try:
+                    mass = "m=%.1f" % fc.get_mass()
+                except Exception:
+                    mass = "m=?"
+                fresh_res.append("AFTER-GC:%s/%s(%s)" % (res[0], res[1], mass))
+            except Exception as exc:
+                fresh_res.append("AFTER-GC-ERR:%s" % str(exc)[:80])
+            subsys.destroy_actor(fa)
+
+            fa, fc, r2 = fresh_probe(
+                "/Engine/BasicShapes/Cube.Cube", 3000.0, "CUBE-FRESH")
+            fresh_res.append(r2)
+            subsys.destroy_actor(fa)
+
+            # Does a fresh process see collision primitives on disk at all?
+            m = unreal.EditorAssetLibrary.load_asset(
+                "/Game/Props/SM_BladeRack_Klingenhof")
+            bs2 = m.get_editor_property("body_setup")
+            agg2 = bs2.get_editor_property("agg_geom")
+            nbox = len(agg2.get_editor_property("box_elems") or [])
+            nconv = len(agg2.get_editor_property("convex_elems") or [])
+            async_probe = "async-prop=absent"
+            for pn in ("create_physics_meshes_async",
+                       "bCreatePhysicsMeshesAsync"):
+                try:
+                    async_probe = "%s=%s" % (pn, bs2.get_editor_property(pn))
+                    break
+                except Exception:
+                    pass
+            fresh_res.append("DISK-AGG:box=%d convex=%d %s flag=%s" % (
+                nbox, nconv, async_probe,
+                bs2.get_editor_property("collision_trace_flag")))
+        except Exception:
+            fresh_res.append("FRESH-SPAWN-ERR " +
+                             traceback.format_exc().replace("\n", " | "))
+        fresh_res = " | ".join(fresh_res)
+        if probe_err:
+            check("CC0 props block (capsule sweep)", False,
+                  "PROBE " + probe_err)
+        else:
+            ok_block = (len(probe) == len(cc0_labels) + 1
+                        and probe[0].startswith("CONTROL-S=HIT")
+                        and all("NO-ACTOR" not in p
+                                and ("S=HIT" in p or "C=HIT" in p)
+                                for p in probe[1:]))
+            check("CC0 props block (capsule sweep)", ok_block,
+                  " | ".join(probe) + " | " + fresh_res)
 
     # Report: checklist items needing PIE/headset stay OPEN by definition.
     ok = all(c[1] for c in checks)
