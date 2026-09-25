@@ -51,3 +51,33 @@ glued duplicate redirect line that logged `AddRedirect ... empty name`.
   `IMC_Player` or rely on the fallback.
 - PIE walkthrough: move/look/jump/V-camera/LMB-attack/E-interact, kill an
   enemy (XP/loot/HUD), die (respawn), checkpoint, save/load.
+
+## Audit addendum (2026-09-25, Dauerbetrieb R19/R20 — backlog #29b)
+
+Fresh headless load probe (`UnrealEditor-Cmd -run=pythonscript`, evidence
+`Saved/BpLoadProbe.txt`, `ok=True`, 15 paths) re-confirms the quarantine
+and adds facts:
+
+- **All 10 SAO blueprint copies still fail to load** ("exists but was not
+  able to be loaded"): the root copies `BP_SAOEnemy`,
+  `BP_SAOMMOCharacter`, `BP_SAOMMOGameMode`, `BP_SAOMMOPlayerController`,
+  `BP_SAOSword` **and** their `Enemies/`, `Blueprints/`, `Weapons/`
+  folder twins. Template BPs (`BP_ThirdPersonCharacter`, `BP_JumpPad`)
+  and `IMC_Default` load fine — the damage is specific to the SAO-era
+  files, exactly as diagnosed above.
+- `IMC_SAOMMO` still fails to load and has **zero** external references
+  (string scan over every uasset/umap). Decision stands: **rely on the
+  transient `BuildFallbackMapping()`**; do not bind `IMC_SAOMMO` until it
+  is repaired in a GUI session (see "Still needs GUI"). The redirect
+  target name `IMC_Player` never existed on disk — the rename was
+  reverted (Widerspruchstagebuch item 13).
+- Two live `IA_*` sets exist on purpose and must **not** be deduplicated:
+  `Content/Input/IA_*` (C++ `FObjectFinder` defaults in
+  `PlayerCharacter`/`MainPlayerController`/`VRCharacter`) and
+  `Content/Input/Actions/IA_*` (bound by `IMC_Default`, used by the
+  ThirdPerson template controller).
+- `L_StartingReach_Ruine.umap` still overrides its GameMode with the
+  load-broken `Blueprints/BP_SAOMMOGameMode` (silently falls back to the
+  native `MainGameMode` global — harmless today because native is the
+  intended mode). Cleanup decision: backlog #26 (needs owner approval;
+  ADR-014a quarantine stands until then).
