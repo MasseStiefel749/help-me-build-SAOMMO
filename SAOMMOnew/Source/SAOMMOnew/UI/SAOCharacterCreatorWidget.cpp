@@ -28,6 +28,13 @@ void USAOCharacterCreatorWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	// Backlog #18(b): the root widget must support keyboard focus, otherwise
+	// FInputModeUIOnly::SetWidgetToFocus logs "Attempting to focus
+	// Non-Focusable widget" (PlayerController.cpp:6345) every time the
+	// controller opens the creator. NativeConstruct runs during AddToViewport,
+	// i.e. before MainPlayerController sets the input mode.
+	SetIsFocusable(true);
+
 	// Build the whole layout in code when no Blueprint designer tree exists,
 	// so the creator is usable with zero Editor assets (HUD pattern).
 	BuildLayoutIfNeeded();
