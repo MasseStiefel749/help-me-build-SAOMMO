@@ -239,6 +239,35 @@ MUS_    Music
 
 Specific naming conventions can be expanded later.
 
+The project expanded the list on 2026-09-25. Every entry was verified
+headlessly against the real assets (class probe evidence:
+`Saved/NamingProbeResult.txt`):
+
+```text
+L_       Level / map package
+ABP_     Anim Blueprint               (class: AnimBlueprint)
+AM_      Anim Montage                 (class: AnimMontage)
+AO_      Aim Offset                   (class: AimOffsetBlendSpace)
+BS_      Blend Space                  (class: BlendSpace)
+BPI_     Interface Blueprint          (class: Blueprint)
+CR_      Control Rig                  (class: ControlRigBlueprint)
+EnvQuery_ Environment Query           (class: EnvQuery)
+IA_      Input Action                 (class: InputAction)
+IMC_     Input Mapping Context        (class: InputMappingContext)
+MF_      anim sequence (Epic template) (class: AnimSequence)
+MM_      anim sequence (Epic template) (class: AnimSequence)
+PA_      Physics Asset                (class: PhysicsAsset)
+SK_      Skeleton                     (class: Skeleton)
+SKM_     Skeletal Mesh                (class: SkeletalMesh)
+ST_      State Tree                   (class: StateTree)
+UI_      touch UI widget              (class: WidgetBlueprint)
+```
+
+`MF_`/`MM_` are inherited from the Epic mannequin template; new montage
+assets use `AM_`, new static meshes `SM_`, new textures `T_`. Assets that
+still lack a prefix (blade-rack template parts under `Content/Atlas` and
+`Content/Weapons/FantasySword`) are tracked as a rename backlog item.
+
 ---
 
 # 15. Folder Structure
