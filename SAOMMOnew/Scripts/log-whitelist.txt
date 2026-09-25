@@ -19,9 +19,19 @@ UnifiedErrorTest
 #   Unable to find RecastNavMesh  -> gefixt f905d99 (#17)
 #
 # Offen, deshalb aktiv:
-#   LogPython: Error  = Backlog #22 (init_unreal.py der Engine-Plugins schlaegt
-#                       in JEDEM Boot fehl: ToolsetDefinition/PythonTestRunner
-#                       fehlen - Engine-seitig, nicht Projektcode).
+#   LogPython: Error  = Backlog #22, TEILWEISE GEFIXT 2026-09-25 (R16):
+#                       AIModuleToolset (9 Traceback-Zeilen je Boot) ist
+#                       ueber SAOMMOnew.uproject auf "Enabled": false
+#                       gesetzt - wenn diese Klasse wieder auftaucht, ist
+#                       das Plugin aktiviert worden (Regressionsalarm!).
+#                       Verbleiben 5 Zeilen je Boot: ToolsetRegistry/
+#                       init_unreal.py (unreal.PythonTestRunner fehlt im
+#                       Headless-Boot - Engine-Quirk, Module registriert
+#                       die Typen dort nicht, Skript laeuft trotzdem),
+#                       weil ModelContextProtocol (bewusst aktiv, 5e89f5d,
+#                       Regel 5) von ToolsetRegistry abhaengt. Deshalb
+#                       bleibt diese Zeile aktiv (Row-22-Fallback
+#                       "sonst Engine-Quirk dokumentieren").
 #   UnifiedErrorTest  = Engine-eigener Self-Test der Unified-Error-API
 #                       (feste LogTemp-Zeilen pro Boot; der Block wirft am
 #                       Editor-Boot zusaetzlich 17x "LogAutomationTest: Error:

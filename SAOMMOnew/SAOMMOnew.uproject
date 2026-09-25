@@ -64,7 +64,7 @@
     },
     {
       "Name": "AIModuleToolset",
-      "Enabled": true
+      "Enabled": false
     },
     {
       "Name": "ControlRig",
