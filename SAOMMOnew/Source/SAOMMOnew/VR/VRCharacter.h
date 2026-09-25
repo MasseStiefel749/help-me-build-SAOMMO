@@ -13,6 +13,9 @@ class UCameraComponent;
 class UMotionControllerComponent;
 class UCombatComponent;
 class ASword;
+class UInputAction;
+class UInputMappingContext;
+struct FInputActionValue;
 
 /**
  *  VR player character (Band 2 §7).
@@ -34,6 +37,12 @@ class ASword;
  *  tracked hand and owns a CombatComponent that arms it from swing velocity.
  *  The component itself is device-independent by design and stays untouched
  *  (audit P8: "do not touch CombatComponent for Block 3").
+ *
+ *  Backlog #16 (desktop input fallback): binds the same enhanced-input
+ *  actions as APlayerCharacter (Move/Look/Jump/Attack + code-only Sprint),
+ *  so a desktop session stays controllable and recordable while an XR system
+ *  registers this pawn (Nachttest Fund 8: pawn spawned immobile whenever the
+ *  Oculus runtime ran, even with no headset worn).
  */
 UCLASS(Blueprintable)
 class AVRCharacter : public ACharacter
@@ -115,4 +124,50 @@ protected:
 
 	/** Mirrors tracked HMD/hand poses into the shared FInputFrame (Band 2 §4). */
 	virtual void Tick(float DeltaSeconds) override;
+
+	/** Desktop-fallback wiring (backlog #16): mirrors APlayerCharacter's
+	 *  enhanced-input setup — same assets, same trigger events. */
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	/** Move Input Action (same asset as the desktop pawn). */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* MoveAction;
+
+	/** Look Input Action (mouse). */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* LookAction;
+
+	/** Attack Input Action (LMB → FInputFrame::bAttack → CombatComponent). */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* AttackAction;
+
+	/** Jump Input Action. */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* JumpAction;
+
+	/** Sprint action + mapping built at possession time (no InputAction asset needed). */
+	UPROPERTY()
+	TObjectPtr<UInputAction> SprintAction = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UInputMappingContext> SprintMapping = nullptr;
+
+	/** Walk speed; applied on construction (mirrors the desktop contract — the
+	 *  pawn previously kept the engine default because nothing could drive it). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (ClampMin = 100, ClampMax = 1200, Units = "cm/s"))
+	float WalkSpeed = 400.0f;
+
+	/** Sprint speed while the sprint key is held (Shift, mapped in code). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (ClampMin = 100, ClampMax = 2000, Units = "cm/s"))
+	float SprintSpeed = 650.0f;
+
+	void OnMove(const FInputActionValue& Value);
+	void OnLook(const FInputActionValue& Value);
+	void OnAttack(const FInputActionValue& Value);
+	void OnJump(const FInputActionValue& Value);
+	void OnSprintStarted(const FInputActionValue& Value);
+	void OnSprintStopped(const FInputActionValue& Value);
+
+	/** Builds the transient Shift sprint mapping (once per pawn) and registers it. */
+	void EnsureSprintMapping();
 };

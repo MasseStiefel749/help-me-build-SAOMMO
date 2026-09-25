@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "VRCharacter.h"
+#include "SAOMMOnew.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
 #include "Components/CapsuleComponent.h"
@@ -8,12 +9,25 @@
 #include "MotionControllerComponent.h"
 #include "Sword.h"
 #include "CombatComponent.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputAction.h"
+#include "InputActionValue.h"
+#include "InputMappingContext.h"
+#include "Engine/LocalPlayer.h"
+#include "UObject/ConstructorHelpers.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AVRCharacter::AVRCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	GetCapsuleComponent()->InitCapsuleSize(35.0f, 90.0f);
+
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	}
 
 	VROrigin = CreateDefaultSubobject<USceneComponent>(TEXT("VROrigin"));
 	VROrigin->SetupAttachment(RootComponent);
@@ -41,6 +55,18 @@ AVRCharacter::AVRCharacter()
 	// counts velocity on motion devices, so this is the designed VR feed
 	// (audit P8; the component itself is not modified).
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+
+	// Desktop-fallback actions (backlog #16): same FObjectFinder defaults as
+	// APlayerCharacter and AMainPlayerController, so the pawn's bindings and
+	// the controller's fallback mapping always agree on the assets.
+	static ConstructorHelpers::FObjectFinder<UInputAction> MoveObj(TEXT("/Game/Input/IA_Move"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> LookObj(TEXT("/Game/Input/IA_Look"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> JumpObj(TEXT("/Game/Input/IA_Jump"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> AttackObj(TEXT("/Game/Input/IA_Attack"));
+	if (MoveObj.Succeeded()) { MoveAction = MoveObj.Object; }
+	if (LookObj.Succeeded()) { LookAction = LookObj.Object; }
+	if (JumpObj.Succeeded()) { JumpAction = JumpObj.Object; }
+	if (AttackObj.Succeeded()) { AttackAction = AttackObj.Object; }
 
 	DefaultSwordClass = ASword::StaticClass();
 }
@@ -147,4 +173,164 @@ void AVRCharacter::Die()
 		EquippedSword = nullptr;
 	}
 	Destroy();
+}
+
+void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		if (MoveAction)
+		{
+			EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AVRCharacter::OnMove);
+		}
+		if (LookAction)
+		{
+			EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered, this, &AVRCharacter::OnLook);
+		}
+		if (AttackAction)
+		{
+			EnhancedInput->BindAction(AttackAction, ETriggerEvent::Started, this, &AVRCharacter::OnAttack);
+		}
+		if (JumpAction)
+		{
+			EnhancedInput->BindAction(JumpAction, ETriggerEvent::Started, this, &AVRCharacter::OnJump);
+		}
+
+		// Sprint: transient action + Shift mapping built in code, so the
+		// feature ships with zero InputAction/IMC assets (same guarantee as
+		// the code-only HUD and the desktop pawn).
+		EnsureSprintMapping();
+		if (SprintAction)
+		{
+			EnhancedInput->BindAction(SprintAction, ETriggerEvent::Started, this, &AVRCharacter::OnSprintStarted);
+			EnhancedInput->BindAction(SprintAction, ETriggerEvent::Completed, this, &AVRCharacter::OnSprintStopped);
+			EnhancedInput->BindAction(SprintAction, ETriggerEvent::Canceled, this, &AVRCharacter::OnSprintStopped);
+		}
+	}
+
+	// Smoke marker (backlog #16): proves the fallback ran on the possessed
+	// pawn — grep "VR input" in a -game boot log next to pawn=VRCharacter.
+	UE_LOG(LogGame, Display, TEXT("VR input: desktop fallback bound (move=%d look=%d jump=%d attack=%d sprint=%d)"),
+		MoveAction ? 1 : 0, LookAction ? 1 : 0, JumpAction ? 1 : 0,
+		AttackAction ? 1 : 0, SprintAction ? 1 : 0);
+}
+
+void AVRCharacter::EnsureSprintMapping()
+{
+	if (SprintAction && SprintMapping)
+	{
+		// Already built; still make sure the local player has the mapping
+		// (respawn creates a fresh pawn against the same local player).
+	}
+	else
+	{
+		SprintAction = NewObject<UInputAction>(this, TEXT("IA_Sprint_Runtime"));
+		SprintMapping = NewObject<UInputMappingContext>(this, TEXT("IMC_Sprint_Runtime"));
+		if (SprintAction && SprintMapping)
+		{
+			SprintAction->ValueType = EInputActionValueType::Boolean;
+			SprintMapping->MapKey(SprintAction, EKeys::LeftShift);
+		}
+		else
+		{
+			SprintAction = nullptr;
+			SprintMapping = nullptr;
+			return;
+		}
+	}
+
+	if (const APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (ULocalPlayer* LP = PC->GetLocalPlayer())
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Sub = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+			{
+				if (!Sub->HasMappingContext(SprintMapping))
+				{
+					Sub->AddMappingContext(SprintMapping, 0);
+				}
+			}
+		}
+	}
+}
+
+void AVRCharacter::OnMove(const FInputActionValue& Value)
+{
+	// Same contract as APlayerCharacter::OnMove: move along the control
+	// rotation and mirror the vector into the device-independent frame.
+	const FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (GetController() && InputFrame)
+	{
+		const FRotator Rotation = GetController()->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		AddMovementInput(ForwardDirection, MovementVector.Y);
+		AddMovementInput(RightDirection, MovementVector.X);
+
+		InputFrame->CurrentFrame.Move = MovementVector;
+	}
+}
+
+void AVRCharacter::OnLook(const FInputActionValue& Value)
+{
+	const FVector2D LookAxisVector = Value.Get<FVector2D>();
+
+	if (GetController() && InputFrame)
+	{
+		AddControllerYawInput(LookAxisVector.X);
+		AddControllerPitchInput(LookAxisVector.Y);
+
+		// The VR camera ignores control rotation by design (Band 2 §7: the HMD
+		// drives it), so mouse look would otherwise be invisible here. Drive the
+		// pawn yaw from the control rotation (keeps the view and the WASD
+		// direction in sync) and pitch the camera directly. Input-driven only:
+		// while an HMD streams poses the tracking system owns the camera
+		// transform every frame, so headset behaviour is unchanged.
+		FRotator ActorRotation = GetActorRotation();
+		ActorRotation.Yaw = GetController()->GetControlRotation().Yaw;
+		SetActorRotation(ActorRotation);
+
+		FRotator CameraRotation = VRCamera->GetRelativeRotation();
+		CameraRotation.Pitch = FMath::Clamp(GetController()->GetControlRotation().Pitch, -89.0f, 89.0f);
+		VRCamera->SetRelativeRotation(CameraRotation);
+
+		InputFrame->CurrentFrame.Turn = LookAxisVector;
+	}
+}
+
+void AVRCharacter::OnAttack(const FInputActionValue& Value)
+{
+	// LMB arms the same rising edge the desktop pawn uses; the device-
+	// independent CombatComponent consumes it (Band 2 §8, audit P8 untouched).
+	if (InputFrame)
+	{
+		InputFrame->CurrentFrame.bAttack = true;
+	}
+}
+
+void AVRCharacter::OnJump(const FInputActionValue& Value)
+{
+	Jump();
+}
+
+void AVRCharacter::OnSprintStarted(const FInputActionValue& Value)
+{
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->MaxWalkSpeed = SprintSpeed;
+	}
+}
+
+void AVRCharacter::OnSprintStopped(const FInputActionValue& Value)
+{
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->MaxWalkSpeed = WalkSpeed;
+	}
 }
