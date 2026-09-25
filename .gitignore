@@ -27,3 +27,7 @@ Build/
 *.user
 DefaultEditorPerProjectUserSettings.ini
 BroadcastDeviceProviderRegistry.json
+
+# Python bytecode caches from Content/Python tooling (py_compile runs)
+__pycache__/
+*.pyc
