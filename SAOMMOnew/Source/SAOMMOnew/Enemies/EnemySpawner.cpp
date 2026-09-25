@@ -101,7 +101,8 @@ void AEnemySpawner::TrySpawn()
 
 void AEnemySpawner::OnSpawnedDied()
 {
-	// Slot frees on next TrySpawn via stale-entry pruning; also prune now
-	// so GetAliveCount is exact for HUD/objectives.
+	// The corpse stays in the roster until the lifespan destroys it
+	// (GetAliveCount reports not-yet-destroyed enemies); this prune and
+	// the pre-spawn one drop the entry once it is actually invalid.
 	Spawned.RemoveAll([](const TWeakObjectPtr<AEnemy>& Weak) { return !Weak.IsValid(); });
 }

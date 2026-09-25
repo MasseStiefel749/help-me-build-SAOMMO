@@ -13,7 +13,8 @@ class AEnemy;
  *
  *  Place in a level (e.g. Grauwaldrand: 2-4 scavengers). Maintains up to
  *  MaxAlive enemies inside SpawnRadius, respawning on SpawnInterval while
- *  the spawner is active. Dead enemies release their slot via OnDied.
+ *  the spawner is active. A killed enemy keeps its slot until its corpse
+ *  is destroyed (lifespan); OnDied then drops the invalid entry.
  */
 UCLASS(Blueprintable)
 class AEnemySpawner : public AActor
