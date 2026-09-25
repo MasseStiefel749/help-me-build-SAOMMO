@@ -212,7 +212,7 @@ def main():
 
     # ---------------- meshes ----------------
     lines.append("== MESHES ==")
-    lines.append("path|class|uasset_KB|lod_probe|tri_lod0")
+    lines.append("path|class|uasset_KB|lod_probe|tri_lod0|collision")
     mesh_api = {}
     for p in sorted(meshes):
         name = package_of(p)[len("/Game/"):]
@@ -224,6 +224,7 @@ def main():
             cls = "?"
         lodinfo = "n/a"
         tri = "n/a"
+        coll = "n/a"
         if cls == "StaticMesh":
             try:
                 m = unreal.EditorAssetLibrary.load_asset(p)
@@ -268,9 +269,21 @@ def main():
                             break
                         except Exception:
                             pass
+                # collision flag (row 30 asks for it; R18 proved FKAggregateGeom
+                # is unexposed for writes - probe what is READABLE and say so)
+                bs = getattr(m, "body_setup", "PROP-NOT-EXPOSED")
+                if isinstance(bs, str):
+                    coll = "body_setup prop not exposed"
+                elif bs is None:
+                    coll = "body_setup=None"
+                else:
+                    ctf = getattr(bs, "collision_trace_flag", None)
+                    if ctf is None:
+                        ctf = "ctf-not-exposed"
+                    coll = "body_setup=yes %s" % ctf
         key = lodinfo.split("->")[0].split(" ")[0]
         mesh_api[key] = mesh_api.get(key, 0) + 1
-        lines.append("%s|%s|%.0f|%s|%s" % (name, cls, kb, lodinfo, tri))
+        lines.append("%s|%s|%.0f|%s|%s|%s" % (name, cls, kb, lodinfo, tri, coll))
     lines.append("mesh_lod_api_distribution=%s" % mesh_api)
 
     # ---------------- others ----------------
