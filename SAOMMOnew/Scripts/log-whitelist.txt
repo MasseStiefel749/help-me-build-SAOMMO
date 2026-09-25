@@ -1,0 +1,31 @@
+# Log-Whitelist fuer Stufe 4 von Scripts\RunAutomation.ps1 (#19 Testinfrastruktur)
+#
+# Format:  eine Zeile = exakter Textabschnitt (Substring). Eine Error-Zeile in
+#          den gescannten Logs scheitert die Stufe, wenn KEINE Whitelist-Zeile
+#          sie enthaelt. Zeilen, die mit '#' beginnen, sind Kommentare.
+# Zweck:   Nur Engine-Rauschen mit belegter Herkunft und bekanntem Backlog-
+#          Ticket steht hier. Gefixte Fehlerklasse NIE reintun, sonst versteckt
+#          die Whitelist spaetere Regressionen (Regel der Nacht-Archaeologie).
+#
+# Aktiv (Baseline R12-Boot, kalibriert am 2026-09-25):
+LogPython: Error
+UnifiedErrorTest
+#
+# Aufgeloest - bewusst NICHT whitelisted (Regressionsalarm erwuenscht):
+#   LogUIActionRouter: Error      -> gefixt fb5f31a (#18a)
+#   Non-Focusable widget          -> gefixt bf25b63 (#18b)
+#   OpenXR-Loader                 -> gefixt 2a7055b (#18c)
+#   SpawnMissingNavigationData    -> gefixt f905d99 (#17)
+#   Unable to find RecastNavMesh  -> gefixt f905d99 (#17)
+#
+# Offen, deshalb aktiv:
+#   LogPython: Error  = Backlog #22 (init_unreal.py der Engine-Plugins schlaegt
+#                       in JEDEM Boot fehl: ToolsetDefinition/PythonTestRunner
+#                       fehlen - Engine-seitig, nicht Projektcode).
+#   UnifiedErrorTest  = Engine-eigener Self-Test der Unified-Error-API
+#                       (feste LogTemp-Zeilen pro Boot; der Block wirft am
+#                       Editor-Boot zusaetzlich 17x "LogAutomationTest: Error:
+#                       Condition failed" NACH den LogTemp-Zeilen - belegt
+#                       gleiche Quelle. Die werden nicht gebraucht, weil
+#                       Stufe 2 das Log erst ab "Cmd: Automation RunTests"
+#                       scannt).
