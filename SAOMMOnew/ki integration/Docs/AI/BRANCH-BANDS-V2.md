@@ -52,6 +52,8 @@ git branch --show-current  # muss main oder feature/... sein
 - [ ] README-Hinweis „5.4.4“ als historisch markieren (nicht löschen, nur ADR-Verweis)
 - [ ] Festlegen: Aktive Bänder = `SAOMMOnew/ki integration/projekt-ki-promts-X-of-6` + `Docs/AI/`
 - [ ] Root-Duplikate `projekt-ki-promts-*` als `legacy/` markieren (nicht wild löschen)
+- [ ] Branch-Wahrheit: `main` gilt (AGENTS.md). `LOCAL-SETUP.md:4` nennt noch `going-to-make-an-project` — veraltet, in DOC-00 als TODO notieren, Datei selbst erst mit ADR/Review ändern.
+- [ ] Band-Lücke prüfen: `projekt-ki-promts-1-of-6` fehlt in `ki integration/` (nur 2-6 + 7/8/9 vorhanden) — mit Root-Duplikat abgleichen, nichts löschen, Fund in PROJECT-STATE notieren.
 - [ ] `SAOMMOnew/ki integration/Docs/AI/PROJECT-STATE.md` anlegen mit:
 
 ```md
