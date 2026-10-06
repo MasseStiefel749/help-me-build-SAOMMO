@@ -1,7 +1,7 @@
 # LOCAL-SETUP — SAOMMO Local AI on this machine
 
 Hardware: RTX 4070 12GB (single GPU; RTX 3060 12GB planned) + Ryzen 7 7700X + 32GB RAM (64GB recommended).
-Engine: UE 5.8 live. Repo: `help-me-build-SAOMMO`, branch `going-to-make-an-project`.
+Engine: UE 5.8 live. Repo: `help-me-build-SAOMMO`, branch `main` (bindend laut AGENTS.md).
 
 ## Models (Ollama, on E: — C: stays free)
 
