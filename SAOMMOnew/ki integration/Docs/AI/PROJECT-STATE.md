@@ -46,6 +46,12 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
   siehe Morgen-Checkliste unten.
 - `LOCAL-SETUP.md` Zeile 4 nennt Branch `going-to-make-an-project`; bindend ist `main` (AGENTS.md) — Fix als eigene Reparatur.
 
+## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
+- Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
+- Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
+- Im Editor: Engine Scalability auf Medium/High statt Epic/Cinematic; nicht Editor + Spiel gleichzeitig.
+- Content ist klein (größte Dateien: Mannequin-Sample-Content ~15–20 MB); kein Asset-Umbau nötig.
+
 ## Morgen-Checkliste (PIE, `L_StartingReach`)
 1. Start → steuerbarer Spieler sichtbar (WASD/Maus, Springen).
 2. V-Taste: FP → TP → FP, Position/HP/Ausrüstung unverändert.
