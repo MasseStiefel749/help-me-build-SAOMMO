@@ -427,6 +427,12 @@ void AEnemy::HandleDeath()
 
 void AEnemy::ApplyHealing(float Healing, AActor* Healer)
 {
+	// S06-P05 Damagevalidierung: negative Heilung ist kein verkappter Schadenweg,
+	// Tote werden nicht geheilt (gleiche Guard-Semantik wie TakeDamage).
+	if (bDead || CurrentHealth <= 0.0f || Healing <= 0.0f)
+	{
+		return;
+	}
 	CurrentHealth = FMath::Min(MaxHealth, CurrentHealth + Healing);
 }
 
