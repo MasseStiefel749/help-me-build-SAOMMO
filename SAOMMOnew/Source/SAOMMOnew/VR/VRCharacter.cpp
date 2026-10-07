@@ -6,6 +6,8 @@
 #include "Engine/World.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/Engine.h"
+#include "IXRTrackingSystem.h"
+#include "IHeadMountedDisplay.h"
 #include "MotionControllerComponent.h"
 #include "Sword.h"
 #include "CombatComponent.h"
@@ -139,7 +141,16 @@ bool AVRCharacter::IsXRSessionActive()
 	// Single XR activation gate (ADR-017c): GEngine->XRSystem (Engine.h) is the
 	// registered IXRTrackingSystem — MainGameMode's initial pawn choice and
 	// MainPlayerController's respawn both ask this one question.
-	return GEngine && GEngine->XRSystem.IsValid();
+	// Strict since 2026-10-07: a registered runtime alone (e.g. installed Oculus
+	// software without a worn headset) must NOT flip desktop into the VR pawn —
+	// require an actually enabled AND connected HMD.
+	if (!GEngine || !GEngine->XRSystem.IsValid())
+	{
+		return false;
+	}
+	IHeadMountedDisplay* HMD = GEngine->XRSystem->GetHMDDevice();
+	return HMD && HMD->IsHMDEnabled() && HMD->IsHMDConnected()
+		&& GEngine->XRSystem->IsHeadTrackingAllowed();
 }
 
 float AVRCharacter::TakeDamage(float Damage, const struct FDamageEvent& DamageEvent,
