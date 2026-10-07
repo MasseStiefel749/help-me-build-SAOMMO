@@ -146,6 +146,12 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - Alle NPC-Grundlagen-Pakete BLOCKIERT — brauchen Inhalts- + D16-Lorefreigabe. Nichts erfunden.
 - Ergebnis S15: kein Codeeingriff.
 
+## S16-Quest-Audit (A01-Bestand 2026-10-07, Branch docs/s16-quest-audit)
+- Ist-Stand: kein Quest-Code im Live-Modul (Grep nach QuestObjective/Reward/GiveQuest/AcceptQuest:
+  keine Treffer; nur `EItemType::Quest`-Enum-Eintrag).
+- Alle Fest-Quest-Pakete BLOCKIERT — brauchen D17-Freigabe (Ziele, Belohnungen, Konsequenzen).
+- Ergebnis S16: kein Codeeingriff.
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
