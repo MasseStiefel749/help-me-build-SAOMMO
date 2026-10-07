@@ -44,7 +44,17 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - D01–D30 (Vision + Lückenregister V2): keine Freigabe erteilt → neue Spielregeln BLOCKIERT.
 - Laufzeitnachweise (Sehen/Spielen: Desktopstart, FP/TP-Wechsel, Kampf, Tod, VR mit Headset): TEST AUSSTEHEND —
   siehe Morgen-Checkliste unten.
-- `LOCAL-SETUP.md` Zeile 4 nennt Branch `going-to-make-an-project`; bindend ist `main` (AGENTS.md) — Fix als eigene Reparatur.
+- `LOCAL-SETUP.md`-Branchzeile auf `main` korrigiert (24b8cb4); XR-Gate verlangt jetzt HMD-verbunden (Branch fix/xr-gate-requires-hmd).
+
+## S04-Desktop-Audit (A01-Bestand 2026-10-07, Branch docs/s04-desktop-audit)
+- P01 Bewegung: verdrahtet (`PlayerCharacter::OnMove`, IA_Move + WASD-Fallback, Walk 400 / Sprint 650).
+- P02 First-Person: verdrahtet (FollowCamera an Capsule, EyeHeight 70, OwnerNoSee-Mesh, Schwert sichtbar).
+- P03 Third-Person: verdrahtet (CameraBoom/SpringArm 300, Collision-Test an).
+- P04 Kamerawechsel: verdrahtet (`SetCameraMode`, V-Taste, ohne Pawnwechsel).
+- P05 UI-Fokus: LÜCKE — kein Pause-Menü, keine GameAndUI-Trennung, Tod ändert InputMode nicht. Kein Neubau ohne D-Entscheidung.
+- P06 Interaktion: verdrahtet (Eye-Trace 350 cm, E-Taste, Pickup, HUD-Fokus).
+- P07 Tod/Restart: Guard gegen doppelte Death-Screen-Auslösung umgesetzt (Branch fix/death-double-trigger-guard).
+- P08 Desktop-Kette: Laufzeitnachweis = Spieltest (Boot-Logs: `pawn=PlayerCharacter_0` belegt).
 
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
