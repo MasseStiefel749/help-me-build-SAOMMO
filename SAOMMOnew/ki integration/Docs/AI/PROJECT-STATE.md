@@ -88,6 +88,16 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - P08 Doppel-Guard: kein Cooldown — als bekannte Kleinigkeit vermerkt, kein Eingriff ohne Vertrag.
 - Ergebnis: kein Codeeingriff; fehlende Features sind Entscheidungen, keine Bugs.
 
+## S09-Beute-Audit (A01-Bestand 2026-10-07, Branch docs/s09-loot-audit)
+- P01 Itemdefinition: vorhanden (`FInventoryItem`: Id/Name/Typ/Count).
+- P02 Instanz-ID: FEHLT (nur Def-ID, Stacks) — BLOCKIERT, braucht D13-Freigabe.
+- P03 Kategorien: verdrahtet (Weapon/Armor/Consumable/Material/Quest).
+- P04 Beutetabelle: FEHLT (nur Einzel-Slot LootItemId + Count + XP) — BLOCKIERT, braucht D13-Freigabe.
+- P05 Loot-Erzeugung: Direkt-Grant an Killer (kein Welt-Spawn) — Designstand, kein Bug.
+- P06 Loot-Aufnahme: verdrahtet (Walk-over + Interact).
+- P07 Besitzwechsel: simpel verdrahtet (Add/Remove/Set + Events).
+- P08 Pickup-Idempotenz: Guard umgesetzt (Branch fix/pickup-double-guard); Enemy-Seite war bereits idempotent.
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
