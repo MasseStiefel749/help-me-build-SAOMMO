@@ -117,7 +117,16 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - P06 Equipment-Abgleich: FEHLT (keine Skalierung) — BLOCKIERT, braucht D15-Freigabe.
 - P07 XP-HUD: verdrahtet (Level/XP-Texte, kein Balken — ok).
 - P08 Reward-Replay: ok (bDead-Guard, Tests vorhanden).
-- Ergebnis: kein Codeeingriff.
+- Ergebnis S11: kein Codeeingriff.
+
+## S12-Speichern-Audit (A01-Bestand 2026-10-07, Branch docs/s12-save-audit)
+- P01 Saveformat: verdrahtet (PlayerSave: Pos/Rot/HP/Inventar/Level/XP; zweiter Slot CharacterSave für Aussehen).
+- P02–P04 Charakter/Inventar/Fortschritt: verdrahtet (Save/Load + Roundtrip-Tests).
+- P05 Weltzustand: FEHLT (keine Gegner-/Quest-Daten, nur transienter Respawn-Punkt) — Ausbau, keine Entscheidung.
+- P06 Neustart-Laden: nur manuell per Blueprint-Call, kein Auto-Load — Verhaltensänderung nur mit Freigabe.
+- P07 Fehler/Korruption: minimal (kein Backup/Checksum/UI) — Robustheit nur mit Freigabe.
+- P08 Migration: FEHLT (kein Versionsfeld) — Formatpolitik braucht Entscheidung.
+- Ergebnis S12: kein Codeeingriff.
 
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
