@@ -147,6 +147,10 @@ if (($null -ne $R2.Log) -and (Test-Path $R2.Log)) {
 }
 $Violations = @()
 $Scanned = 0
+# (#43) Warnzaehler im gescannten Scope: rein informativ, kein Gating
+# (Whitelist-Regel der Nacht-Archaeologie / log-diagnosis.md) - entscheidend
+# bleibt ausschliesslich ": Error" + Whitelist in den zwei Logs.
+$ScopedWarnings = 0
 foreach ($Entry in $ScanLogs) {
     $ErrLines = @(Select-String -Path $Entry.Path -Pattern ': Error' -ErrorAction SilentlyContinue |
         Where-Object { $_.LineNumber -ge $Entry.FromLine })
@@ -162,9 +166,65 @@ foreach ($Entry in $ScanLogs) {
             $Violations += ($Trimmed)
         }
     }
+    # (#43) ": Warning"-Zeilen nach dem gleichen Scope-Slice zaehlen -
+    # informativ, kein Gating: Warnungen duerfen bestehende GRUEN-Laeufe
+    # nicht brechen (Whitelist-Regel der Nacht-Archaeologie / log-diagnosis.md).
+    $ScopedWarnings += @(Select-String -Path $Entry.Path -Pattern ': Warning' -ErrorAction SilentlyContinue |
+        Where-Object { $_.LineNumber -ge $Entry.FromLine }).Count
+}
+# --- NEU (#43): informationale Erfassung ueber die Scope-Grenze hinaus -----
+# Die .out-Gegenstuecke der gescannten Logs und der Hauptlog
+# SAOMMOnew/Saved/Logs/SAOMMOnew.log werden gezaehlt, aber AUSDRUECKLICH
+# NICHT gating: der Hauptlog enthaelt z.B. 4x MCP "resources/templates/list"
+# und 17x LogAutomationTest "Condition failed", die bestehenden GRUEN-Laeufe
+# duerfen davon nicht rot werden. Begruendung: Whitelist-Regel der
+# Nacht-Archaeologie / log-diagnosis.md - die einzige entscheidende Regel
+# bleibt ": Error" + Whitelist in den zwei gescannten Logs.
+$OutFiles = 0
+$OutErr = 0
+$OutWarn = 0
+$InfoExamples = @()
+foreach ($Entry in $ScanLogs) {
+    $OutPath = $Entry.Path + '.out'
+    if (-not (Test-Path $OutPath)) { continue }   # .out kann fehlen (z.B. Prozessstart fehlgeschlagen)
+    $OutFiles++
+    $OE = @(Select-String -Path $OutPath -Pattern ': Error' -ErrorAction SilentlyContinue)
+    $OW = @(Select-String -Path $OutPath -Pattern ': Warning' -ErrorAction SilentlyContinue)
+    $OutErr += $OE.Count
+    $OutWarn += $OW.Count
+    foreach ($M in (@($OE) + @($OW))) {
+        $T = $M.Line.Trim()
+        if ($T.Length -gt 160) { $T = $T.Substring(0, 160) }
+        $InfoExamples += [pscustomobject]@{ Src = (Split-Path -Leaf $OutPath); Line = $T }
+    }
+}
+$MainLogPath = Join-Path (Split-Path -Parent $Project) 'Saved\Logs\SAOMMOnew.log'
+$MainLogOk = Test-Path $MainLogPath   # Hauptlog kann fehlen (frischer Checkout)
+$MainErr = 0
+$MainWarn = 0
+if ($MainLogOk) {
+    $ME = @(Select-String -Path $MainLogPath -Pattern ': Error' -ErrorAction SilentlyContinue)
+    $MW = @(Select-String -Path $MainLogPath -Pattern ': Warning' -ErrorAction SilentlyContinue)
+    $MainErr = $ME.Count
+    $MainWarn = $MW.Count
+    foreach ($M in (@($ME) + @($MW))) {
+        $T = $M.Line.Trim()
+        if ($T.Length -gt 160) { $T = $T.Substring(0, 160) }
+        $InfoExamples += [pscustomobject]@{ Src = (Split-Path -Leaf $MainLogPath); Line = $T }
+    }
+}
+# Kurz-Aufschluesselung + max. 5 Beispiele, ausdruecklich als Info (kein Gating)
+Write-Host ("    INFO (kein Gating): .out-Logs=" + $OutFiles + ', Fehler=' + $OutErr + ', Warnungen=' + $OutWarn +
+    '; Hauptlog=' + $(if ($MainLogOk) { 'Fehler=' + $MainErr + ', Warnungen=' + $MainWarn } else { 'fehlt' }))
+foreach ($Ex in ($InfoExamples | Select-Object -First 5)) {
+    Write-Host ("    INFO (kein Gating) [" + $Ex.Src + "]: " + $Ex.Line)
 }
 $ScanOk = ($ScanLogs.Count -gt 0) -and ($Violations.Count -eq 0)
+# Bestehende Felder unveraendert lassen (alte Leser der urteil.txt), dann
+# die neuen Info-Felder anhaengen - informativ, kein Gating.
 $ScanInfo = ("Logs=" + $ScanLogs.Count + ', Error-Zeilen(nach Scope)=' + $Scanned + ', Whitelist=' + $Whitelist.Count + ', Verstoesse=' + $Violations.Count)
+$ScanInfo += (', Warnungen(nach Scope)=' + $ScopedWarnings + ', Info: out=' + $OutErr + ' Fehler/' + $OutWarn + ' Warnungen' +
+    ', Hauptlog=' + $(if ($MainLogOk) { $MainErr.ToString() + ' Fehler/' + $MainWarn.ToString() + ' Warnungen' } else { 'fehlt' }) + ' (nicht gating)')
 foreach ($V in ($Violations | Select-Object -First 5)) { Write-Host ("    VIOLATION: " + $V) }
 Add-Result 4 'Log-Scan' $ScanOk $ScanInfo
 
