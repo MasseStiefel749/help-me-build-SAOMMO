@@ -128,6 +128,13 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - P08 Migration: FEHLT (kein Versionsfeld) — Formatpolitik braucht Entscheidung.
 - Ergebnis S12: kein Codeeingriff.
 
+## S13-Permadeath-Audit (A01-Bestand 2026-10-07, Branch docs/s13-permadeath-audit)
+- Ist-Stand: Tod = Death-Screen + Respawn (kein Permadeath). Grep nach Permadeath/DeleteCharacter/Corpse/Nachfolger:
+  keine Implementierung (nur Gegner-Leichen-Kommentare + Spawner-Test).
+- P01–P08 (Todesvertrag, Endgültigkeit, Sperren, Abschluss, Leiche, Item-Übertrag, Nachfolger, Recovery):
+  ALLE BLOCKIERT — brauchen D02-Freigabe (Zeitpunkt, Ausnahmen, Disconnect). Nichts erfunden.
+- Ergebnis S13: kein Codeeingriff.
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
