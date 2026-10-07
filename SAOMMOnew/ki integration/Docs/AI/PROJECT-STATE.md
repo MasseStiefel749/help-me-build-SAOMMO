@@ -56,6 +56,16 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - P07 Tod/Restart: Guard gegen doppelte Death-Screen-Auslösung umgesetzt (Branch fix/death-double-trigger-guard).
 - P08 Desktop-Kette: Laufzeitnachweis = Spieltest (Boot-Logs: `pawn=PlayerCharacter_0` belegt).
 
+## S06-Kampf-Audit (A01-Bestand 2026-10-07, Branch docs/s06-combat-audit)
+- P01 Waffenbesitz: lückenhaft aber funktionsfähig (SetSword/DropPhysics/Lifespan da; Spawn/Attach extern).
+- P02 Angriffsfenster: verdrahtet (Armed 0,25 s, Kanten-Trigger Desktop / Velocity VR).
+- P03 Treffererkennung: verdrahtet, einfach (Overlap-Sphere 130 cm, kein Sweep; BladeCollision ungenutzt).
+- P04 Trefferbegrenzung: wirksam per Zeit-Cooldown (0,4 s); `ASword::LastHitTime` ist ungenutzter Tot-Code (liegen lassen).
+- P05 Damagevalidierung: Guards überall; `Enemy::ApplyHealing`-Lücke geschlossen (Branch fix/enemy-heal-guard).
+- P06 Abwehrregel (Block/Parry): FEHLT komplett — BLOCKIERT, braucht D14-Freigabe, nichts erfunden.
+- P07 Todesabschluss: verdrahtet (Gegner bDead-Guard + Ragdoll + XP/Loot; Spieler Death-Screen + Respawn).
+- P08 Desktop-VR-Vertrag: gleicher Combat-Pfad beidseitig (InputFrame + CombatComponent).
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
