@@ -98,6 +98,16 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - P07 Besitzwechsel: simpel verdrahtet (Add/Remove/Set + Events).
 - P08 Pickup-Idempotenz: Guard umgesetzt (Branch fix/pickup-double-guard); Enemy-Seite war bereits idempotent.
 
+## S10-Inventar-Audit (A01-Bestand 2026-10-07, Branch docs/s10-inventory-audit)
+- P01 Besitz: verdrahtet (Component am Pawn + Change-Events).
+- P02/P03 Hinzufügen/Entfernen: verdrahtet (Validierung, Broadcast, Save/Load via SetItems).
+- P04 Stapeln: unbegrenzt per ItemId, kein MaxStack/Split — Prototyp-ok.
+- P05 Kapazität: FEHLT (kein Slot-/Gewicht-Limit) — BLOCKIERT, braucht D13-Freigabe.
+- P06 Ausrüstungsslots: FEHLT (nur gespawntes Schwert, keine Slots) — BLOCKIERT, braucht D13-Freigabe.
+- P07 Ausrüstungswirkung: FEHLT (keine Boni) — BLOCKIERT, braucht D13/D15-Freigabe.
+- P08 Inventar-UI: verdrahtet (Code-HUD mit Toggle + Liste).
+- Ergebnis: kein Codeeingriff.
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
