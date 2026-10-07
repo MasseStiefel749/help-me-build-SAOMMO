@@ -66,6 +66,17 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - P07 Todesabschluss: verdrahtet (Gegner bDead-Guard + Ragdoll + XP/Loot; Spieler Death-Screen + Respawn).
 - P08 Desktop-VR-Vertrag: gleicher Combat-Pfad beidseitig (InputFrame + CombatComponent).
 
+## S07-Gegner-Audit (A01-Bestand 2026-10-07, Branch docs/s07-enemy-audit)
+- P01 Spawn: verdrahtet (MaxAlive 3, Intervall 5 s, Radius 500 cm, Sofortwelle). Kein Gesamt-Limit — Prototyp-ok.
+- P02 Erkennung: Distanz-only (1000 cm, kein Sicht-Check) — bewusste Prototyp-Vereinfachung, kein Bug.
+- P03 Navigation: direkt per MovementInput, kein NavMesh/BT — bewusste Prototyp-Vereinfachung.
+- P04 Angriff: verdrahtet (120 cm, Schaden + PushAway).
+- P05 Erholung: verdrahtet (Recover 1,0 s + Cooldown).
+- P06 Zielverlust: verdrahtet (Leash 2x DetectRange, Rückkehr bei >600 cm). Kein Such-Timer — ok.
+- P07 Entfernung: verdrahtet (bDead-Guard, Ragdoll, LifeSpan 2 s, OnDied-Prune im Spawner).
+- P08 Gruppe: ein EnemyClass, keine Wellen/Varianten — Inhaltsentscheidung, kein Codebau ohne Freigabe.
+- Ergebnis: kein Codeeingriff; NavMesh/Perception/Wellen sind Ausbau, keine Fehler.
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
