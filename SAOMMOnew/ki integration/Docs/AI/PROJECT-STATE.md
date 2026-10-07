@@ -77,6 +77,17 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - P08 Gruppe: ein EnemyClass, keine Wellen/Varianten — Inhaltsentscheidung, kein Codebau ohne Freigabe.
 - Ergebnis: kein Codeeingriff; NavMesh/Perception/Wellen sind Ausbau, keine Fehler.
 
+## S08-Interaktion-Audit (A01-Bestand 2026-10-07, Branch docs/s08-interaction-audit)
+- P01 Vertrag: per Component + Delegate + Pickup-Cast verdrahtet (kein UInterface — ok).
+- P02 Reichweite/Sicht: verdrahtet (350 cm, Visibility-Trace).
+- P03 Fokusrückmeldung: verdrahtet (HUD-Fokustext + Debug).
+- P04 Aufheben: verdrahtet (TryPickup + Overlap + Destroy).
+- P05 Ablegen: FEHLT (nur RemoveItem, kein Drop-Spawning) — BLOCKIERT, braucht D13-Freigabe.
+- P06 Türen: FEHLT (kein Tür-Aktor) — BLOCKIERT, braucht Inhaltsfreigabe.
+- P07 Truhen: FEHLT (nur Kosmetik-UI) — BLOCKIERT, braucht D13/D17-Freigabe.
+- P08 Doppel-Guard: kein Cooldown — als bekannte Kleinigkeit vermerkt, kein Eingriff ohne Vertrag.
+- Ergebnis: kein Codeeingriff; fehlende Features sind Entscheidungen, keine Bugs.
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
