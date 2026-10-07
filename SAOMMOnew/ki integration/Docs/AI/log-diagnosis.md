@@ -19,11 +19,11 @@ reintun (Regel der Nacht-Archaeologie).
 | Hauptlog | `SAOMMOnew/Saved/Logs/SAOMMOnew.log` | Editor-Boots, MCP, Headless-Commandlets |
 | Automation-Lauf | `%LOCALAPPDATA%\Temp\opencode\automation\<Stamp>-<Tag>.log` | `Scripts/RunAutomation.ps1` (`-abslog=`, Zeile 49) |
 | stdout/Stderr | derselbe Pfad, Endung `.log.out` / `.log.err` | RedirectStandardOutput/Err (Zeile 51-52) |
-| Gesamturteil | `<Stamp>-urteil.txt` | Stufen 0-4 (Zeile 182) |
+| Gesamturteil | `<Stamp>-urteil.txt` | Stufen 0-4 (Zeile 242) |
 
 Tags: `stufe0-build`, `stufe1-list`, `stufe2-runtests`, `stufe3-boot`.
 
-## 3 Erfassungsumfang Stufe 4 (RunAutomation.ps1 Zeilen 126-169)
+## 3 Erfassungsumfang Stufe 4 (RunAutomation.ps1 Zeilen 126-229)
 
 Gescannt werden nur **zwei** Logs:
 * `stufe3-boot.log` ab Zeile 1,
@@ -33,9 +33,18 @@ Gescannt werden nur **zwei** Logs:
 Match ist der Substring `: Error`; Whitelist-Abgleich ist ein case-sensitiver
 Substring ueber die ganze Zeile (`$E.Line.Contains($W)`).
 
-NICHT gescannt: `stufe0/1`, alle `.out`/`.err`, der Hauptlog
+NICHT gescannt (fuer das Gating): `stufe0/1`, alle `.out`/`.err`, der Hauptlog
 `SAOMMOnew.log`, alle `: Warning`-Zeilen und Tracebacks. Zwei Fehlerklassen
 konnten dadurch lange unsichtbar bleiben (Abschnitt 5).
+Mit #43 (Stand 2026-10-07) sind die Erfassungsluecken jetzt informativ
+geschlossen: Stufe 4 zaehlt zusaetzlich die `: Warning`-Zeilen im
+gescannten Scope und meldet informationale Zaehler ueber die Scope-Grenze
+hinaus - die `.out`-Gegenstuecke beider gescannten Logs plus den Hauptlog
+`SAOMMOnew.log` (`: Error`/`: Warning`, Kurz-Aufschluesselung mit max. 5
+Beispielen) als `$ScanInfo`-Felder, ausdruecklich mit `(nicht gating)`
+markiert. Die einzige entscheidende Regel bleibt unveraendert die zwei
+gescannten Logs + Substring `: Error` + Whitelist-Abgleich; bestehende
+GRUEN-Laeufe werden durch die neuen Zaehler nicht beeinflusst.
 
 ## 4 Bestandsaufnahme (Referenzlauf 20261006-234914, GRUEN; Hauptlog-Stand 2026-10-07)
 
@@ -73,9 +82,14 @@ als Rest dokumentiert, nicht als behoben.
 
 ## 6 Offene Punkte (als Backlog fortgefuehrt, hier nur dokumentiert)
 
-1. Stufe-4-Scope: Warnungen, `.out`-Dateien und der Hauptlog werden nicht
+1. ~~Stufe-4-Scope: Warnungen, `.out`-Dateien und der Hauptlog werden nicht
    gezaehlt — Fehlerklassen wie `resources/templates/list` bleiben dadurch
-   unsichtbar (Erweiterung als eigene Zeile, muss GRUEN-Laeufe nicht brechen).
+   unsichtbar (Erweiterung als eigene Zeile, muss GRUEN-Laeufe nicht brechen).~~
+   **erledigt (#43)**: Warnzaehler nach Scope-Slice + informationale Zaehler
+   fuer `.out` und Hauptlog eingebaut, ausdruecklich `(nicht gating)`; Beleg
+   Lauf 20261007-101304: `Warnungen(nach Scope)=27, Info: out=23 Fehler/36
+   Warnungen, Hauptlog=24 Fehler/14 Warnungen (nicht gating)` bei
+   `Verstoesse=0` und GRUEN-Gesamturteil (Gating-Regel unveraendert).
 2. ~~`DestroyActor: World has no context!` bei Enemy/ItemPickup im Testlauf~~
    **erledigt (#42)**: Ursache war `Tests/SAOMMOTestWorld.h` (kein
    `FWorldContext` zur Testwelt), Fix = Kontext-Registrierung in
