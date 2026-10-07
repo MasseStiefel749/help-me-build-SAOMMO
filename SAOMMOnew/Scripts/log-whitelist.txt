@@ -16,7 +16,11 @@ UnifiedErrorTest
 #   Non-Focusable widget          -> gefixt bf25b63 (#18b)
 #   OpenXR-Loader                 -> gefixt 2a7055b (#18c)
 #   SpawnMissingNavigationData    -> gefixt f905d99 (#17)
-#   Unable to find RecastNavMesh  -> gefixt f905d99 (#17)
+#   Unable to find RecastNavMesh  -> f905d99 (#17): Beleg ist 0x im -game-
+#                       Smoke (vorher 16x/Boot); die Warning-Variante von
+#                       LogCrowdFollowing taucht weiterhin auf - regressions-
+#                       wirksam ist nur die Error-Variante (Stufe 4 scannt
+#                       ohnehin nur ': Error'). Details: Docs/AI/log-diagnosis.md
 #
 # Offen, deshalb aktiv:
 #   LogPython: Error  = Backlog #22, TEILWEISE GEFIXT 2026-09-25 (R16):
