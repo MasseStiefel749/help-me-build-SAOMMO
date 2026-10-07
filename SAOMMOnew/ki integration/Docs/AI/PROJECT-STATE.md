@@ -141,6 +141,11 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - Alle Lager-Pakete BLOCKIERT — brauchen D03-Freigabe (konto-/familiengebunden, was vererbt, kein Nachfolger).
 - Ergebnis S14: kein Codeeingriff.
 
+## S15-NPC-Audit (A01-Bestand 2026-10-07, Branch docs/s15-npc-audit)
+- Ist-Stand: kein NPC-Code im Live-Modul (Grep nach ANPC/Dialog: keine Treffer; nur Template-NPC in Variant_*).
+- Alle NPC-Grundlagen-Pakete BLOCKIERT — brauchen Inhalts- + D16-Lorefreigabe. Nichts erfunden.
+- Ergebnis S15: kein Codeeingriff.
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
