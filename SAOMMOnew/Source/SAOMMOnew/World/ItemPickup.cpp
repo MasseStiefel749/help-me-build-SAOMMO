@@ -65,7 +65,9 @@ void AItemPickup::Configure(FName ItemId, int32 Count)
 
 bool AItemPickup::TryPickup(AActor* Caller)
 {
-	if (!Caller || Item.ItemId.IsNone() || Item.Count <= 0)
+	// S09-P08: overlap and interact trace can resolve the same pickup in one
+	// tick — grant once, second call is a no-op (actor is already going away).
+	if (bPickedUp || !Caller || Item.ItemId.IsNone() || Item.Count <= 0)
 	{
 		return false;
 	}
@@ -91,6 +93,7 @@ bool AItemPickup::TryPickup(AActor* Caller)
 	}
 
 	Inventory->AddItem(Item);
+	bPickedUp = true;
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.5f, FColor::Green,

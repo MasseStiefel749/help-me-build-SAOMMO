@@ -42,6 +42,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pickup")
 	void Configure(FName ItemId, int32 Count);
 
+	/** S09-P08: same-tick double pickup (overlap + interact trace) grants only once. */
+	bool bPickedUp = false;
+
 protected:
 
 	/** Walk-over pickup: collects when a pawn carrying an inventory enters. */
