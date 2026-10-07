@@ -12,6 +12,22 @@ ASSET-LICENSES.csv) to SM_* static meshes:
     Barrel_01/Barrel_01_1k.fbx                         -> SM_Barrel_Brunnfeld
     painted_wooden_bench/painted_wooden_bench_1k.fbx   -> SM_Bench_Brunnfeld
 
+Backlog #41b (CC0-Vegetation, Band 5 ss8/ss18, names per
+ASSET-LICENSES.csv) adds the two Grauwaldrand vegetation meshes from the
+same SRC_ROOT, again from their *_ubx.fbx derivatives:
+
+    island_tree_02/island_tree_02_1k_ubx.fbx   -> SM_IslandTree_Grauwaldrand
+    tree_stump_01/tree_stump_01_1k_ubx.fbx     -> SM_TreeStump_Grauwaldrand
+
+Destination stays DEST_PATH = /Game/Props: two more files from the same
+CC0 pass do not justify a second import folder, and every CC0 mesh keeps
+living next to the #24 props. Band 5 ss15 would also allow a dedicated
+/Game/Vegetation folder - revisit when the vegetation count grows.
+Colour textures for both sets are already fetched to
+D:/Assets/CC0/Textures/<set>/ (1k JPG, Poly Haven files API md5
+verified); wiring them into the project is a later step
+(import_cc0_textures.py).
+
 Import settings: mesh ONLY - no materials, no textures (Band 5 §9 /
 backlog #24: props are dressed with the existing MI_* instances in
 dress_arena.py, "kein Material-Neubau"). Every optional 5.8 import
@@ -55,6 +71,8 @@ JOBS = [
     ("katana_stand_01/katana_stand_01_1k_ubx.fbx", "SM_BladeRack_Klingenhof"),
     ("Barrel_01/Barrel_01_1k_ubx.fbx", "SM_Barrel_Brunnfeld"),
     ("painted_wooden_bench/painted_wooden_bench_1k_ubx.fbx", "SM_Bench_Brunnfeld"),
+    ("island_tree_02/island_tree_02_1k_ubx.fbx", "SM_IslandTree_Grauwaldrand"),
+    ("tree_stump_01/tree_stump_01_1k_ubx.fbx", "SM_TreeStump_Grauwaldrand"),
 ]
 
 SRC_ROOT = "D:/Assets/CC0/Models"
