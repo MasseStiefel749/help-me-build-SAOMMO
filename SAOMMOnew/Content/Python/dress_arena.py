@@ -21,6 +21,12 @@ Idempotent (dedupe by actor label, materials re-applied every run):
     actor location - both spawners stood at (0,0,0), i.e. inside the safe
     town. Move them into Grauwaldrand / Ruine approach, add a second
     Grauwaldrand spawner (spec: 2-4), set EnemyClass when unset.
+  * backlog #41 (Schritt 3b): vegetation on the Grauwaldrand forest edge
+    (regionsdoc §5, Band 5 §8) - 5x SM_IslandTree_Grauwaldrand +
+    3x SM_TreeStump_Grauwaldrand north of the rock line, outside the
+    traverse and spawn space, per-slot MIs (trunk/leaves/branches).
+    Instance count stays low on purpose: Band 5 §17 VR budget, the tree
+    has 1,072,213 triangles and a single LOD (LOD/Nanite still open).
 
 Writes <Project>/Saved/ArenaDressResult.txt.
 """
@@ -32,6 +38,13 @@ MI = {
     "rock": "/Game/Materials/MI_Rock063",
     "planks": "/Game/Materials/MI_Planks009",
     "metal": "/Game/Materials/MI_PracticeBlade",
+    # Backlog #41 vegetation (Band 5 ss9: instances, never unique
+    # materials). Slot order of SM_IslandTree_Grauwaldrand was proven in
+    # #41e: 0=trunk, 1=leaves, 2=branches - hence a per-slot spec below.
+    "veg_trunk": "/Game/Materials/MI_IslandTree_Trunk",
+    "veg_leaves": "/Game/Materials/MI_IslandTree_Leaves",
+    "veg_branches": "/Game/Materials/MI_IslandTree_Branches",
+    "veg_stump": "/Game/Materials/MI_TreeStump",
 }
 CUBE = "/Engine/BasicShapes/Cube.Cube"
 CYLINDER = "/Engine/BasicShapes/Cylinder.Cylinder"
@@ -102,6 +115,56 @@ MESH_PROPS = [
      (-400.0, -1450.0, 0.0), 1.0, "planks"),
 ]
 
+# Backlog #41, Schritt 3b: CC0 vegetation on the Grauwaldrand forest
+# edge (regionsdoc Docs/World/regions/01-starting-reach.md §5 "forest
+# edge, broken wall segments", Band 5 §8). Same contract as MESH_PROPS
+# (label / mesh asset / x-y-ground-z / uniform scale), but the material
+# spec is a PER-SLOT tuple: the tree keeps its three imported slots
+# (0 trunk, 1 leaves, 2 branches - #41e), so one blanket MI must not
+# overwrite them; the stump has a single slot.
+# Placement facts (read from this script, not guessed):
+#   * path chain ends at Path_09 (13000, 0), every slab is y ±150
+#   * Grauwaldrand rocks sit at y -1100..+1000, x 13200..14800
+#   * Spawner_Grauwaldrand (14000, 200) and _02 (15400, -600), both with
+#     SpawnRadius 500 (EnemySpawner.h)
+# The row therefore runs north of y=2300 (>= 1700 clear of every
+# spawner, >= 1200 clear of the rock line, >= 2150 clear of the traverse
+# slabs) inside zone x 12500..16500, so verify checks [1]/[2] stay green.
+# Band 5 §17 (VR/perf): SM_IslandTree_Grauwaldrand = 1,072,213 triangles
+# with ONE LOD - deliberately only 5 instances (hard max 6); LOD/Nanite
+# work is still OPEN and tracked as follow-up backlog.
+# Scale 1.0 = real world size, checked against the source: the FBX
+# vertex data is metres (tree_stump_01 matches the Poly Haven dimensions
+# API exactly: 1426x1590x573mm; island_tree_02 matches in Y/Z:
+# 4079/3409mm - Poly Haven lists 8486mm in X for the full geonodes asset
+# while the 1k FBX spans 4208mm there). Readback from the level bounds
+# in ArenaDressResult.txt: 421x408x341cm / 143x160x58cm.
+VEG_PROPS = [
+    ("veg_tree_gw_1", "/Game/Props/SM_IslandTree_Grauwaldrand",
+     (12600.0, 2400.0, 0.0), 1.0,
+     ("veg_trunk", "veg_leaves", "veg_branches")),
+    ("veg_tree_gw_2", "/Game/Props/SM_IslandTree_Grauwaldrand",
+     (13900.0, 2900.0, 0.0), 1.0,
+     ("veg_trunk", "veg_leaves", "veg_branches")),
+    ("veg_tree_gw_3", "/Game/Props/SM_IslandTree_Grauwaldrand",
+     (15100.0, 2300.0, 0.0), 1.0,
+     ("veg_trunk", "veg_leaves", "veg_branches")),
+    ("veg_tree_gw_4", "/Game/Props/SM_IslandTree_Grauwaldrand",
+     (16300.0, 3000.0, 0.0), 1.0,
+     ("veg_trunk", "veg_leaves", "veg_branches")),
+    # one deeper tree so the edge reads as a group, not a fence
+    ("veg_tree_gw_5", "/Game/Props/SM_IslandTree_Grauwaldrand",
+     (14500.0, 3900.0, 0.0), 1.0,
+     ("veg_trunk", "veg_leaves", "veg_branches")),
+    # shrub layer: stumps between the trees (still clear of the paths)
+    ("veg_stump_gw_1", "/Game/Props/SM_TreeStump_Grauwaldrand",
+     (13250.0, 2550.0, 0.0), 1.0, ("veg_stump",)),
+    ("veg_stump_gw_2", "/Game/Props/SM_TreeStump_Grauwaldrand",
+     (14500.0, 2750.0, 0.0), 1.0, ("veg_stump",)),
+    ("veg_stump_gw_3", "/Game/Props/SM_TreeStump_Grauwaldrand",
+     (15700.0, 2650.0, 0.0), 1.0, ("veg_stump",)),
+]
+
 # Existing actors that get their MI re-applied every run.
 MATERIAL_MAP = {
     "Ground_BrunnfeldSlab": "ground",
@@ -136,6 +199,72 @@ def set_prop(obj, name, value):
     except Exception as exc:
         log("PROP-FAIL %s.%s: %s" % (obj.get_name() if hasattr(obj, "get_name") else obj, name, exc))
         return False
+
+
+def place_mesh_props(unreal, subsys, sm_cls, by_label, mats, entries, kind):
+    """Dedupe by actor label, spawn once, bottom-align, MI on every slot.
+
+    Contract identical to the historic inline MESH_PROPS pass (#24):
+
+      * label is the idempotency key - existing actors are kept and only
+        re-dressed (mesh/scale/alignment/materials), never duplicated
+      * loc[2] is the target plane of the mesh BOTTOM: bounds are read
+        after scaling, so pivot differences cannot sink or float a prop
+      * ``mat_spec`` is either ONE MI key applied to every slot (the #24
+        props) or a PER-SLOT tuple (backlog #41 tree: trunk/leaves/
+        branches, because those three slots carry different materials)
+
+    ``kind`` only prefixes the summary line, so the historic "#24" log
+    wording ("mesh props placed=...") stays byte-identical.
+    """
+    placed = kept = 0
+    for label, mesh_path, loc, scale, mat_spec in entries:
+        mesh = unreal.EditorAssetLibrary.load_asset(mesh_path)
+        if mesh is None:
+            log("MESH-MISSING " + mesh_path)
+            continue
+        actor = by_label.get(label)
+        first_place = actor is None
+        if first_place:
+            try:
+                actor = subsys.spawn_actor_from_class(
+                    sm_cls, unreal.Vector(*loc), unreal.Rotator(0.0, 0.0, 0.0))
+                actor.set_actor_label(label)
+                by_label[label] = actor
+                placed += 1
+            except Exception:
+                log("MESH-SPAWN-FAIL %s\n%s" % (label, traceback.format_exc()))
+                continue
+        else:
+            kept += 1
+        comp = actor.get_component_by_class(unreal.StaticMeshComponent)
+        if comp is None:
+            log("MESH-NO-COMP " + label)
+            continue
+        comp.set_static_mesh(mesh)
+        actor.set_actor_scale3d(unreal.Vector(scale, scale, scale))
+        try:
+            origin, extent = actor.get_actor_bounds(False, False)
+            bottom = origin.z - extent.z
+            dz = loc[2] - bottom
+            actor.set_actor_location(
+                unreal.Vector(loc[0], loc[1], loc[2] + dz), False, False)
+            log("mesh %s placed=%s scale=%.1f bottom %.1f -> %.1f" % (
+                label, first_place, scale, bottom, loc[2]))
+            # cm-scale sanity readout (get_actor_bounds returns the HALF
+            # extents, hence x2): Band 5 §17 - the 1.07M-tri tree must not
+            # be silently 100x oversized. Scale check vs the source data
+            # is documented next to VEG_PROPS.
+            log("mesh %s bounds=(%.0f x %.0f x %.0f)" % (
+                label, 2.0 * extent.x, 2.0 * extent.y, 2.0 * extent.z))
+        except Exception:
+            log("MESH-ALIGN-FAIL %s\n%s" % (label, traceback.format_exc()))
+        keys = mat_spec if isinstance(mat_spec, (list, tuple)) else (mat_spec,)
+        for slot in range(max(1, comp.get_num_materials())):
+            key = keys[slot] if slot < len(keys) else keys[-1]
+            comp.set_material(slot, mats[key])
+    log("%s props placed=%d kept-existing=%d/%d" % (
+        kind, placed, kept, len(entries)))
 
 
 def main():
@@ -206,47 +335,15 @@ def main():
         # 1c) Backlog #24: real CC0 meshes, bottom-aligned to ground z,
         # MI on every material slot (Band 5 §9 - slots stay consistent
         # even if an import ever yields more than one).
-        mesh_placed = mesh_kept = 0
-        for label, mesh_path, loc, scale, mat_key in MESH_PROPS:
-            mesh = unreal.EditorAssetLibrary.load_asset(mesh_path)
-            if mesh is None:
-                log("MESH-MISSING " + mesh_path)
-                continue
-            actor = by_label.get(label)
-            first_place = actor is None
-            if first_place:
-                try:
-                    actor = subsys.spawn_actor_from_class(
-                        sm_cls, unreal.Vector(*loc), unreal.Rotator(0.0, 0.0, 0.0))
-                    actor.set_actor_label(label)
-                    by_label[label] = actor
-                    mesh_placed += 1
-                except Exception:
-                    log("MESH-SPAWN-FAIL %s\n%s" % (label, traceback.format_exc()))
-                    continue
-            else:
-                mesh_kept += 1
-            comp = actor.get_component_by_class(unreal.StaticMeshComponent)
-            if comp is None:
-                log("MESH-NO-COMP " + label)
-                continue
-            comp.set_static_mesh(mesh)
-            actor.set_actor_scale3d(unreal.Vector(scale, scale, scale))
-            try:
-                origin, extent = actor.get_actor_bounds(False, False)
-                bottom = origin.z - extent.z
-                dz = loc[2] - bottom
-                actor.set_actor_location(
-                    unreal.Vector(loc[0], loc[1], loc[2] + dz), False, False)
-                log("mesh %s placed=%s scale=%.1f bottom %.1f -> %.1f" % (
-                    label, first_place, scale, bottom, loc[2]))
-            except Exception:
-                log("MESH-ALIGN-FAIL %s\n%s" % (label, traceback.format_exc()))
-            mat = mats[mat_key]
-            for slot in range(max(1, comp.get_num_materials())):
-                comp.set_material(slot, mat)
-        log("mesh props placed=%d kept-existing=%d/%d" % (
-            mesh_placed, mesh_kept, len(MESH_PROPS)))
+        place_mesh_props(unreal, subsys, sm_cls, by_label, mats,
+                         MESH_PROPS, "mesh")
+
+        # 1d) Backlog #41: vegetation on the Grauwaldrand forest edge -
+        # same placement mechanic as 1c, but per-slot MIs (see VEG_PROPS).
+        # Deliberately few instances: 1.07M-triangle tree, one LOD,
+        # Band 5 §17 VR budget; LOD/Nanite is an open follow-up.
+        place_mesh_props(unreal, subsys, sm_cls, by_label, mats,
+                         VEG_PROPS, "veg")
 
         # 2) Re-apply MI on pre-existing landmark props.
         for label, mat_key in MATERIAL_MAP.items():

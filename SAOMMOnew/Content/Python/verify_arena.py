@@ -16,6 +16,10 @@ spec-arena checklist items that can be proven without a headset:
       answering the visibility channel, control slab first; full capsule
       sweep evidence incl. touch-refresh recorded in the detail (see the
       check body for why the sweep itself is not the pass criterion)
+  [8] vegetation (backlog #41) sits on the Grauwaldrand forest edge:
+      >= 4 tree labels + >= 2 stump labels in the world, each with the
+      right StaticMesh path, no slot left on WorldGridMaterial, and the
+      leaves material really masks (MI parent M_CC0Foliage, MASKED)
 
 Items needing PIE/headset (real traversal, VR+desktop camera, feel) are
 reported as OPEN - they belong to Simon's playtest (backlog #2/#8).
@@ -423,6 +427,76 @@ def main():
                   "control=%s actors=%s data=%s state=%s aggBox=%s || %s | %s"
                   % (control_ok, actors_ok, data_ok, state_ok, agg_ok,
                      " | ".join(probe), fresh_res))
+
+        # [8] Vegetation (backlog #41): CC0 tree/stump group on the
+        # Grauwaldrand forest edge (regionsdoc §5, Band 5 §8). Band 5 §17
+        # VR budget: SM_IslandTree_Grauwaldrand has 1,072,213 triangles
+        # and one LOD, hence the deliberately small floor of 4 trees
+        # (dress_arena.py places 5, hard max 6) - LOD/Nanite is an open
+        # follow-up. Proven here: labels exist, StaticMesh path matches
+        # per kind, NO slot fell back to WorldGridMaterial (Band 5 §9 -
+        # the tree needs its three distinct slots), and the leaves
+        # material really masks so the canopy is not a black box.
+        veg_specs = (
+            ("veg_tree_gw_", "/Game/Props/SM_IslandTree_Grauwaldrand", 4),
+            ("veg_stump_gw_", "/Game/Props/SM_TreeStump_Grauwaldrand", 2),
+        )
+        veg_bad = []
+        veg_counts = []
+        leaves_info = "leaves=not-read"
+        try:
+            for prefix, mesh_path, minimum in veg_specs:
+                found = sorted(l for l in labels if l.startswith(prefix))
+                veg_counts.append("%s=%d(min %d)" % (
+                    prefix, len(found), minimum))
+                if len(found) < minimum:
+                    veg_bad.append("%s:count=%d<%d" % (
+                        prefix, len(found), minimum))
+                for label in found:
+                    actor = next((a for a in actors
+                                  if a.get_actor_label() == label), None)
+                    if actor is None:
+                        veg_bad.append(label + ":NO-ACTOR")
+                        continue
+                    comp = actor.get_component_by_class(
+                        unreal.StaticMeshComponent)
+                    if comp is None:
+                        veg_bad.append(label + ":NO-COMP")
+                        continue
+                    m = comp.get_editor_property("static_mesh")
+                    mpath = m.get_path_name() if m is not None else "None"
+                    if not mpath.startswith(mesh_path):
+                        veg_bad.append("%s:MESH=%s" % (label, mpath))
+                    for slot in range(max(1, comp.get_num_materials())):
+                        sm = comp.get_material(slot)
+                        sname = sm.get_name() if sm is not None else "None"
+                        if sm is None or sname == "WorldGridMaterial":
+                            veg_bad.append("%s:slot%d=%s" % (
+                                label, slot, sname))
+            # Leaves material must mask: MI parent M_CC0Foliage, MASKED.
+            leaves = unreal.EditorAssetLibrary.load_asset(
+                "/Game/Materials/MI_IslandTree_Leaves")
+            if leaves is None:
+                veg_bad.append("MI_IslandTree_Leaves:MISSING")
+                leaves_info = "leaves=MISSING"
+            else:
+                parent = leaves.get_editor_property("parent")
+                pname = parent.get_name() if parent is not None else "None"
+                blend = (parent.get_editor_property("blend_mode")
+                         if parent is not None else None)
+                masked = (pname == "M_CC0Foliage"
+                          and blend == unreal.BlendMode.BLEND_MASKED)
+                leaves_info = "leavesParent=%s blend=%s masked=%s" % (
+                    pname, blend, masked)
+                if not masked:
+                    veg_bad.append("leaves-not-masked (" + leaves_info + ")")
+        except Exception:
+            veg_bad.append("VEG-ERR " + traceback.format_exc().replace(
+                "\n", " | "))
+        check("vegetation forest edge (>=4 trees/>=2 stumps, no WorldGrid)",
+              not veg_bad,
+              "%s | %s | bad=%s" % (" ".join(veg_counts), leaves_info,
+                                    veg_bad))
 
     # Report: checklist items needing PIE/headset stay OPEN by definition.
     ok = all(c[1] for c in checks)
