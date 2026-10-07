@@ -152,6 +152,13 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - Alle Fest-Quest-Pakete BLOCKIERT — brauchen D17-Freigabe (Ziele, Belohnungen, Konsequenzen).
 - Ergebnis S16: kein Codeeingriff.
 
+## S29-Schloss-Audit (A01-Bestand 2026-10-07, Branch docs/s29-castle-audit)
+- Ist-Stand: kein Schloss-Content. Vorhanden nur Test-Arena (`L_StartingReach` + Ruine-Variante);
+  im Code keine Schloss-/Etagen-/Boss-Logik (nur Template-Lavaboden in Variant_*).
+- Alle Schloss-Pakete BLOCKIERT — brauchen D06-Freigabe (Etagen, Reihenfolge, Solo/Gruppe) und
+  D16-Loreabstimmung (Wiederaufbau-/Artefakt-Lore). Kein Weltbau ohne Freigabe.
+- Ergebnis S29: kein Codeeingriff.
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
