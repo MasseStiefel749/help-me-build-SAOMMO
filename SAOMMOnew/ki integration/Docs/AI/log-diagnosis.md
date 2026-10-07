@@ -46,7 +46,7 @@ konnten dadurch lange unsichtbar bleiben (Abschnitt 5).
 | `LogHMD` XR-Extensions nicht verfuegbar / OpenXR-Runtime | 6 je Log | Warning | Headless ohne HMD | Engine-Rauschen, kein Ticket noetig |
 | `LogEditorDataStorageUI` widget factory purpose 0 | 14 je Boot | Warning | UE-5.8 Editor | Engine-Rauschen |
 | `LogModelContextProtocol: Error: Call to unknown method "resources/templates/list"` | 4x Hauptlog | Error | Client `mcp-remote` (globale OpenCode-Config `~/.config/opencode/opencode.json`, Port 8000) gegen Engine-Plugin, das nur `resources/list` + `resources/read` implementiert (`ModelContextProtocolServer.cpp:571-575` weist unbekannte Methoden bewusst ab) | KEIN Projektcode (Repo-Grep 0 Treffer); unschaedlich; sichtbar nur, weil der Hauptlog nicht gescannt wird |
-| `LogSpawn/LogAutomationController: Warning: UWorld::DestroyActor: World has no context!` (Enemy_0, Enemy_1, ItemPickup_0) | 4x stufe2, davon 2x im Scanbereich | Warning | Projekt-Testklassen (SAOMMOnew-Enemies/ItemPickup) | ECHTER BEFUND: Aufruf aus/logisch ausserhalb des Weltkontextes — neue Backlog-Zeile #42 |
+| `LogSpawn/LogAutomationController: Warning: UWorld::DestroyActor: World has no context!` (Enemy_0, Enemy_1, ItemPickup_0) | Baseline (Lauf 20261006-234914): 6 Trefferzeilen = 3 eigentliche Warnungen + 3 Controller-Echos, ALLE nach dem Slice-Marker `Cmd: Automation RunTests` (Korrektur gegenueber der vorlaeufigen Schaetzung "4x, davon 2x im Scanbereich") | Warning | Projekt-Testcode: `Tests/SAOMMOTestWorld.h` legte die Testwelt mit `CreateWorld(EWorldType::Game, false)` an, registrierte aber keinen `FWorldContext` | GEFIXT (#42): FWorldContext-Registrierung in `CreateTestWorld()`/`DestroyTestWorld()`; Beleg = 0 Treffer in Log UND `.out` des Laufs 20261007-094658 |
 | `LogCrowdFollowing: Unable to find RecastNavMesh instance` | 3x Hauptlog | Warning | CrowdManager ohne NavMesh in Temp-Welten | siehe Abschnitt 5 |
 | `LogHttp` Timeout google.com/generate_204, datarouter-POST | je 1x | Warning | Netzwerk/Telemetrie der Testumgebung | Rauschen |
 | `LogLayoutService` UnrealEd_Layout v1.5/v1.6 | 1x | Warning | Editor-Layout-Quirk | Rauschen |
@@ -76,8 +76,11 @@ als Rest dokumentiert, nicht als behoben.
 1. Stufe-4-Scope: Warnungen, `.out`-Dateien und der Hauptlog werden nicht
    gezaehlt — Fehlerklassen wie `resources/templates/list` bleiben dadurch
    unsichtbar (Erweiterung als eigene Zeile, muss GRUEN-Laeufe nicht brechen).
-2. `DestroyActor: World has no context!` bei Enemy/ItemPickup im Testlauf
-   (Backlog #42).
+2. ~~`DestroyActor: World has no context!` bei Enemy/ItemPickup im Testlauf~~
+   **erledigt (#42)**: Ursache war `Tests/SAOMMOTestWorld.h` (kein
+   `FWorldContext` zur Testwelt), Fix = Kontext-Registrierung in
+   `CreateTestWorld()`/`DestroyTestWorld()`; Beleg = 0 Treffer (Log + `.out`)
+   im Lauf 20261007-094658, vorher 6 Trefferzeilen (Lauf 20261006-234914).
 3. MCP-Client-Rauschen `resources/templates/list`: Abhilfe nur clientseitig
    (OpenCode-Config) oder engineitig — ausserhalb des Projektscopes.
 
