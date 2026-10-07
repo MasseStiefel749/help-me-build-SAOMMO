@@ -108,6 +108,17 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - P08 Inventar-UI: verdrahtet (Code-HUD mit Toggle + Liste).
 - Ergebnis: kein Codeeingriff.
 
+## S11-Fortschritt-Audit (A01-Bestand 2026-10-07, Branch docs/s11-progression-audit)
+- P01 XP-Zustand: verdrahtet (Level/XP, 100 XP pro Level, Save/Load).
+- P02 XP-Vergabe: verdrahtet (Kill → AddExperience + Loot an Killer).
+- P03 Levelgrenzen: NUR flach 100/Level, kein MaxLevel/keine Kurve — BLOCKIERT, braucht D15-Freigabe.
+- P04 Levelaufstieg: Event vorhanden, ohne Subscriber/Effekte — kein Eingriff ohne D15.
+- P05 Grundwerte: FEHLEN (keine Attribute) — BLOCKIERT, braucht D15-Freigabe.
+- P06 Equipment-Abgleich: FEHLT (keine Skalierung) — BLOCKIERT, braucht D15-Freigabe.
+- P07 XP-HUD: verdrahtet (Level/XP-Texte, kein Balken — ok).
+- P08 Reward-Replay: ok (bDead-Guard, Tests vorhanden).
+- Ergebnis: kein Codeeingriff.
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
