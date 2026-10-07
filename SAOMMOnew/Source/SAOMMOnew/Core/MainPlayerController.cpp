@@ -371,6 +371,13 @@ bool AMainPlayerController::LoadProgress()
 
 void AMainPlayerController::OnPawnDestroyed(AActor* DestroyedActor)
 {
+	// S04-P07 Randfall "doppelte Todesmeldung": Destroyed-Events koennen mehrmals
+	// feuern — ohne Guard gaebe es Overlay + Respawn-Timer doppelt. Bereits
+	// wartender Respawn nutzt den bestehenden Timer, kein zweiter Anlauf.
+	if (bPendingRespawn)
+	{
+		return;
+	}
 	// Death beat: show the overlay first; the respawn is driven by the
 	// player (any key press - see InputKey) with RespawnDelay as the
 	// no-input fallback, so "die" and "restart" read as two distinct
