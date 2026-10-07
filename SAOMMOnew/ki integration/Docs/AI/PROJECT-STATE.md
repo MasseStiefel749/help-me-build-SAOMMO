@@ -135,6 +135,12 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
   ALLE BLOCKIERT — brauchen D02-Freigabe (Zeitpunkt, Ausnahmen, Disconnect). Nichts erfunden.
 - Ergebnis S13: kein Codeeingriff.
 
+## S14-Lager-Audit (A01-Bestand 2026-10-07, Branch docs/s14-storage-audit)
+- Ist-Stand: kein Lager-/Vererbungs-Code. Grep nach Stash/Lager/Inherit/Vererb/Storage/Nachfolger:
+  keine Implementierung (nur Schwert-Physik-Kommentare).
+- Alle Lager-Pakete BLOCKIERT — brauchen D03-Freigabe (konto-/familiengebunden, was vererbt, kein Nachfolger).
+- Ergebnis S14: kein Codeeingriff.
+
 ## Schwach-PC-Betrieb (16 GB RAM, Stand 2026-10-07)
 - Projekt-Default: Raytracing aus (`DefaultEngine.ini`, Lumen bleibt an) — Optik bleibt hoch, Kosten runter.
 - Zum Spielen: Standalone mit `-nohmd` starten (bis XR-Gate-Fix), Browser + TeamViewer vorher schließen.
