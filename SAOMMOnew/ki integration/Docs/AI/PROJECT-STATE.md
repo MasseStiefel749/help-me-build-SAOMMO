@@ -166,6 +166,14 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - S21 BLOCKIERT (braucht D10: Kriterien, Seltenheit, Fairness). S22 BLOCKIERT (braucht D11 + D03-Erbe).
 - Ergebnis S21–S22: kein Codeeingriff.
 
+## S23–S28-KI-Audit (A01-Bestand 2026-10-11, Branch docs/s23-s28-ai-audit)
+- Ist-Stand: keine KI-Anbindung im Code. Grep nach LLM/ChatGPT/Ollama/Voice/Mikrofon/Dialog:
+  keine Treffer im Live-Modul (NPC/Quest-Systeme fehlen ohnehin, siehe S15/S16).
+- S23 Anbindung, S24 Persönlichkeit, S25 Gedächtnis, S26 Text/Mikrofon, S27 Agenten,
+  S28 KI-Quests: ALLE BLOCKIERT — brauchen D07/D08/D09/D17. Keine Modell-, Kosten- oder
+  Datenfluss-Entscheidung erfunden.
+- Ergebnis S23–S28: kein Codeeingriff.
+
 ## S29-Schloss-Audit (A01-Bestand 2026-10-07, Branch docs/s29-castle-audit)
 - Ist-Stand: kein Schloss-Content. Vorhanden nur Test-Arena (`L_StartingReach` + Ruine-Variante);
   im Code keine Schloss-/Etagen-/Boss-Logik (nur Template-Lavaboden in Variant_*).
