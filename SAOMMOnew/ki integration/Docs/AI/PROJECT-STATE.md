@@ -158,7 +158,13 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
   Alle Live-Components nicht repliziert.
 - S17 Netzwerk, S18 Online-Persistenz, S19 PvP/PK, S20 Leichenbeute: ALLE BLOCKIERT —
   brauchen D12 (Server/Hosting), D04 (Leiche), D05 (PK-Regeln). Nichts erfunden.
-- Ergebnis: kein Codeeingriff.
+- Ergebnis S17–S20: kein Codeeingriff.
+
+## S21–S22-Audit (2026-10-11, Branch docs/s21-s22-special-housing-audit)
+- Ist-Stand: keine Spezialfähigkeiten, keine Eigenheime im Code (Grep nach Ability/Housing/House:
+  keine Treffer im Live-Modul).
+- S21 BLOCKIERT (braucht D10: Kriterien, Seltenheit, Fairness). S22 BLOCKIERT (braucht D11 + D03-Erbe).
+- Ergebnis S21–S22: kein Codeeingriff.
 
 ## S29-Schloss-Audit (A01-Bestand 2026-10-07, Branch docs/s29-castle-audit)
 - Ist-Stand: kein Schloss-Content. Vorhanden nur Test-Arena (`L_StartingReach` + Ruine-Variante);
