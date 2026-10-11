@@ -217,8 +217,8 @@ void AMainPlayerController::BuildFallbackMapping()
 	AddKey(AttackAction, EKeys::LeftMouseButton);
 	AddKey(ToggleCameraAction, EKeys::V);
 	AddKey(InteractAction, EKeys::E);
-	// I opens the inventory directly: same action, and OnInteract toggles
-	// the screen whenever nothing is in reach anyway.
+	// I shares the interact action; APlayerCharacter::OnInteract routes a fresh
+	// I press straight to the inventory, E only interacts with a world target.
 	AddKey(InteractAction, EKeys::I);
 
 	auto Negate = [&](int32 Index, bool bX, bool bY)

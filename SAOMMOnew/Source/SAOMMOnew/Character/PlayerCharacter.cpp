@@ -278,17 +278,23 @@ void APlayerCharacter::OnInteract(const FInputActionValue& Value)
 		return;
 	}
 
-	InteractionComponent->Interact();
-
-	// Nothing in reach: E/I doubles as the inventory screen toggle (matches
-	// player expectation from the reference UI; a dedicated key comes later).
-	if (!InteractionComponent->GetFocusedActor())
+	// Standard split (S04-P06 follow-up): I always toggles the inventory
+	// screen, E only interacts with the focused world target (no-op when
+	// nothing is in reach). Both keys share IA_Interact, so the I press is
+	// detected via key state instead of a second action asset.
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		if (AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
+		if (PC->WasInputKeyJustPressed(EKeys::I))
 		{
-			PC->ToggleInventory();
+			if (AMainPlayerController* MainPC = Cast<AMainPlayerController>(PC))
+			{
+				MainPC->ToggleInventory();
+			}
+			return;
 		}
 	}
+
+	InteractionComponent->Interact();
 }
 
 void APlayerCharacter::OnJump(const FInputActionValue& Value)
