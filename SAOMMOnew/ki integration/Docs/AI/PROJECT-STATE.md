@@ -180,7 +180,22 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - S32 Pre-Beta: TEILWEISE — frische Pakete booten belegt in Arena mit Spieler-Pawn
   (Paket-Builds + Boot-Smoke grün); Testprotokoll, Bedienhilfe und Bugweg noch offen;
   VR-Pflicht hängt an D01.
-- Ergebnis: kein Codeeingriff.
+- Ergebnis S30–S32: kein Codeeingriff.
+
+## S33–S48-Audit (A01-Bestand 2026-10-11, Branch docs/s33-s48-rest-audit)
+- S33 Creator: VORHANDEN (Widget + CharacterSave-Slot, C-Taste).
+- S34 Menüs: TEILWEISE (HUD ja; Hauptmenü unfertig/schwarz; Pause-Menü fehlt) — D22 offen.
+- S35 Bosse: FEHLT — BLOCKIERT (D23).
+- S36–S38 Handel/Crafting/Gruppen: FEHLEN, zusätzlich OPTIONAL — keine Entscheidung, kein Bau.
+- S39 Animation: FEHLT im Live-Modul (nur Variant-Templates) — Inhaltsarbeit, kein Bug.
+- S40 Assets: vorhanden (Starter-Content + Blender-Quellen/FBX neu, Import ausstehend).
+- S41 Audio: FEHLT im Live-Modul — Inhaltsarbeit.
+- S42 Komfort: TEILWEISE (Medium-Defaults, RT aus, Schwach-PC-Doku; VR-Komfort ohne Headset offen).
+- S43 Tutorial: FEHLT — Inhaltsarbeit.
+- S44–S46 Sicherheit/Server/Performance: FEHLEN (S46 teilweise: RT aus, Medium-Profil).
+- S47 Lokalisierung: TEILWEISE (DE/EN-Pass in Arbeit).
+- S48 Roadmap: TEILWEISE (PROJECT-STATE + V2-Abdeckung bis S32; Rest BLOCKIERT wie oben).
+- Ergebnis S33–S48: kein Codeeingriff.
 
 ## S29-Schloss-Audit (A01-Bestand 2026-10-07, Branch docs/s29-castle-audit)
 - Ist-Stand: kein Schloss-Content. Vorhanden nur Test-Arena (`L_StartingReach` + Ruine-Variante);
