@@ -50,11 +50,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	AActor* GetFocusedActor() const { return FocusedActor; }
 
+	/** Runs the forward trace; returns hit actor or null. Updates FocusedActor. */
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	AActor* UpdateFocus();
+
 protected:
 
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	/** Runs the forward trace; returns hit actor or null. Updates FocusedActor. */
-	AActor* UpdateFocus();
 };
