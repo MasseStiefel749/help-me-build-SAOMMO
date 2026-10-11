@@ -15,7 +15,7 @@ class UPlayerHudWidget;
 class UDeathScreenWidget;
 class USAOCharacterCreatorWidget;
 class UMainMenuWidget;
-
+class UPauseWidget;
 /**
  *  SAOMMO player controller (target architecture).
  *
@@ -107,6 +107,10 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UMainMenuWidget> MainMenuWidget = nullptr;
 
+	/** Pause overlay (Esc). Created on demand, hidden when unpaused. */
+	UPROPERTY()
+	TObjectPtr<UPauseWidget> PauseWidget = nullptr;
+
 	/** Opens the creator overlay for local players (loads CharacterSave if present). */
 	void ShowCharacterCreator();
 
@@ -143,6 +147,14 @@ public:
 	/** Toggles the inventory screen (safe with no HUD yet). */
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void ToggleInventory();
+
+	/** Toggles pause + overlay (safe with no viewport yet). */
+	UFUNCTION(BlueprintCallable, Category = "Pause")
+	void TogglePauseMenu();
+
+	/** True while the pause overlay is shown. */
+	UFUNCTION(BlueprintCallable, Category = "Pause")
+	bool IsPauseMenuOpen() const;
 
 	/** Save slot name (shared with UPlayerSaveGame default). */
 	UPROPERTY(EditAnywhere, Category = "Save")

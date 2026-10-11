@@ -24,6 +24,7 @@
 #include "SAOCharacterData.h"
 #include "PlayerSaveGame.h"
 #include "MainMenuWidget.h"
+#include "PauseWidget.h"
 #include "InventoryComponent.h"
 #include "ProgressionComponent.h"
 
@@ -320,6 +321,48 @@ void AMainPlayerController::ToggleInventory()
 	}
 }
 
+void AMainPlayerController::TogglePauseMenu()
+{
+	if (!IsLocalPlayerController() || !GetWorld())
+	{
+		return;
+	}
+
+	if (IsPaused())
+	{
+		SetPause(false);
+		if (PauseWidget)
+		{
+			PauseWidget->HidePause();
+		}
+		FInputModeGameOnly GameMode;
+		SetInputMode(GameMode);
+		bShowMouseCursor = false;
+	}
+	else
+	{
+		if (!PauseWidget)
+		{
+			PauseWidget = CreateWidget<UPauseWidget>(this, UPauseWidget::StaticClass());
+		}
+		if (!PauseWidget)
+		{
+			return;
+		}
+		SetPause(true);
+		PauseWidget->ShowPause();
+		FInputModeUIOnly UIMode;
+		UIMode.SetWidgetToFocus(PauseWidget->TakeWidget());
+		SetInputMode(UIMode);
+		bShowMouseCursor = true;
+	}
+}
+
+bool AMainPlayerController::IsPauseMenuOpen() const
+{
+	return PauseWidget && PauseWidget->IsPauseShown();
+}
+
 bool AMainPlayerController::SaveProgress()
 {
 	// NOTE: locals intentionally NOT named Pawn/Character: AController owns
@@ -432,6 +475,15 @@ bool AMainPlayerController::InputKey(const FInputKeyEventArgs& Params)
 	{
 		ShowCharacterCreator();
 		return true;
+	}
+	// Pause toggle: Esc pauses outside death/creator overlays (standard).
+	if (!bPendingRespawn && Params.Event == IE_Pressed && Params.Key == EKeys::Escape)
+	{
+		if (!CreatorWidget || !CreatorWidget->IsInViewport())
+		{
+			TogglePauseMenu();
+			return true;
+		}
 	}
 	return Super::InputKey(Params);
 }
