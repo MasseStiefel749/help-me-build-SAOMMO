@@ -1,0 +1,74 @@
+// Copyright Epic Games, Inc. All Rights Reserved.
+
+#include "CoreMinimal.h"
+#include "Misc/AutomationTest.h"
+#include "SAOMMOTestWorld.h"
+#include "PlayerCharacter.h"
+#include "MainPlayerController.h"
+#include "InputFrameComponent.h"
+#include "InputActionValue.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
+#if WITH_AUTOMATION_TESTS
+
+/**
+ *  Desktop movement contract (S04-P01): W/S input through OnMove must reach
+ *  the character movement as pending input, and the input-frame recorder must
+ *  observe the same vector. Runs synchronously — no tick required, because
+ *  AddMovementInput only accumulates the pending vector here.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSAOMMOPlayerMovementInputTest,
+	"SAOMMOnew.Desktop.PlayerMovementInput",
+	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FSAOMMOPlayerMovementInputTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = SAOMMOTest::CreateTestWorld();
+	if (!TestNotNull(TEXT("Test world created"), World))
+	{
+		return false;
+	}
+
+	APlayerCharacter* Character = World->SpawnActor<APlayerCharacter>(FVector::ZeroVector, FRotator::ZeroRotator);
+	AMainPlayerController* Controller = World->SpawnActor<AMainPlayerController>();
+	if (!TestNotNull(TEXT("Player character spawned"), Character)
+		|| !TestNotNull(TEXT("MainPlayerController spawned"), Controller))
+	{
+		SAOMMOTest::DestroyTestWorld(World);
+		return false;
+	}
+	Controller->Possess(Character);
+
+	UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
+	if (!TestNotNull(TEXT("Character owns a movement component"), Movement))
+	{
+		SAOMMOTest::DestroyTestWorld(World);
+		return false;
+	}
+
+	// Fresh character: no pending input.
+	TestTrue(TEXT("Fresh character has no pending input"),
+		Movement->GetLastInputVector().IsNearlyZero());
+
+	// Forward input (W): pending vector must point forward (+X at yaw 0).
+	Character->OnMove(FInputActionValue(FVector2D(0.0f, 1.0f)));
+	const FVector ForwardInput = Movement->GetLastInputVector();
+	TestTrue(TEXT("Forward input produces forward pending input"), ForwardInput.X > 0.5f);
+
+	// The input-frame recorder observes the same vector (Band 2 §4 path intact).
+	if (TestNotNull(TEXT("Character owns an input frame recorder"), Character->GetInputFrame()))
+	{
+		const FVector2D Recorded = Character->GetInputFrame()->CurrentFrame.Move;
+		TestTrue(TEXT("Recorder observed the forward vector"),
+			FMath::IsNearlyEqual(Recorded.X, 0.0f) && FMath::IsNearlyEqual(Recorded.Y, 1.0f));
+	}
+
+	// Look input runs without crashing (rotation itself applies on tick).
+	Character->OnLook(FInputActionValue(FVector2D(10.0f, -5.0f)));
+	TestTrue(TEXT("Look input handled without crash"), true);
+
+	SAOMMOTest::DestroyTestWorld(World);
+	return true;
+}
+
+#endif // WITH_AUTOMATION_TESTS

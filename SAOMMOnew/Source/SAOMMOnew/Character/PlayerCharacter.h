@@ -186,10 +186,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	void SetCameraMode(ECameraMode NewMode);
 
-protected:
-
+	/** Input handlers are public for automation tests (S04-P01-A05); binding
+	 *  stays inside SetupPlayerInputComponent, behavior is unchanged. */
 	void OnMove(const FInputActionValue& Value);
 	void OnLook(const FInputActionValue& Value);
+
+protected:
+
 	void OnToggleCamera(const FInputActionValue& Value);
 	void OnAttack(const FInputActionValue& Value);
 	void OnInteract(const FInputActionValue& Value);
