@@ -240,3 +240,10 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - Die Style-Richtung nutzt allgemeine Merkmale der Referenz (lebendige Fantasy-Landschaften, Städte, Wald und Ruinen), ohne konkrete Spielmodelle zu übernehmen: wärmere Natursteine, sattere Vegetation, Eichenholz, kühles Metall und prozedurale Oberflächenvariation.
 - Blender 5.2.1 hat alle drei `.blend`-Szenen und Vorschauen erzeugt. FBX-Exports: 36 Einzelassets, 8 Einzelprops sowie ein 173-Mesh-Blockout der Region. `ArtSource/Blender/Styled_Assets/README.md` dokumentiert Dateipfade und Grenzen.
 - Die prozeduralen Shaderdetails sind in Blender sichtbar, aber nicht in FBX gebacken. Unreal benötigt eigene Materialinstanzen oder gebackene Texturen. Import, Kollision, LOD, Performance und Spielbarkeit bleiben ungeprüft.
+
+
+## Autonome Kette (Master-Prompt ab 2026-10-11, ein Branch je Aufgabe)
+- Annahme (Standard, aenderbar): E = nur Interagieren, I = immer Inventar.
+- Annahme: Flat-Farbmaterialien als Sichtbarkeits-Basis; PBR/Texturen folgen mit D27-Feinabstimmung.
+- Belegt per Paket-Log: I-Kette schaltet um (auf/zu), E-leer ist sicherer No-Op; Panel-Sicht + E-am-Pickup brauchen Augen-Test. Menue-Map bleibt optionale Baustelle (Start = Arena).
+- Statusworte: PASS = getestet oder im Log belegt; FAIL = beobachtet; BLOCKIERT = D-Nummer genannt; manuell offen = braucht Spiel-Test.

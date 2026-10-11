@@ -283,21 +283,30 @@ void APlayerCharacter::OnInteract(const FInputActionValue& Value)
 	// screen, E only interacts with the focused world target (no-op when
 	// nothing is in reach). Both keys share IA_Interact, so the I press is
 	// detected via key state instead of a second action asset.
+	bool bInventoryKey = false;
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		const bool bIPressed = PC->WasInputKeyJustPressed(EKeys::I);
-		UE_LOG(LogGame, Display, TEXT("SAOMMO input: OnInteract fired, I-just-pressed=%d"), bIPressed ? 1 : 0);
-		if (bIPressed)
+		bInventoryKey = PC->WasInputKeyJustPressed(EKeys::I);
+		UE_LOG(LogGame, Display, TEXT("SAOMMO input: OnInteract fired, I-just-pressed=%d"), bInventoryKey ? 1 : 0);
+	}
+	HandleInteractKey(bInventoryKey);
+}
+
+void APlayerCharacter::HandleInteractKey(bool bInventoryKey)
+{
+	if (bInventoryKey)
+	{
+		if (AMainPlayerController* MainPC = Cast<AMainPlayerController>(GetController()))
 		{
-			if (AMainPlayerController* MainPC = Cast<AMainPlayerController>(PC))
-			{
-				MainPC->ToggleInventory();
-			}
-			return;
+			MainPC->ToggleInventory();
 		}
+		return;
 	}
 
-	InteractionComponent->Interact();
+	if (InteractionComponent)
+	{
+		InteractionComponent->Interact();
+	}
 }
 
 void APlayerCharacter::OnJump(const FInputActionValue& Value)
