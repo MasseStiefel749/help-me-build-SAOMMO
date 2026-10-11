@@ -255,3 +255,10 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - SAOGoblin.h / SAOVRPawn.h / SAOBudgetVRBridge.h: nicht vorhanden - Band C darf sie nicht voraussetzen.
 - Docs/ROADMAP.md & Co: nicht vorhanden - Doku liegt in ki integration/Docs + PROJECT-STATE.md.
 - V6/V7-Befund: Inventardaten, I-Toggle, E-Pickup, Guards existieren bereits (siehe S09-S12-Audits); offen sind nur Sicht-Beweis und E-am-Pickup im Spiel.
+
+
+## Wiedereinstiegspunkt (Master-Prompt-Betrieb)
+- Branch: fix/interact-routing-testable (20bc2dd), Baum sauber, Stand 2026-10-11.
+- Naechstes: Sicht-Test Paket 7 (Panel bei I, E am Pickup im Osten) durch Nutzer; danach Push-Entscheidung fuer 9 offene Branches.
+- Wichtigste offene Bugs: Menue schwarz (L_MainMenu, Ursache unbewiesen), Panel-Sicht unbestaetigt.
+- Verifikation: RunAutomation (Build+14 Tests+Boot) als Standard; Paket per UAT nach C:/SAOMMO-Builds; Verknuepfung auf Desktop.
