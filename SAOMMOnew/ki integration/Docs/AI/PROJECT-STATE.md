@@ -262,3 +262,7 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - Naechstes: Sicht-Test Paket 7 (Panel bei I, E am Pickup im Osten) durch Nutzer; danach Push-Entscheidung fuer 9 offene Branches.
 - Wichtigste offene Bugs: Menue schwarz (L_MainMenu, Ursache unbewiesen), Panel-Sicht unbestaetigt.
 - Verifikation: RunAutomation (Build+14 Tests+Boot) als Standard; Paket per UAT nach C:/SAOMMO-Builds; Verknuepfung auf Desktop.
+
+
+## Pause-Menue (2026-10-11, Branch feature/pause-menu)
+- Esc pausiert/entsperrt, Overlay mit Fortsetzen/Beenden, 15/15 Tests gruen (Run 20261011-223829). Sicht-Check im Spiel offen.
