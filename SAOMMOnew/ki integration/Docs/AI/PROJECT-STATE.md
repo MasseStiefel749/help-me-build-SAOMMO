@@ -247,3 +247,11 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - Annahme: Flat-Farbmaterialien als Sichtbarkeits-Basis; PBR/Texturen folgen mit D27-Feinabstimmung.
 - Belegt per Paket-Log: I-Kette schaltet um (auf/zu), E-leer ist sicherer No-Op; Panel-Sicht + E-am-Pickup brauchen Augen-Test. Menue-Map bleibt optionale Baustelle (Start = Arena).
 - Statusworte: PASS = getestet oder im Log belegt; FAIL = beobachtet; BLOCKIERT = D-Nummer genannt; manuell offen = braucht Spiel-Test.
+
+
+## Master-Prompt Faktencheck (2026-10-11)
+- Repo-Pfad: OneDrive/Documents/GitHub/help-me-build-SAOMMO (Prompt-Pfad C:/Users/Simon/SAOMMO existiert nicht).
+- Toolchain: VS 18 (2026), Engine 5.8.3 (Prompt nennt VS2022, vorhanden aber ungenutzt).
+- SAOGoblin.h / SAOVRPawn.h / SAOBudgetVRBridge.h: nicht vorhanden - Band C darf sie nicht voraussetzen.
+- Docs/ROADMAP.md & Co: nicht vorhanden - Doku liegt in ki integration/Docs + PROJECT-STATE.md.
+- V6/V7-Befund: Inventardaten, I-Toggle, E-Pickup, Guards existieren bereits (siehe S09-S12-Audits); offen sind nur Sicht-Beweis und E-am-Pickup im Spiel.
