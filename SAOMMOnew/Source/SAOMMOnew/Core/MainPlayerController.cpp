@@ -311,6 +311,12 @@ void AMainPlayerController::ToggleInventory()
 	if (HudWidget)
 	{
 		HudWidget->ToggleInventory();
+		UE_LOG(LogGame, Display, TEXT("SAOMMO input: ToggleInventory ran, open=%d"),
+			HudWidget->IsInventoryOpen() ? 1 : 0);
+	}
+	else
+	{
+		UE_LOG(LogGame, Warning, TEXT("SAOMMO input: ToggleInventory has no HUD"));
 	}
 }
 

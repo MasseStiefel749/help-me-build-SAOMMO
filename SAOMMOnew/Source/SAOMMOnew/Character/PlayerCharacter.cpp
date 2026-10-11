@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PlayerCharacter.h"
+#include "SAOMMOnew.h"
 #include "MainPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -284,7 +285,9 @@ void APlayerCharacter::OnInteract(const FInputActionValue& Value)
 	// detected via key state instead of a second action asset.
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		if (PC->WasInputKeyJustPressed(EKeys::I))
+		const bool bIPressed = PC->WasInputKeyJustPressed(EKeys::I);
+		UE_LOG(LogGame, Display, TEXT("SAOMMO input: OnInteract fired, I-just-pressed=%d"), bIPressed ? 1 : 0);
+		if (bIPressed)
 		{
 			if (AMainPlayerController* MainPC = Cast<AMainPlayerController>(PC))
 			{
