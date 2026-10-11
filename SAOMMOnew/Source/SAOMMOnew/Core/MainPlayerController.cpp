@@ -56,6 +56,15 @@ void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	EnsureHud();
+	// Always enter gameplay with gameplay input. Opening the character creator
+	// automatically on a fresh save used to pause the world and switch to
+	// UIOnly before the player had a chance to control the pawn. The creator is
+	// still available through C once the player is in game.
+	if (IsLocalPlayerController())
+	{
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+	}
 	// Cache current transform as default respawn so death doesn't drop to origin.
 	if (RespawnTransform.Equals(FTransform::Identity))
 	{
@@ -72,22 +81,6 @@ void AMainPlayerController::BeginPlay()
 		RespawnTransform.SetScale3D(FVector::OneVector);
 	}
 
-	// Character creator: first boot (no CharacterSave yet) opens the overlay
-	// shortly after possession; the C key re-opens it later.
-	if (IsLocalPlayerController() && GetWorld())
-	{
-		GetWorld()->GetTimerManager().SetTimer(
-			FirstBootTimer, this, &AMainPlayerController::MaybeShowCreatorOnFirstBoot, 0.3f, false);
-	}
-}
-
-void AMainPlayerController::MaybeShowCreatorOnFirstBoot()
-{
-	if (!IsLocalPlayerController() || UGameplayStatics::DoesSaveGameExist(TEXT("CharacterSave"), 0))
-	{
-		return;
-	}
-	ShowCharacterCreator();
 }
 
 void AMainPlayerController::ShowCharacterCreator()
