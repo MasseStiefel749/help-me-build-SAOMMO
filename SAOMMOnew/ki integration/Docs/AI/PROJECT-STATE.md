@@ -152,6 +152,14 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - Alle Fest-Quest-Pakete BLOCKIERT — brauchen D17-Freigabe (Ziele, Belohnungen, Konsequenzen).
 - Ergebnis S16: kein Codeeingriff.
 
+## S17–S20-Online-Audit (A01-Bestand 2026-10-11, Branch docs/s17-s20-online-audit)
+- Ist-Stand: kein Netzwerk-Code im Live-Modul. Grep nach ServerRPC/ClientRPC/NetMulticast/
+  GetLifetimeReplicatedProps/DedicatedServer: keine Treffer (nur HasAuthority-Erwähnung in VR-Test).
+  Alle Live-Components nicht repliziert.
+- S17 Netzwerk, S18 Online-Persistenz, S19 PvP/PK, S20 Leichenbeute: ALLE BLOCKIERT —
+  brauchen D12 (Server/Hosting), D04 (Leiche), D05 (PK-Regeln). Nichts erfunden.
+- Ergebnis: kein Codeeingriff.
+
 ## S29-Schloss-Audit (A01-Bestand 2026-10-07, Branch docs/s29-castle-audit)
 - Ist-Stand: kein Schloss-Content. Vorhanden nur Test-Arena (`L_StartingReach` + Ruine-Variante);
   im Code keine Schloss-/Etagen-/Boss-Logik (nur Template-Lavaboden in Variant_*).
