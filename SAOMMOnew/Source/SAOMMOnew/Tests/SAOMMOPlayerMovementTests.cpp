@@ -46,13 +46,15 @@ bool FSAOMMOPlayerMovementInputTest::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	// Fresh character: no pending input.
+	// Fresh character: no pending input. NOTE: GetPendingInputVector (accumulated,
+	// not yet consumed) is the right accessor here — GetLastInputVector only
+	// reflects the last consumed tick.
 	TestTrue(TEXT("Fresh character has no pending input"),
-		Movement->GetLastInputVector().IsNearlyZero());
+		Movement->GetPendingInputVector().IsNearlyZero());
 
 	// Forward input (W): pending vector must point forward (+X at yaw 0).
 	Character->OnMove(FInputActionValue(FVector2D(0.0f, 1.0f)));
-	const FVector ForwardInput = Movement->GetLastInputVector();
+	const FVector ForwardInput = Movement->GetPendingInputVector();
 	TestTrue(TEXT("Forward input produces forward pending input"), ForwardInput.X > 0.5f);
 
 	// The input-frame recorder observes the same vector (Band 2 §4 path intact).
