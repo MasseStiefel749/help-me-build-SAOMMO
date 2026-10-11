@@ -174,6 +174,14 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
   Datenfluss-Entscheidung erfunden.
 - Ergebnis S23–S28: kein Codeeingriff.
 
+## S30–S32-Audit (2026-10-11, Branch docs/s30-s32-campaign-prebeta-audit)
+- S30 Schloss-Kampagne: FEHLT (nur Test-Arena) — BLOCKIERT (D06/D16/D18).
+- S31 Außenwelt/Kontinente: FEHLT — BLOCKIERT (D06, Streaming/Lasttests ausstehend).
+- S32 Pre-Beta: TEILWEISE — frische Pakete booten belegt in Arena mit Spieler-Pawn
+  (Paket-Builds + Boot-Smoke grün); Testprotokoll, Bedienhilfe und Bugweg noch offen;
+  VR-Pflicht hängt an D01.
+- Ergebnis: kein Codeeingriff.
+
 ## S29-Schloss-Audit (A01-Bestand 2026-10-07, Branch docs/s29-castle-audit)
 - Ist-Stand: kein Schloss-Content. Vorhanden nur Test-Arena (`L_StartingReach` + Ruine-Variante);
   im Code keine Schloss-/Etagen-/Boss-Logik (nur Template-Lavaboden in Variant_*).
