@@ -23,6 +23,7 @@
 #include "SAOCharacterCreatorWidget.h"
 #include "SAOCharacterData.h"
 #include "PlayerSaveGame.h"
+#include "MainMenuWidget.h"
 #include "InventoryComponent.h"
 #include "ProgressionComponent.h"
 
@@ -55,6 +56,26 @@ AMainPlayerController::AMainPlayerController()
 void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	if (IsLocalPlayerController() && GetWorld() && GetWorld()->GetMapName().Contains(TEXT("L_MainMenu")))
+	{
+		UE_LOG(LogTemp, Display, TEXT("SAOMMO menu: creating startup widget on %s"), *GetWorld()->GetMapName());
+		MainMenuWidget = CreateWidget<UMainMenuWidget>(this, UMainMenuWidget::StaticClass());
+		if (MainMenuWidget)
+		{
+			MainMenuWidget->AddToViewport(500);
+			MainMenuWidget->SetVisibility(ESlateVisibility::Visible);
+			bShowMouseCursor = true;
+			FInputModeUIOnly UIMode;
+			UIMode.SetWidgetToFocus(MainMenuWidget->TakeWidget());
+			SetInputMode(UIMode);
+			UE_LOG(LogTemp, Display, TEXT("SAOMMO menu: widget added to viewport; input set to UI only"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("SAOMMO menu: CreateWidget failed"));
+		}
+		return;
+	}
 	EnsureHud();
 	// Always enter gameplay with gameplay input. Opening the character creator
 	// automatically on a fresh save used to pause the world and switch to

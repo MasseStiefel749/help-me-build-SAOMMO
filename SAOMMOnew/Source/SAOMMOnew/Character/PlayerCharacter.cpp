@@ -220,7 +220,7 @@ void APlayerCharacter::OnMove(const FInputActionValue& Value)
 {
 	const FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (GetController() && InputFrame)
+	if (GetController())
 	{
 		const FRotator Rotation = GetController()->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -231,7 +231,12 @@ void APlayerCharacter::OnMove(const FInputActionValue& Value)
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 
-		InputFrame->CurrentFrame.Move = MovementVector;
+		// Movement must not depend on the optional input-frame recorder. A
+		// missing/replaced recorder should never make the pawn uncontrollable.
+		if (InputFrame)
+		{
+			InputFrame->CurrentFrame.Move = MovementVector;
+		}
 	}
 }
 
@@ -239,12 +244,15 @@ void APlayerCharacter::OnLook(const FInputActionValue& Value)
 {
 	const FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (GetController() && InputFrame)
+	if (GetController())
 	{
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 
-		InputFrame->CurrentFrame.Turn = LookAxisVector;
+		if (InputFrame)
+		{
+			InputFrame->CurrentFrame.Turn = LookAxisVector;
+		}
 	}
 }
 

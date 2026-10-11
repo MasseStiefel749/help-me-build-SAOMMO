@@ -8,11 +8,10 @@
 #if WITH_AUTOMATION_TESTS
 
 /**
- *  Boot contract (#19 Testinfrastruktur): the project must boot into
- *  L_StartingReach with MainGameMode as the global default game mode — the
- *  round-1 decision recorded in the night log. A regression here silently
- *  changes what players get when they press Play, so it is checked at three
- *  levels: config key, map package on disk, resolvable native class.
+ *  Boot contract: the project must boot directly into the playable L_StartingReach map
+ *  with MainGameMode as the global default game mode. L_MainMenu remains an
+ *  unfinished optional menu map. Check startup config, both map packages,
+ *  and the resolvable native class.
  */
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSAOMMOBootDefaultMapAndGameModeTest,
 	"SAOMMOnew.Boot.DefaultMapAndGameMode",
@@ -30,8 +29,8 @@ bool FSAOMMOBootDefaultMapAndGameModeTest::RunTest(const FString& Parameters)
 	FString DefaultMap;
 	GConfig->GetString(TEXT("/Script/EngineSettings.GameMapsSettings"),
 		TEXT("GameDefaultMap"), DefaultMap, GEngineIni);
-	TestTrue(TEXT("GameDefaultMap points at L_StartingReach"),
-		DefaultMap.StartsWith(TEXT("/Game/Levels/StartingReach/L_StartingReach")));
+	TestEqual(TEXT("GameDefaultMap points at L_StartingReach"),
+		DefaultMap, FString(TEXT("/Game/Levels/StartingReach/L_StartingReach.L_StartingReach")));
 
 	FString GameMode;
 	GConfig->GetString(TEXT("/Script/EngineSettings.GameMapsSettings"),
@@ -39,7 +38,9 @@ bool FSAOMMOBootDefaultMapAndGameModeTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("GlobalDefaultGameMode is MainGameMode"),
 		GameMode, FString(TEXT("/Script/SAOMMOnew.MainGameMode")));
 
-	// 2) The map package actually exists on disk (catches a renamed level).
+	// 2) The menu and gameplay map packages exist on disk.
+	TestTrue(TEXT("L_MainMenu package exists on disk"),
+		FPackageName::DoesPackageExist(TEXT("/Game/Levels/L_MainMenu")));
 	TestTrue(TEXT("L_StartingReach package exists on disk"),
 		FPackageName::DoesPackageExist(TEXT("/Game/Levels/StartingReach/L_StartingReach")));
 

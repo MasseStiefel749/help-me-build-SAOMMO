@@ -14,6 +14,7 @@ class AVRCharacter;
 class UPlayerHudWidget;
 class UDeathScreenWidget;
 class USAOCharacterCreatorWidget;
+class UMainMenuWidget;
 
 /**
  *  SAOMMO player controller (target architecture).
@@ -101,6 +102,10 @@ protected:
 	/** Character creator overlay (opened with C). */
 	UPROPERTY()
 	TObjectPtr<USAOCharacterCreatorWidget> CreatorWidget = nullptr;
+
+	/** Main menu shown on the lightweight startup map. */
+	UPROPERTY()
+	TObjectPtr<UMainMenuWidget> MainMenuWidget = nullptr;
 
 	/** Opens the creator overlay for local players (loads CharacterSave if present). */
 	void ShowCharacterCreator();
