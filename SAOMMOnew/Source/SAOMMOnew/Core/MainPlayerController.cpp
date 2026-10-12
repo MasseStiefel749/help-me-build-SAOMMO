@@ -321,6 +321,11 @@ void AMainPlayerController::ToggleInventory()
 	}
 }
 
+bool AMainPlayerController::IsInventoryOpen() const
+{
+	return HudWidget && HudWidget->IsInventoryOpen();
+}
+
 void AMainPlayerController::TogglePauseMenu()
 {
 	if (!IsLocalPlayerController() || !GetWorld())

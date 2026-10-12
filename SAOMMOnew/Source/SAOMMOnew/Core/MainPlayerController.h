@@ -148,6 +148,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void ToggleInventory();
 
+	/** True while the inventory screen is open (false with no HUD yet). */
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	bool IsInventoryOpen() const;
+
 	/** Toggles pause + overlay (safe with no viewport yet). */
 	UFUNCTION(BlueprintCallable, Category = "Pause")
 	void TogglePauseMenu();

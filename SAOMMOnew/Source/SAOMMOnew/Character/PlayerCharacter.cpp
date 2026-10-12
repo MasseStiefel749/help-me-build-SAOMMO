@@ -266,6 +266,15 @@ void APlayerCharacter::OnToggleCamera(const FInputActionValue& Value)
 
 void APlayerCharacter::OnAttack(const FInputActionValue& Value)
 {
+	// Open inventory is view-only: swings while reading would hit unseen
+	// enemies and waste the attack window (S04-P05 UI focus).
+	if (const AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
+	{
+		if (PC->IsInventoryOpen())
+		{
+			return;
+		}
+	}
 	if (InputFrame)
 	{
 		InputFrame->CurrentFrame.bAttack = true;
