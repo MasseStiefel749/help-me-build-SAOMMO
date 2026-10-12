@@ -283,3 +283,7 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 
 ## V4.2-Batch (2026-10-12, Branch fix/movement-diagonal-deadcode)
 - Diagonal-Test neu (16/16 gruen, Run 20261012-091050), ASword::LastHitTime als Tot-Code entfernt.
+
+
+## V4.3-Batch (2026-10-12, Branch fix/no-attack-with-open-inventory)
+- Angriff bei offenem Inventar unterdrueckt (IsInventoryOpen-Abfrage); 17/17 gruen (Run 20261012-100644). Unterdrueckungs-Zweig braucht Sicht-Test (I oeffnen, LMB, kein Schwung).
