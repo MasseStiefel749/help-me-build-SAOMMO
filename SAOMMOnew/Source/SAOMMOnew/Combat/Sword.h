@@ -122,10 +122,6 @@ protected:
 	/** Estimated swing velocity in cm/s. */
 	FVector SwingVelocity = FVector::ZeroVector;
 
-	/** Per-target timestamps to throttle repeated hits (used by the combat component's active query). */
-	UPROPERTY()
-	TMap<TObjectPtr<AActor>, float> LastHitTime;
-
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 };
