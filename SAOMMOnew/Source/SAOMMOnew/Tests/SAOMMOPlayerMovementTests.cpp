@@ -73,4 +73,54 @@ bool FSAOMMOPlayerMovementInputTest::RunTest(const FString& Parameters)
 	return true;
 }
 
+/**
+ *  Diagonal movement contract (S04-P01 edge case): a diagonal W+D press must
+ *  reach both axes (forward + right at yaw 0). Engine-side acceleration
+ *  clamping happens later in CharacterMovement; this guards our mapping math.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSAOMMOPlayerMovementDiagonalTest,
+	"SAOMMOnew.Desktop.PlayerMovementDiagonal",
+	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FSAOMMOPlayerMovementDiagonalTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = SAOMMOTest::CreateTestWorld();
+	if (!TestNotNull(TEXT("Test world created"), World))
+	{
+		return false;
+	}
+
+	APlayerCharacter* Character = World->SpawnActor<APlayerCharacter>(FVector::ZeroVector, FRotator::ZeroRotator);
+	AMainPlayerController* Controller = World->SpawnActor<AMainPlayerController>();
+	if (!TestNotNull(TEXT("Player character spawned"), Character)
+		|| !TestNotNull(TEXT("MainPlayerController spawned"), Controller))
+	{
+		SAOMMOTest::DestroyTestWorld(World);
+		return false;
+	}
+	Controller->Possess(Character);
+
+	UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
+	if (!TestNotNull(TEXT("Character owns a movement component"), Movement))
+	{
+		SAOMMOTest::DestroyTestWorld(World);
+		return false;
+	}
+
+	Character->OnMove(FInputActionValue(FVector2D(1.0f, 1.0f)));
+	const FVector DiagonalInput = Movement->GetPendingInputVector();
+	TestTrue(TEXT("Diagonal input drives the forward axis"), DiagonalInput.X > 0.5f);
+	TestTrue(TEXT("Diagonal input drives the strafe axis"), DiagonalInput.Y > 0.5f);
+
+	if (TestNotNull(TEXT("Character owns an input frame recorder"), Character->GetInputFrame()))
+	{
+		const FVector2D Recorded = Character->GetInputFrame()->CurrentFrame.Move;
+		TestTrue(TEXT("Recorder observed the diagonal vector"),
+			FMath::IsNearlyEqual(Recorded.X, 1.0f) && FMath::IsNearlyEqual(Recorded.Y, 1.0f));
+	}
+
+	SAOMMOTest::DestroyTestWorld(World);
+	return true;
+}
+
 #endif // WITH_AUTOMATION_TESTS
