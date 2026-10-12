@@ -279,3 +279,7 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - feature/pause-menu NUR LOKAL (3 Commits) - kein Push ohne Freigabe.
 - 4 Augen-Checks auf Automatisierbarkeit geprueft: Widget-Erstellung braucht Player/Viewport, Trace-Query fehlt headless, Menue braucht Sicht - alle NICHT automatisierbar, dokumentiert statt erfunden.
 - Keine TODOs im Live-Code, keine neuen Defekte gefunden.
+
+
+## V4.2-Batch (2026-10-12, Branch fix/movement-diagonal-deadcode)
+- Diagonal-Test neu (16/16 gruen, Run 20261012-091050), ASword::LastHitTime als Tot-Code entfernt.
