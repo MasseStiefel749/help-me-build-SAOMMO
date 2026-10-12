@@ -266,3 +266,9 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 
 ## Pause-Menue (2026-10-11, Branch feature/pause-menu)
 - Esc pausiert/entsperrt, Overlay mit Fortsetzen/Beenden, 15/15 Tests gruen (Run 20261011-223829). Sicht-Check im Spiel offen.
+
+
+## V3-Betrieb ab 2026-10-12
+- Master-Prompt V3 aktiv: Branch feature/pause-menu, Baum sauber, Engine 5.8.3, Arena6-Paket vorhanden.
+- Kette gruen (Run 20261011-223829, 15/15); Docs-Commit danach aendert keine Binaries.
+- Echte Grenze: alle Restpunkte brauchen Augen-Test (Panel-Sicht, E-am-Pickup, Menue-Schwarz, Pause-Sicht, Bodentextur).
