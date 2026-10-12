@@ -272,3 +272,10 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - Master-Prompt V3 aktiv: Branch feature/pause-menu, Baum sauber, Engine 5.8.3, Arena6-Paket vorhanden.
 - Kette gruen (Run 20261011-223829, 15/15); Docs-Commit danach aendert keine Binaries.
 - Echte Grenze: alle Restpunkte brauchen Augen-Test (Panel-Sicht, E-am-Pickup, Menue-Schwarz, Pause-Sicht, Bodentextur).
+
+
+## V4.1-Verifikation (2026-10-12)
+- 5 Ziel-Branches alle AUF REMOTE (push-Stand heute verifiziert).
+- feature/pause-menu NUR LOKAL (3 Commits) - kein Push ohne Freigabe.
+- 4 Augen-Checks auf Automatisierbarkeit geprueft: Widget-Erstellung braucht Player/Viewport, Trace-Query fehlt headless, Menue braucht Sicht - alle NICHT automatisierbar, dokumentiert statt erfunden.
+- Keine TODOs im Live-Code, keine neuen Defekte gefunden.
