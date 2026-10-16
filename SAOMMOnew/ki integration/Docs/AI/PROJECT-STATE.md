@@ -152,6 +152,51 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 - Alle Fest-Quest-Pakete BLOCKIERT — brauchen D17-Freigabe (Ziele, Belohnungen, Konsequenzen).
 - Ergebnis S16: kein Codeeingriff.
 
+## S17–S20-Online-Audit (A01-Bestand 2026-10-11, Branch docs/s17-s20-online-audit)
+- Ist-Stand: kein Netzwerk-Code im Live-Modul. Grep nach ServerRPC/ClientRPC/NetMulticast/
+  GetLifetimeReplicatedProps/DedicatedServer: keine Treffer (nur HasAuthority-Erwähnung in VR-Test).
+  Alle Live-Components nicht repliziert.
+- S17 Netzwerk, S18 Online-Persistenz, S19 PvP/PK, S20 Leichenbeute: ALLE BLOCKIERT —
+  brauchen D12 (Server/Hosting), D04 (Leiche), D05 (PK-Regeln). Nichts erfunden.
+- Ergebnis S17–S20: kein Codeeingriff.
+
+## S21–S22-Audit (2026-10-11, Branch docs/s21-s22-special-housing-audit)
+- Ist-Stand: keine Spezialfähigkeiten, keine Eigenheime im Code (Grep nach Ability/Housing/House:
+  keine Treffer im Live-Modul).
+- S21 BLOCKIERT (braucht D10: Kriterien, Seltenheit, Fairness). S22 BLOCKIERT (braucht D11 + D03-Erbe).
+- Ergebnis S21–S22: kein Codeeingriff.
+
+## S23–S28-KI-Audit (A01-Bestand 2026-10-11, Branch docs/s23-s28-ai-audit)
+- Ist-Stand: keine KI-Anbindung im Code. Grep nach LLM/ChatGPT/Ollama/Voice/Mikrofon/Dialog:
+  keine Treffer im Live-Modul (NPC/Quest-Systeme fehlen ohnehin, siehe S15/S16).
+- S23 Anbindung, S24 Persönlichkeit, S25 Gedächtnis, S26 Text/Mikrofon, S27 Agenten,
+  S28 KI-Quests: ALLE BLOCKIERT — brauchen D07/D08/D09/D17. Keine Modell-, Kosten- oder
+  Datenfluss-Entscheidung erfunden.
+- Ergebnis S23–S28: kein Codeeingriff.
+
+## S30–S32-Audit (2026-10-11, Branch docs/s30-s32-campaign-prebeta-audit)
+- S30 Schloss-Kampagne: FEHLT (nur Test-Arena) — BLOCKIERT (D06/D16/D18).
+- S31 Außenwelt/Kontinente: FEHLT — BLOCKIERT (D06, Streaming/Lasttests ausstehend).
+- S32 Pre-Beta: TEILWEISE — frische Pakete booten belegt in Arena mit Spieler-Pawn
+  (Paket-Builds + Boot-Smoke grün); Testprotokoll, Bedienhilfe und Bugweg noch offen;
+  VR-Pflicht hängt an D01.
+- Ergebnis S30–S32: kein Codeeingriff.
+
+## S33–S48-Audit (A01-Bestand 2026-10-11, Branch docs/s33-s48-rest-audit)
+- S33 Creator: VORHANDEN (Widget + CharacterSave-Slot, C-Taste).
+- S34 Menüs: TEILWEISE (HUD ja; Hauptmenü unfertig/schwarz; Pause-Menü fehlt) — D22 offen.
+- S35 Bosse: FEHLT — BLOCKIERT (D23).
+- S36–S38 Handel/Crafting/Gruppen: FEHLEN, zusätzlich OPTIONAL — keine Entscheidung, kein Bau.
+- S39 Animation: FEHLT im Live-Modul (nur Variant-Templates) — Inhaltsarbeit, kein Bug.
+- S40 Assets: vorhanden (Starter-Content + Blender-Quellen/FBX neu, Import ausstehend).
+- S41 Audio: FEHLT im Live-Modul — Inhaltsarbeit.
+- S42 Komfort: TEILWEISE (Medium-Defaults, RT aus, Schwach-PC-Doku; VR-Komfort ohne Headset offen).
+- S43 Tutorial: FEHLT — Inhaltsarbeit.
+- S44–S46 Sicherheit/Server/Performance: FEHLEN (S46 teilweise: RT aus, Medium-Profil).
+- S47 Lokalisierung: TEILWEISE (DE/EN-Pass in Arbeit).
+- S48 Roadmap: TEILWEISE (PROJECT-STATE + V2-Abdeckung bis S32; Rest BLOCKIERT wie oben).
+- Ergebnis S33–S48: kein Codeeingriff.
+
 ## S29-Schloss-Audit (A01-Bestand 2026-10-07, Branch docs/s29-castle-audit)
 - Ist-Stand: kein Schloss-Content. Vorhanden nur Test-Arena (`L_StartingReach` + Ruine-Variante);
   im Code keine Schloss-/Etagen-/Boss-Logik (nur Template-Lavaboden in Variant_*).
