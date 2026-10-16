@@ -18,6 +18,11 @@ AItemPickup::AItemPickup()
 	PickupVolume->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	PickupVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
 	PickupVolume->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	// The eye-trace interaction (InteractionComponent, Visibility channel) only
+	// hits blocking objects: overlap lets the trace pass straight through the
+	// pickup, so E could never reach it. Block Visibility (walk-over overlap on
+	// the Pawn channel is unaffected — separate channel, still overlap).
+	PickupVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	PickupVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Overlap);
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));

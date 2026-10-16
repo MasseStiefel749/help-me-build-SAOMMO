@@ -172,3 +172,118 @@ Date: 2026-10-06 · Status: verifiziert (Build + Tests + Boot-Smoke GRÜN) · Br
 4. Schaden bis Tod (Testcharakter): Death-Screen → beliebige Taste → Respawn (15-s-Fallback).
 5. Regression: Inventar-HUD (I?), Item-Pickup, Sprint (Shift), Knockback-Stärke, Creator (C).
 6. Auffälliges notieren (Death-Screen, Knockback, Creator-UX, Sprint-Speed sind EditAnywhere-tunbar).
+
+## Verifikation 2026-10-11 — Paketstart-Korrektur (Arbeitszweig `docs/s29-castle-audit`)
+- Aktuelle Startkarte in `DefaultEngine.ini`: `/Game/Levels/StartingReach/L_StartingReach`; `MainGameMode` bleibt aktiv. `L_MainMenu` bleibt als unfertige optionale Karte erhalten.
+- Ursache des schwarzen/untauglichen alten Pakets eingegrenzt: das am 12:14 erzeugte Paket startete `L_MainMenu`; ein expliziter Paketstart von `L_StartingReach` scheiterte mit `Failed to load package`. Die dynamisch per `OpenLevel` geöffnete Karte war nicht verlässlich in der Cook-Liste.
+- `DefaultGame.ini` enthält jetzt explizite `MapsToCook`-Einträge für `L_StartingReach` und `L_MainMenu`.
+- RunAutomation 20261011-124533: Stufe 0 Build ROT (Exit 6: Live Coding aktiv, Unreal Editor bleibt offen); Stufe 1 23 Tests gefunden; Stufe 2 im vorhandenen kompilierten Modul 12/12 erfolgreich; Stufe 3 Source-Boot-Smoke lädt `L_StartingReach` und spawnt `PlayerCharacter_0`; Stufe 4 Log-Scan GRÜN (8 bekannte/whitelistete Enginefehler, 0 Verstöße). Die in dieser Runde geänderte Testquelle konnte wegen der Live-Coding-Sperre nicht neu kompiliert werden.
+- UAT `BuildCookRun` mit `-nocompile` erfolgreich: Cook/Stage/Archive, 621 Pakete, separates Testpaket unter `%LOCALAPPDATA%\Temp\saommo-playable-build-20261011\Windows`. Neuer Paketstart ohne Map-Override lädt `L_StartingReach`, aktiviert `MainGameMode` und spawnt `PlayerCharacter` (HUD first tick); kein Map-load-Fehler. Der Build verwendet bestehende C++-Binaries, kein frischer C++-Build.
+- Maus-/Tastaturbewegung im sichtbaren Fenster wurde nicht interaktiv verifiziert; VR-Headset weiterhin nicht verbunden. Unreal Editor bleibt offen. Das ältere Spielpaket und die zuvor laufende Instanz wurden nicht überschrieben.
+- Für fehlende Festlegungen gilt seit Nutzerauftrag 2026-10-11: risikoarme, übliche und reversible Prototyp-Defaults wählen und sichtbar dokumentieren; ausdrücklich genannte Vision und festgelegte Lore bleiben maßgeblich.
+
+## S04-P01 Desktop-Bewegung — Bestandsaudit und Vertrag (2026-10-11)
+- A01 Bestand: `APlayerCharacter::OnMove` reads `IA_Move` as `FVector2D`, projects against controller yaw, and calls `AddMovementInput` for forward/right. `AMainPlayerController::BuildFallbackMapping` maps W/A/S/D and `Mouse2D`; `APlayerCharacter` builds a LeftShift sprint mapping. `WalkSpeed=400 cm/s`, `SprintSpeed=650 cm/s`; jump uses Space. `/Game/Input/IA_Move` and related action assets exist.
+- A02 Standardvertrag (Nutzerauftrag 2026-10-11): WASD moves relative to camera yaw; release stops; diagonal input is normalized; no speed penalty for diagonal keys; desktop baseline remains 400 cm/s and Shift sprint 650 cm/s. UE 5.8.3 `UCharacterMovementComponent::ScaleInputAcceleration` clamps input acceleration to length 1, so diagonals do not exceed straight-line acceleration.
+- A03/A04: no production movement code change needed for normal or diagonal movement; implementation and engine clamp already match the contract. Frame time is handled by CharacterMovement. These are code/source findings, not a manual feel test.
+- A05/A06: current Automation suite has 12 tests, but none directly asserts desktop `APlayerCharacter::OnMove` in a live local-player session. Package smoke proves map + pawn startup only. Manual WASD/mouse/diagonal/stop testing remains OPEN; VR still requires headset.
+
+## S04-P02–P08 Desktop-Bestandsaudit (A01, 2026-10-11)
+- First person: `APlayerCharacter::UpdateCameraAttachment` attaches camera to capsule at `FirstPersonEyeHeight`, enables control rotation, hides own mesh/shadows; sword remains a separate actor. Code vorhanden, no automated view/occlusion test, manual view pending.
+- Third person: camera boom is attached to root, `bUsePawnControlRotation=true`, target arm length is set from `ThirdPersonBoomLength`, collision test is on. Code vorhanden; wall-behind-player behavior needs PIE proof.
+- Camera switch: `V` maps to `ToggleCameraAction`; handler changes only `CameraMode` and camera attachment, no pawn/level recreate. Test for transition during attack and state preservation is missing.
+- UI focus: gameplay BeginPlay sets `FInputModeGameOnly` and hides cursor; main menu/creator overlays use `FInputModeUIOnly`. Source code supports expected routing; live mouse capture/held-key behavior not verified.
+- Interaction: `E` and `I` currently map to the same `InteractAction`; when the trace has no target, `OnInteract` toggles inventory. This differs from common controls (E interact, I inventory) and should be split in a scoped follow-up after a compilable Live Coding build is available. Do not claim interaction tested by package boot.
+- Death/restart: pawn destruction raises death screen and arms the configured timer; any pressed key respawns immediately. No Permadeath behavior is implemented by this existing path. Automation has checkpoint/respawn coverage; visible overlay/input path still needs PIE.
+- Desktop chain: code paths exist across start, pawn, movement, camera, interaction and death, but no uninterrupted manual pass through the playable package is proven. Treat as implemented/code-audited, not finished runtime.
+
+## Nutzerentscheidungen — Entwicklungsrichtung (2026-10-11)
+- Maßgebliche Grundlage: Nutzertext „SAOMMO – Grundlegende Entscheidungen für die Entwicklung“ (Anhang vom 2026-10-11). Er bestätigt dieses Repository, Unreal Engine 5.8 und C++ als bevorzugte Sprache; die vorhandenen Repo-Regeln und geprüften Entscheidungen bleiben vorrangig.
+- Produktziel: zuerst ein stabiles, kleines Desktop-Fantasy-Action-RPG mit Schwertkampf. Später schrittweise VR-fähiges Online-RPG mit persistenter Welt und MMO-Ausbau. Multiplayer bleibt Architekturziel, ist kein Vorwand für einen vorzeitigen Serverumbau.
+- Erste spielbare Version: steuerbarer Charakter, Bewegung/Kamera, nachvollziehbarer Schwertkampf, mindestens ein Gegner, Schaden/Tod/Respawn nach vorläufigen Testregeln, Beute/einfache Ausrüstung, ein NPC mit Dialog, Speichern/Laden und zusammenhängendes Testgebiet. Das ist der Zielumfang, kein bereits belegter Implementierungsstand.
+- Reihenfolge: zuerst Desktop-Stabilität und die bereits vorhandenen Systeme verifizieren; danach fehlende, abhängige Bausteine in kleinen Schritten ergänzen. VR wird architektonisch berücksichtigt und mit vorhandener Quest 3 geprüft, sobald Desktop-Grundlagen stabil sind. Budget-VR und große MMO-Systeme folgen später.
+- Kampfrichtung: direkt und actionreich, aber anspruchsvoll; Positionierung, Timing, Ausweichen und lesbare Gegnerangriffe sollen zählen. Konkrete Kampfwerte bleiben tunbar und werden anhand Spieltests angepasst.
+- Welt: eigenständige Fantasywelt um die Ruinen einer untergegangenen Schwertmeister-Kultur; keine Übernahme geschützter SAO-Figuren, Namen oder Handlung. „Echoes of Aincrad“, „Alicization Lycoris“ und „Breath of the Wild“ sind Stil-/Erkundungsreferenzen, keine zu kopierenden Assets oder Designs.
+- Hardwareziel für die erste Entwicklungsrunde: vorhandener PC (RTX 4070, Ryzen 7 7700X, 32 GB RAM) und Meta Quest 3. Diese Daten definieren keine Mindestanforderung für spätere Spieler.
+- Permadeath: als wichtiges langfristiges Spielelement bestätigt, aber die im Nutzertext genannten Normalwelt-/Hochrisikoregeln sind ausdrücklich Vorschläge. Bis zu einer konkreten Spielregel bleibt der aktuelle Tod/Respawn-Prototyp für Tests bestehen; keine endgültige Löschung von Charakteren oder Besitz implementieren.
+- Schloss: ein späterer erster Abschnitt soll Erkundung, Kampf, NPCs und Boss verbinden; Sieg soll Fortschritt freischalten und Weltreaktionen auslösen. Detaillierte Etagenstruktur, Lore und Bossregeln bleiben an die bestehenden Abhängigkeiten gebunden; keine Schlosskampagne vor den nötigen Grundlagen erfinden.
+- Arbeitsweise: kleine, nachvollziehbare Schritte; vorhandenen Stand vor Änderungen prüfen; Build, Tests und Laufzeit getrennt belegen; Fehler/Schulden dokumentieren. Nutzer hat am 2026-10-11 zusätzlich übliche, risikoarme und reversible Standards für nicht beschriebene Bedienungsdetails autorisiert. Diese Erlaubnis überschreibt keine ausdrücklich offene Kernregel wie Permadeath.
+
+## Laufzeitprüfung am PC — Input/Start (2026-10-11, direkt auf Nutzer-PC)
+- Das ältere Paket aus `Saved/Packaged/Windows` zeigt ein schwarzes Fenster. Sein Log lädt `L_MainMenu`, erstellt `UMainMenuWidget` und setzt UI-only; der Viewport meldet `MouseCaptureMode=NoCapture`. Der Menüpfad ist dadurch nicht als spielbarer Start bestätigt. Die laufende ältere Instanz blieb offen.
+- Das separate Paket unter `%LOCALAPPDATA%\Temp\saommo-playable-build-20261011\Windows` startet sichtbar in `L_StartingReach`; Spieler und Level werden gerendert. Dort reagierten `V` (FP/TP-Wechsel), Leertaste (Sprung) und Mausbewegung (Kameradrehung). Log: `CapturePermanently`, `HUD first tick`, Pawn `PlayerCharacter`. Damit ist sichtbarer Start und ein Teil der Eingabe live belegt.
+- Im Editor-PIE ließ sich die Map starten; Unreal zeigte die Einblendung `Umschalt+F1 für den Mauszeiger`. Mausziehen änderte die Kamerarichtung. Der PIE-Lauf wurde danach regulär gestoppt; der Editor blieb offen.
+- WASD-Dauerbewegung konnte mit der verfügbaren UI-Eingabe nicht zweifelsfrei bestätigt werden: kurze synthetische Tastendrücke sind kein gehaltener Tastendruck. Dies bleibt offen und ist weder als bestanden noch als Codefehler gewertet.
+- Während Editor + zwei Spielinstanzen lieferten Windows und Unreal eine Speicherdruckwarnung. Windows meldete etwa 16 GB sichtbaren RAM und kurzfristig unter 1 GB frei (abweichend von der Master-Datei mit 32 GB). Nach regulärem Schließen der von Codex gestarteten Testinstanz waren etwa 4 GB frei; Editor und ursprüngliche Spielinstanz blieben offen. Weitere parallele Instanzen vermeiden.
+- Schlussfolgerung: der ursprüngliche „Mauszeiger bleibt stehen“-Eindruck kann teilweise durch das alte Menüfenster (UI-only/no-capture) und die alte Startkarte erklärt sein. Das gameplay-startende Paket erfasst Maus/Kamera. Vollständige Bewegungs- und Desktop-Spieltests stehen weiterhin aus.
+
+- 2026-10-11: APlayerCharacter::OnMove/OnLook now apply actual input whenever a controller exists; UInputFrameComponent is only updated when present. This removes a needless failure dependency. Source change is not yet compiled or runtime-tested because Unreal Editor/Live Coding remains open and blocks the normal build. WASD held movement remains unverified.
+
+## Blender-Weltmodelle (2026-10-11)
+- In `ArtSource/Blender/SAOMMO_World_Props.blend` sind acht editierbare, stilisierte Low-Poly-Props angelegt: Ruinenbogen, Checkpoint-Wegstein, Schwertdenkmal, gebrochene Säule, Brunnen, Kohlebecken, Vorratskiste und Klingenhofbank.
+- Je Modell liegt ein einzelner FBX-Export in `ArtSource/Blender/Exports/FBX/`; Galerie-Render: `ArtSource/Blender/renders/SAOMMO_world_props.png`; Blender-Erzeugungsskript und Importhinweise liegen daneben.
+- Blender 5.2.1 hat alle acht FBX-Exporte und die Galerie erfolgreich erzeugt. Noch nicht in Unreal importiert; keine Unreal-Asset-Import- oder Laufzeitprüfung erfolgt. Material-Slots sind enthalten, finale Unreal-Materialien, Texturen, Collision und Niagara-Feuer fehlen.
+
+## Modularer Weltbaukasten (2026-10-11)
+- ArtSource/Blender/SAOMMO_World_Builder_Kit.blend enthält 36 getrennte, editierbare Low-Poly-Meshes mit 4-m-Rasterbauteilen, Boden/Wegen, Ruinen-/Gebäudeteilen, Holzbau und Naturobjekten.
+- 36 separate FBX-Dateien unter ArtSource/Blender/Exports/World_Builder_Kit/FBX/; Katalogbild und Importanleitung sind unter ArtSource/Blender/renders/SAOMMO_world_builder_kit.png bzw. im Exportordner.
+- Blender 5.2.1 hat die Galerie gerendert und 36 FBX-Dateien exportiert. Noch nicht in Unreal importiert oder dort geprüft; Materialinstanzen, Kollision, LODs und Terrain-System bleiben Folgearbeit.
+
+## Starting Reach — Blender-Weltübersicht (2026-10-11)
+- `ArtSource/Blender/SAOMMO_Starting_Reach.blend` setzt die vier dokumentierten Slice-Zonen als eine editierbare, zusammenhängende Szene um: Brunnfeld (50×50 m), Klingenhof (30×30 m), Grauwaldrand (80×80 m) und Ruine des Ersten Griffs (40×60 m); Wege und Torbogen verbinden die Bereiche.
+- Die Szene verwendet vorhandene Kit-Meshes plus Blockout-Geometrie für Brunnen/Siedlungswiederaufbau, vier Trainingspuppen, Wald-/Deckungsruinen und drei Ruinenräume. Der Nischen-Leuchteffekt zeigt nur einen versiegelten Artefakt-Teaser; keine Belohnung oder neue Boss-/Quest-Lore wurde erfunden.
+- Vorschau: `ArtSource/Blender/renders/SAOMMO_Starting_Reach.png`. Reproduzierbares Blender-Skript: `ArtSource/Blender/create_starting_reach_world.py`. FBX-Blockout: `ArtSource/Blender/Exports/Starting_Reach/SM_StartingReach_Blockout.fbx` (Meshes einzeln benannt, Unreal-Zentimeter).
+- Blender 5.2.1 speichert und rendert die Szene; FBX-Export erfolgt aus derselben Szene. Noch nicht in Unreal importiert, auf Kollision/Navmesh geprüft oder spielbar verifiziert. Es ist eine präsentierbare Blockout-Weltübersicht und kein fertiges MMO-/Open-World-Gebiet.
+
+## Weltmodelle — Fantasy-Stilvariante (2026-10-11)
+- Neue, rückwärtskompatible Variante unter `ArtSource/Blender/Styled_Assets/`: 36 Weltbaukasten-Meshes, 8 Props/Landmarken und eine neu gerenderte Starting-Reach-Szene. Die bisherigen Blender-Dateien bleiben unverändert.
+- Die Style-Richtung nutzt allgemeine Merkmale der Referenz (lebendige Fantasy-Landschaften, Städte, Wald und Ruinen), ohne konkrete Spielmodelle zu übernehmen: wärmere Natursteine, sattere Vegetation, Eichenholz, kühles Metall und prozedurale Oberflächenvariation.
+- Blender 5.2.1 hat alle drei `.blend`-Szenen und Vorschauen erzeugt. FBX-Exports: 36 Einzelassets, 8 Einzelprops sowie ein 173-Mesh-Blockout der Region. `ArtSource/Blender/Styled_Assets/README.md` dokumentiert Dateipfade und Grenzen.
+- Die prozeduralen Shaderdetails sind in Blender sichtbar, aber nicht in FBX gebacken. Unreal benötigt eigene Materialinstanzen oder gebackene Texturen. Import, Kollision, LOD, Performance und Spielbarkeit bleiben ungeprüft.
+
+
+## Autonome Kette (Master-Prompt ab 2026-10-11, ein Branch je Aufgabe)
+- Annahme (Standard, aenderbar): E = nur Interagieren, I = immer Inventar.
+- Annahme: Flat-Farbmaterialien als Sichtbarkeits-Basis; PBR/Texturen folgen mit D27-Feinabstimmung.
+- Belegt per Paket-Log: I-Kette schaltet um (auf/zu), E-leer ist sicherer No-Op; Panel-Sicht + E-am-Pickup brauchen Augen-Test. Menue-Map bleibt optionale Baustelle (Start = Arena).
+- Statusworte: PASS = getestet oder im Log belegt; FAIL = beobachtet; BLOCKIERT = D-Nummer genannt; manuell offen = braucht Spiel-Test.
+
+
+## Master-Prompt Faktencheck (2026-10-11)
+- Repo-Pfad: OneDrive/Documents/GitHub/help-me-build-SAOMMO (Prompt-Pfad C:/Users/Simon/SAOMMO existiert nicht).
+- Toolchain: VS 18 (2026), Engine 5.8.3 (Prompt nennt VS2022, vorhanden aber ungenutzt).
+- SAOGoblin.h / SAOVRPawn.h / SAOBudgetVRBridge.h: nicht vorhanden - Band C darf sie nicht voraussetzen.
+- Docs/ROADMAP.md & Co: nicht vorhanden - Doku liegt in ki integration/Docs + PROJECT-STATE.md.
+- V6/V7-Befund: Inventardaten, I-Toggle, E-Pickup, Guards existieren bereits (siehe S09-S12-Audits); offen sind nur Sicht-Beweis und E-am-Pickup im Spiel.
+
+
+## Wiedereinstiegspunkt (Master-Prompt-Betrieb)
+- Branch: fix/interact-routing-testable (20bc2dd), Baum sauber, Stand 2026-10-11.
+- Naechstes: Sicht-Test Paket 7 (Panel bei I, E am Pickup im Osten) durch Nutzer; danach Push-Entscheidung fuer 9 offene Branches.
+- Wichtigste offene Bugs: Menue schwarz (L_MainMenu, Ursache unbewiesen), Panel-Sicht unbestaetigt.
+- Verifikation: RunAutomation (Build+14 Tests+Boot) als Standard; Paket per UAT nach C:/SAOMMO-Builds; Verknuepfung auf Desktop.
+
+
+## Pause-Menue (2026-10-11, Branch feature/pause-menu)
+- Esc pausiert/entsperrt, Overlay mit Fortsetzen/Beenden, 15/15 Tests gruen (Run 20261011-223829). Sicht-Check im Spiel offen.
+
+
+## V3-Betrieb ab 2026-10-12
+- Master-Prompt V3 aktiv: Branch feature/pause-menu, Baum sauber, Engine 5.8.3, Arena6-Paket vorhanden.
+- Kette gruen (Run 20261011-223829, 15/15); Docs-Commit danach aendert keine Binaries.
+- Echte Grenze: alle Restpunkte brauchen Augen-Test (Panel-Sicht, E-am-Pickup, Menue-Schwarz, Pause-Sicht, Bodentextur).
+
+
+## V4.1-Verifikation (2026-10-12)
+- 5 Ziel-Branches alle AUF REMOTE (push-Stand heute verifiziert).
+- feature/pause-menu NUR LOKAL (3 Commits) - kein Push ohne Freigabe.
+- 4 Augen-Checks auf Automatisierbarkeit geprueft: Widget-Erstellung braucht Player/Viewport, Trace-Query fehlt headless, Menue braucht Sicht - alle NICHT automatisierbar, dokumentiert statt erfunden.
+- Keine TODOs im Live-Code, keine neuen Defekte gefunden.
+
+
+## V4.2-Batch (2026-10-12, Branch fix/movement-diagonal-deadcode)
+- Diagonal-Test neu (16/16 gruen, Run 20261012-091050), ASword::LastHitTime als Tot-Code entfernt.
+
+
+## V4.3-Batch (2026-10-12, Branch fix/no-attack-with-open-inventory)
+- Angriff bei offenem Inventar unterdrueckt (IsInventoryOpen-Abfrage); 17/17 gruen (Run 20261012-100644). Unterdrueckungs-Zweig braucht Sicht-Test (I oeffnen, LMB, kein Schwung).

@@ -15,6 +15,14 @@ AMainGameMode::AMainGameMode()
 
 UClass* AMainGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
 {
+	// The startup map is deliberately empty: it shows the menu without loading
+	// or spawning the gameplay world. The regular pawn is created after Play
+	// opens the StartingReach map.
+	if (GetWorld() && GetWorld()->GetMapName().Contains(TEXT("L_MainMenu")))
+	{
+		return nullptr;
+	}
+
 	// Band 3 §20 point 5 (audit gaps G2 + G6): while an XR system (HMD) is active,
 	// the player spawns as the Band 2 §7 VR pawn instead of the desktop character.
 	// Single shared gate per ADR-017c (MainPlayerController::DoRespawn uses it too).

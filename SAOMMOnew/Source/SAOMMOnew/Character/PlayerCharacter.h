@@ -186,12 +186,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	void SetCameraMode(ECameraMode NewMode);
 
-protected:
-
+	/** Input handlers are public for automation tests (S04-P01-A05); binding
+	 *  stays inside SetupPlayerInputComponent, behavior is unchanged. */
 	void OnMove(const FInputActionValue& Value);
 	void OnLook(const FInputActionValue& Value);
-	void OnToggleCamera(const FInputActionValue& Value);
 	void OnAttack(const FInputActionValue& Value);
+	/** Routing behind OnInteract, directly testable: true toggles inventory,
+	 *  false interacts with the focused target (safe no-op without one). */
+	void HandleInteractKey(bool bInventoryKey);
+
+protected:
+
+	void OnToggleCamera(const FInputActionValue& Value);
 	void OnInteract(const FInputActionValue& Value);
 	void OnJump(const FInputActionValue& Value);
 	void OnSprintStarted(const FInputActionValue& Value);

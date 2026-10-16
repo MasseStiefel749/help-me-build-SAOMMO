@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PlayerCharacter.h"
+#include "SAOMMOnew.h"
 #include "MainPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -153,6 +154,45 @@ void APlayerCharacter::BeginPlay()
 			}
 		}
 	}
+	// SAOMMO starter armor (V5 Priority A, stage 1): socket-attached plates that
+	// ride the Manny bones — no skinning needed, animations keep working.
+	// Meshes are joint-centered, so zero-offset attach places them correctly.
+	static const TPair<FName, const TCHAR*> ArmorPieces[] =
+	{
+		{ TEXT("upperarm_l"), TEXT("/Game/Characters/SAOMMO/Armor/SM_ShoulderPad_L.SM_ShoulderPad_L") },
+		{ TEXT("upperarm_r"), TEXT("/Game/Characters/SAOMMO/Armor/SM_ShoulderPad_R.SM_ShoulderPad_R") },
+		{ TEXT("spine_03"), TEXT("/Game/Characters/SAOMMO/Armor/SM_ChestPlate.SM_ChestPlate") },
+		{ TEXT("lowerarm_l"), TEXT("/Game/Characters/SAOMMO/Armor/SM_Bracer_L.SM_Bracer_L") },
+		{ TEXT("lowerarm_r"), TEXT("/Game/Characters/SAOMMO/Armor/SM_Bracer_R.SM_Bracer_R") },
+	};
+	UMaterialInterface* ArmorMaterial = Cast<UMaterialInterface>(StaticLoadObject(
+		UMaterialInterface::StaticClass(), nullptr,
+		TEXT("/Game/World/BuilderKit/Materials/M_SAOMMO_Metal.M_SAOMMO_Metal")));
+	if (USkeletalMeshComponent* Skel = GetMesh())
+	{
+		for (const TPair<FName, const TCHAR*>& Piece : ArmorPieces)
+		{
+			UStaticMesh* ArmorMesh = Cast<UStaticMesh>(StaticLoadObject(
+				UStaticMesh::StaticClass(), nullptr, Piece.Value));
+			if (!ArmorMesh)
+			{
+				UE_LOG(LogGame, Warning, TEXT("SAOMMO armor: missing %s"), Piece.Value);
+				continue;
+			}
+			UStaticMeshComponent* ArmorComp = NewObject<UStaticMeshComponent>(this);
+			ArmorComp->SetStaticMesh(ArmorMesh);
+			ArmorComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			if (ArmorMaterial)
+			{
+				ArmorComp->SetMaterial(0, ArmorMaterial);
+			}
+			ArmorComp->RegisterComponent();
+			ArmorComp->AttachToComponent(Skel,
+				FAttachmentTransformRules::SnapToTargetNotIncludingScale, Piece.Key);
+			UE_LOG(LogGame, Display, TEXT("SAOMMO armor: attached %s to %s"),
+				*ArmorMesh->GetName(), *Piece.Key.ToString());
+		}
+	}
 }
 
 void APlayerCharacter::SetCameraMode(ECameraMode NewMode)
@@ -220,7 +260,7 @@ void APlayerCharacter::OnMove(const FInputActionValue& Value)
 {
 	const FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (GetController() && InputFrame)
+	if (GetController())
 	{
 		const FRotator Rotation = GetController()->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -231,7 +271,12 @@ void APlayerCharacter::OnMove(const FInputActionValue& Value)
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 
-		InputFrame->CurrentFrame.Move = MovementVector;
+		// Movement must not depend on the optional input-frame recorder. A
+		// missing/replaced recorder should never make the pawn uncontrollable.
+		if (InputFrame)
+		{
+			InputFrame->CurrentFrame.Move = MovementVector;
+		}
 	}
 }
 
@@ -239,12 +284,15 @@ void APlayerCharacter::OnLook(const FInputActionValue& Value)
 {
 	const FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (GetController() && InputFrame)
+	if (GetController())
 	{
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 
-		InputFrame->CurrentFrame.Turn = LookAxisVector;
+		if (InputFrame)
+		{
+			InputFrame->CurrentFrame.Turn = LookAxisVector;
+		}
 	}
 }
 
@@ -257,6 +305,15 @@ void APlayerCharacter::OnToggleCamera(const FInputActionValue& Value)
 
 void APlayerCharacter::OnAttack(const FInputActionValue& Value)
 {
+	// Open inventory is view-only: swings while reading would hit unseen
+	// enemies and waste the attack window (S04-P05 UI focus).
+	if (const AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
+	{
+		if (PC->IsInventoryOpen())
+		{
+			return;
+		}
+	}
 	if (InputFrame)
 	{
 		InputFrame->CurrentFrame.bAttack = true;
@@ -270,16 +327,33 @@ void APlayerCharacter::OnInteract(const FInputActionValue& Value)
 		return;
 	}
 
-	InteractionComponent->Interact();
-
-	// Nothing in reach: E/I doubles as the inventory screen toggle (matches
-	// player expectation from the reference UI; a dedicated key comes later).
-	if (!InteractionComponent->GetFocusedActor())
+	// Standard split (S04-P06 follow-up): I always toggles the inventory
+	// screen, E only interacts with the focused world target (no-op when
+	// nothing is in reach). Both keys share IA_Interact, so the I press is
+	// detected via key state instead of a second action asset.
+	bool bInventoryKey = false;
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		if (AMainPlayerController* PC = Cast<AMainPlayerController>(GetController()))
+		bInventoryKey = PC->WasInputKeyJustPressed(EKeys::I);
+		UE_LOG(LogGame, Display, TEXT("SAOMMO input: OnInteract fired, I-just-pressed=%d"), bInventoryKey ? 1 : 0);
+	}
+	HandleInteractKey(bInventoryKey);
+}
+
+void APlayerCharacter::HandleInteractKey(bool bInventoryKey)
+{
+	if (bInventoryKey)
+	{
+		if (AMainPlayerController* MainPC = Cast<AMainPlayerController>(GetController()))
 		{
-			PC->ToggleInventory();
+			MainPC->ToggleInventory();
 		}
+		return;
+	}
+
+	if (InteractionComponent)
+	{
+		InteractionComponent->Interact();
 	}
 }
 

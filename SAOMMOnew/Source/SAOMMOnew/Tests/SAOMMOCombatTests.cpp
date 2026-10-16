@@ -7,6 +7,10 @@
 #include "Sword.h"
 #include "CombatInterfaces.h"
 #include "Components/CapsuleComponent.h"
+#include "PlayerCharacter.h"
+#include "MainPlayerController.h"
+#include "InputFrameComponent.h"
+#include "InputActionValue.h"
 
 #if WITH_AUTOMATION_TESTS
 
@@ -83,6 +87,48 @@ bool FSAOMMOSwordDamageFormulaTest::RunTest(const FString& Parameters)
 	// 4) Double-death guard: a second killing blow changes nothing.
 	Damageable->ApplyDamage(100.0f, nullptr, FVector::ZeroVector, FVector::ZeroVector);
 	TestTrue(TEXT("Blow after death changes nothing"), Enemy->CurrentHealth == 0.0f);
+
+	SAOMMOTest::DestroyTestWorld(World);
+	return true;
+}
+
+/**
+ *  Attack input contract (S04-P05 UI focus): OnAttack arms the swing through
+ *  the input frame, and a missing/closed inventory never suppresses it
+ *  (IsInventoryOpen is false with no HUD). The open-inventory suppression
+ *  itself needs a live HUD and stays a manual test: open with I, press LMB,
+ *  no swing may happen.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSAOMMOAttackInputArmsTest,
+	"SAOMMOnew.Combat.AttackInputArms",
+	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FSAOMMOAttackInputArmsTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = SAOMMOTest::CreateTestWorld();
+	if (!TestNotNull(TEXT("Test world created"), World))
+	{
+		return false;
+	}
+
+	APlayerCharacter* Character = World->SpawnActor<APlayerCharacter>(FVector::ZeroVector, FRotator::ZeroRotator);
+	AMainPlayerController* Controller = World->SpawnActor<AMainPlayerController>();
+	if (!TestNotNull(TEXT("Player character spawned"), Character)
+		|| !TestNotNull(TEXT("MainPlayerController spawned"), Controller))
+	{
+		SAOMMOTest::DestroyTestWorld(World);
+		return false;
+	}
+	Controller->Possess(Character);
+
+	// Safe default: no HUD yet means no open inventory, attacks arm normally.
+	TestFalse(TEXT("Inventory reports closed with no HUD"), Controller->IsInventoryOpen());
+
+	Character->OnAttack(FInputActionValue());
+	if (TestNotNull(TEXT("Character owns an input frame recorder"), Character->GetInputFrame()))
+	{
+		TestTrue(TEXT("Attack input arms the swing"), Character->GetInputFrame()->CurrentFrame.bAttack);
+	}
 
 	SAOMMOTest::DestroyTestWorld(World);
 	return true;

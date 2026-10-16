@@ -14,7 +14,8 @@ class AVRCharacter;
 class UPlayerHudWidget;
 class UDeathScreenWidget;
 class USAOCharacterCreatorWidget;
-
+class UMainMenuWidget;
+class UPauseWidget;
 /**
  *  SAOMMO player controller (target architecture).
  *
@@ -98,18 +99,20 @@ protected:
 	/** Shows/refreshes the death overlay (call before arming the respawn timer). */
 	void BeginDeathScreen();
 
-	/** Character creator overlay (first-boot auto-open + C toggle). */
+	/** Character creator overlay (opened with C). */
 	UPROPERTY()
 	TObjectPtr<USAOCharacterCreatorWidget> CreatorWidget = nullptr;
 
+	/** Main menu shown on the lightweight startup map. */
+	UPROPERTY()
+	TObjectPtr<UMainMenuWidget> MainMenuWidget = nullptr;
+
+	/** Pause overlay (Esc). Created on demand, hidden when unpaused. */
+	UPROPERTY()
+	TObjectPtr<UPauseWidget> PauseWidget = nullptr;
+
 	/** Opens the creator overlay for local players (loads CharacterSave if present). */
 	void ShowCharacterCreator();
-
-	/** First-boot gate: opens the creator when no CharacterSave exists yet. */
-	void MaybeShowCreatorOnFirstBoot();
-
-	/** Defers the first-boot creator check past pawn possession. */
-	FTimerHandle FirstBootTimer;
 
 	/** Any key press on the death screen ends the wait and respawns. */
 	virtual bool InputKey(const struct FInputKeyEventArgs& Params) override;
@@ -144,6 +147,18 @@ public:
 	/** Toggles the inventory screen (safe with no HUD yet). */
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void ToggleInventory();
+
+	/** True while the inventory screen is open (false with no HUD yet). */
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	bool IsInventoryOpen() const;
+
+	/** Toggles pause + overlay (safe with no viewport yet). */
+	UFUNCTION(BlueprintCallable, Category = "Pause")
+	void TogglePauseMenu();
+
+	/** True while the pause overlay is shown. */
+	UFUNCTION(BlueprintCallable, Category = "Pause")
+	bool IsPauseMenuOpen() const;
 
 	/** Save slot name (shared with UPlayerSaveGame default). */
 	UPROPERTY(EditAnywhere, Category = "Save")

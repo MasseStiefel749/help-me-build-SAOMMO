@@ -23,6 +23,8 @@
 #include "SAOCharacterCreatorWidget.h"
 #include "SAOCharacterData.h"
 #include "PlayerSaveGame.h"
+#include "MainMenuWidget.h"
+#include "PauseWidget.h"
 #include "InventoryComponent.h"
 #include "ProgressionComponent.h"
 
@@ -55,7 +57,36 @@ AMainPlayerController::AMainPlayerController()
 void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	if (IsLocalPlayerController() && GetWorld() && GetWorld()->GetMapName().Contains(TEXT("L_MainMenu")))
+	{
+		UE_LOG(LogTemp, Display, TEXT("SAOMMO menu: creating startup widget on %s"), *GetWorld()->GetMapName());
+		MainMenuWidget = CreateWidget<UMainMenuWidget>(this, UMainMenuWidget::StaticClass());
+		if (MainMenuWidget)
+		{
+			MainMenuWidget->AddToViewport(500);
+			MainMenuWidget->SetVisibility(ESlateVisibility::Visible);
+			bShowMouseCursor = true;
+			FInputModeUIOnly UIMode;
+			UIMode.SetWidgetToFocus(MainMenuWidget->TakeWidget());
+			SetInputMode(UIMode);
+			UE_LOG(LogTemp, Display, TEXT("SAOMMO menu: widget added to viewport; input set to UI only"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("SAOMMO menu: CreateWidget failed"));
+		}
+		return;
+	}
 	EnsureHud();
+	// Always enter gameplay with gameplay input. Opening the character creator
+	// automatically on a fresh save used to pause the world and switch to
+	// UIOnly before the player had a chance to control the pawn. The creator is
+	// still available through C once the player is in game.
+	if (IsLocalPlayerController())
+	{
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+	}
 	// Cache current transform as default respawn so death doesn't drop to origin.
 	if (RespawnTransform.Equals(FTransform::Identity))
 	{
@@ -72,22 +103,6 @@ void AMainPlayerController::BeginPlay()
 		RespawnTransform.SetScale3D(FVector::OneVector);
 	}
 
-	// Character creator: first boot (no CharacterSave yet) opens the overlay
-	// shortly after possession; the C key re-opens it later.
-	if (IsLocalPlayerController() && GetWorld())
-	{
-		GetWorld()->GetTimerManager().SetTimer(
-			FirstBootTimer, this, &AMainPlayerController::MaybeShowCreatorOnFirstBoot, 0.3f, false);
-	}
-}
-
-void AMainPlayerController::MaybeShowCreatorOnFirstBoot()
-{
-	if (!IsLocalPlayerController() || UGameplayStatics::DoesSaveGameExist(TEXT("CharacterSave"), 0))
-	{
-		return;
-	}
-	ShowCharacterCreator();
 }
 
 void AMainPlayerController::ShowCharacterCreator()
@@ -203,8 +218,8 @@ void AMainPlayerController::BuildFallbackMapping()
 	AddKey(AttackAction, EKeys::LeftMouseButton);
 	AddKey(ToggleCameraAction, EKeys::V);
 	AddKey(InteractAction, EKeys::E);
-	// I opens the inventory directly: same action, and OnInteract toggles
-	// the screen whenever nothing is in reach anyway.
+	// I shares the interact action; APlayerCharacter::OnInteract routes a fresh
+	// I press straight to the inventory, E only interacts with a world target.
 	AddKey(InteractAction, EKeys::I);
 
 	auto Negate = [&](int32 Index, bool bX, bool bY)
@@ -297,7 +312,60 @@ void AMainPlayerController::ToggleInventory()
 	if (HudWidget)
 	{
 		HudWidget->ToggleInventory();
+		UE_LOG(LogGame, Display, TEXT("SAOMMO input: ToggleInventory ran, open=%d"),
+			HudWidget->IsInventoryOpen() ? 1 : 0);
 	}
+	else
+	{
+		UE_LOG(LogGame, Warning, TEXT("SAOMMO input: ToggleInventory has no HUD"));
+	}
+}
+
+bool AMainPlayerController::IsInventoryOpen() const
+{
+	return HudWidget && HudWidget->IsInventoryOpen();
+}
+
+void AMainPlayerController::TogglePauseMenu()
+{
+	if (!IsLocalPlayerController() || !GetWorld())
+	{
+		return;
+	}
+
+	if (IsPaused())
+	{
+		SetPause(false);
+		if (PauseWidget)
+		{
+			PauseWidget->HidePause();
+		}
+		FInputModeGameOnly GameMode;
+		SetInputMode(GameMode);
+		bShowMouseCursor = false;
+	}
+	else
+	{
+		if (!PauseWidget)
+		{
+			PauseWidget = CreateWidget<UPauseWidget>(this, UPauseWidget::StaticClass());
+		}
+		if (!PauseWidget)
+		{
+			return;
+		}
+		SetPause(true);
+		PauseWidget->ShowPause();
+		FInputModeUIOnly UIMode;
+		UIMode.SetWidgetToFocus(PauseWidget->TakeWidget());
+		SetInputMode(UIMode);
+		bShowMouseCursor = true;
+	}
+}
+
+bool AMainPlayerController::IsPauseMenuOpen() const
+{
+	return PauseWidget && PauseWidget->IsPauseShown();
 }
 
 bool AMainPlayerController::SaveProgress()
@@ -419,6 +487,15 @@ bool AMainPlayerController::InputKey(const FInputKeyEventArgs& Params)
 	{
 		ShowCharacterCreator();
 		return true;
+	}
+	// Pause toggle: Esc pauses outside death/creator overlays (standard).
+	if (!bPendingRespawn && Params.Event == IE_Pressed && Params.Key == EKeys::Escape)
+	{
+		if (!CreatorWidget || !CreatorWidget->IsInViewport())
+		{
+			TogglePauseMenu();
+			return true;
+		}
 	}
 	return Super::InputKey(Params);
 }
